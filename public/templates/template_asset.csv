@@ -1,0 +1,2 @@
+category_id,supplier_id,regional_id,brand,serial_number,specification,production_year,purchase_price,purchase_date,condition
+1,1,1,"Contoh Brand",SN12345,"Spek Singkat",2024,5000000,2024-01-20,baru

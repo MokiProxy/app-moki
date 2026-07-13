@@ -11,17 +11,18 @@ class CreateDivisionsTable extends Migration
      *
      * @return void
      */
-    public function up()
-    {
-        Schema::create('divisions', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('abbreviation')->nullable();
-            $table->foreignId('company_id');
-            $table->foreignId('regional_id');
-            $table->timestamps();
-        });
-    }
+   public function up()
+{
+    Schema::create('divisions', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('code'); // Tambahkan ini
+        $table->string('abbreviation');
+        $table->foreignId('regional_id');
+        $table->foreignId('company_id'); // Tambahkan ini
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

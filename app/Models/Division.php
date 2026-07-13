@@ -9,7 +9,15 @@ class Division extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'company_id', 'regional_id', 'abbreviation'];
+    // Tambahkan 'code' ke dalam fillable
+    protected $fillable = [
+        'name', 
+        'code', 
+        'company_id', 
+        'regional_id', 
+        'abbreviation'
+    ];
+
     /**
      * Get all of the transaction for the Division
      *
@@ -39,4 +47,11 @@ class Division extends Model
     {
         return $this->belongsTo(Regional::class);
     }
+
+    /**
+     * Get all of the employees for the Division
+     */
+   public function employees() {
+    return $this->hasMany(Employee::class, 'division_id');
+}
 }

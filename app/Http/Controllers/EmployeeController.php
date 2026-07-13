@@ -3,166 +3,101 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\Division;
+use App\Models\Regional;
 use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Validator;
+use Yajra\DataTables\DataTables;
+use App\Exports\EmployeeTemplateExport;
+use App\Imports\EmployeeImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class EmployeeController extends Controller
 {
     public function index()
     {
-        return view('components.employee');
+        $divisions = Division::all();
+        $regionals = Regional::all();
+       return view('components.employee', compact('divisions', 'regionals'));
     }
 
-    public function datatable(Request $request)
-    {
-        if ($request->ajax()) {
-            // $store = Store::where('user_id', auth()->user()->id)->first();
-            $employees = Employee::query();
-            // dd($order);
-            return DataTables::eloquent($employees)
-                ->addIndexColumn()
+public function datatable(Request $request)
+{
+    // Eager loading division dan regional
+    $data = Employee::with(['division', 'regional'])->latest();
 
-                ->addColumn('_address', function ($row) {
-                    return substr($row->address, 0, 100);
-                })
-                ->addColumn('action', function ($row) {
-                    return '<ul class="list-unstyled hstack gap-1 mb-0">
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="View">
-                                    <a href="job-details.html" class="btn btn-sm btn-soft-primary"><i class="mdi mdi-eye-outline mdi-18px"></i></a>
-                                </li>
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                    <button class="btn btn-sm btn-soft-info btn-edit" data-id="' . $row->id . '"><i class="mdi mdi-pencil-outline mdi-18px"></i></button>
-                                </li>
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="Delete">
-                                    <button data-id="' . $row->id . '" class="btn btn-sm btn-soft-danger btn-delete"><i class="mdi mdi-delete-outline mdi-18px"></i></button>
-                                </li>
-                            </ul>';
-                })
-                ->rawColumns(['action', '_address'])
-                ->make(true);
-        }
-    }
+    return DataTables::of($data)
+        ->addIndexColumn()
+        ->addColumn('departemen', function($row){
+            return $row->division->name ?? '-';
+        })
+        ->addColumn('kode_dept', function($row){
+            // Menampilkan kode dari tabel divisions
+            return $row->division->code ?? '-';
+        })
+        ->addColumn('regional', function($row){
+            return $row->regional->name ?? '-';
+        })
+        ->addColumn('action', function($row){
+            // Pastikan atribut data-id dan atribut lainnya lengkap untuk JS
+            return '
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-info btn-view" data-id="'.$row->id.'" title="Detail"><i class="mdi mdi-eye"></i></button>
+                    <button class="btn btn-sm btn-primary btn-edit" 
+                        data-id="'.$row->id.'" 
+                        data-division-id="'.$row->division_id.'" 
+                        data-division-code="'.($row->division->code ?? '').'"
+                        title="Edit"><i class="mdi mdi-pencil"></i></button>
+                    <button class="btn btn-sm btn-danger btn-delete" data-id="'.$row->id.'" title="Hapus"><i class="mdi mdi-trash-can"></i></button>
+                </div>';
+        })
+        ->rawColumns(['action'])
+        ->make(true);
+}
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'hp'    => 'required|numeric|min:8',
-            'email' => 'required|email:dns'
-        ]);
-
-        if ($validator->fails()) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Bad parameter!',
-                'data' => [
-                    'error' => $validator->errors()
-                ]
-            ]);
-        }
-
-        try {
-            Employee::create([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'hp'        => $request->hp,
-                'address'   => $request->address,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Employee created successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ]);
-        }
+        $request->validate(['employee_id' => 'required|unique:employees', 'name' => 'required']);
+        
+        Employee::create($request->all());
+        return response()->json(['success' => true, 'message' => 'Karyawan berhasil ditambahkan!']);
     }
 
     public function show($id)
     {
         $employee = Employee::find($id);
-
-        if (is_null($employee)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Employee not found',
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Employee retrieved successfully',
-            'data' => $employee
-        ]);
+        return response()->json(['success' => true, 'data' => $employee]);
     }
 
     public function update(Request $request, $id)
     {
-        $employee = Employee::find($id);
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'hp'    => 'required|numeric|min:8',
-            'email' => 'required|email:dns'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bad parameter!',
-                'data' => [
-                    'error' => $validator->errors()
-                ]
-            ]);
-        }
-
-        try {
-            $employee->update([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'hp'        => $request->hp,
-                'address'   => $request->address,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Employee updated successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ]);
-        }
+        $employee = Employee::findOrFail($id);
+        $employee->update($request->all());
+        return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui!']);
     }
 
     public function destroy($id)
     {
-        $employee = Employee::find($id);
+        Employee::destroy($id);
+        return response()->json(['success' => true, 'message' => 'Karyawan dihapus!']);
+    }
 
-        if (is_null($employee)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Employee not found',
-            ]);
-        }
+    // --- FITUR EXCEL ---
+
+    public function downloadTemplate()
+    {
+        // Pastikan Anda sudah membuat Route::get('/employee/template', ...) jika ingin membedakan
+        return Excel::download(new EmployeeTemplateExport, 'template_karyawan.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
 
         try {
-            $employee->delete();
-            return response()->json([
-                'success' => true,
-                'message' => 'Employee deleted successfully',
-            ]);
+            Excel::import(new EmployeeImport, $request->file('file'));
+            return response()->json(['success' => true, 'message' => 'Data berhasil diimport!']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ]);
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
 }

@@ -2,21 +2,31 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    use HasFactory;
+    protected $fillable = [
+        'employee_id',
+        'name',
+        'jabatan',
+        'division_id',
+        'regional_id',
+        'hp',
+        'email',
+        'address',
+    ];
 
-    protected $fillable = ['name', 'email', 'hp', 'address'];
-    /**
-     * Get all of the transactions for the Employee
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function transaction()
-    {
-        return $this->hasMany(Transaction::class);
-    }
+    // Relasi ke Division (Sebagai pengganti Department)
+    public function division()
+{
+    // Mengacu pada kolom division_id di tabel employees
+    return $this->belongsTo(Division::class, 'division_id');
+}
+
+// File: app/Models/Employee.php
+public function regional() {
+    return $this->belongsTo(Regional::class, 'regional_id'); 
+}
+
 }

@@ -12,6 +12,11 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    // Konstanta untuk mempermudah pengecekan role di Controller/Blade
+    const ROLE_SUPERADMIN = 1;
+    const ROLE_ADMIN = 2;
+    const ROLE_ATASAN = 3;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -21,6 +26,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'employee_id', // Tambahkan ini agar bisa disimpan via Controller
+        'role_id',     // Tambahkan ini agar bisa disimpan via Controller
     ];
 
     /**
@@ -41,4 +48,23 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Helper untuk cek role di Blade atau Controller
+     * Contoh penggunaan: if(Auth::user()->isSuperAdmin())
+     */
+    public function isSuperAdmin()
+    {
+        return $this->role_id === self::ROLE_SUPERADMIN;
+    }
+
+    public function isAdmin()
+    {
+        return $this->role_id === self::ROLE_ADMIN;
+    }
+
+    public function isAtasan()
+    {
+        return $this->role_id === self::ROLE_ATASAN;
+    }
 }

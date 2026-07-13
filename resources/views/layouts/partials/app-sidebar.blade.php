@@ -1,8 +1,19 @@
+@php
+    $role = session('user_role');
+@endphp
+
 <div id="sidebar-menu">
-    <!-- Left Menu Start -->
     <ul class="metismenu list-unstyled" id="side-menu">
 
-        <li class="menu-title" key="t-menu">Menu</li>
+        <li class="menu-title" key="t-portal">Main Navigation</li>
+        <li>
+            <a href="{{ route('portal.index') }}" class="waves-effect" style="color: #f46a6a;">
+                <i class="bx bx-grid-alt" style="color: #f46a6a;"></i>
+                <span key="t-back-portal" class="fw-bold">Back to Portal</span>
+            </a>
+        </li>
+
+        <li class="menu-title" key="t-menu">Asset Management</li>
 
         <li>
             <a href="{{ route('dashboard') }}" class="waves-effect">
@@ -11,96 +22,75 @@
             </a>
         </li>
 
-        <li class="menu-title" key="t-master-data">Master Data</li>
+        {{-- JIKA BUKAN APPROVER, TAMPILKAN MASTER DATA --}}
+        @if($role != 2)
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-data'></i>
+                <span key="t-master-data">Master Data</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('employee') }}"><i class='bx bx-user-circle'></i> Karyawan</a></li>
+                <li><a href="{{ route('regional') }}"><i class='bx bx-map-alt'></i> Regional</a></li>
+                <li><a href="{{ route('company') }}"><i class='bx bx-buildings'></i> Perusahaan</a></li>
+                <li><a href="{{ route('division') }}"><i class='bx bx-sitemap'></i> Divisi</a></li>
+            </ul>
+        </li>
+        @endif
 
         <li>
-            <a href="{{ route('employee') }}" class="waves-effect">
-                <i class='bx bx-group'></i>
-                <span key="t-karyawan">Karyawan</span>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-package'></i>
+                <span key="t-asset-group">Aset & Supplier</span>
             </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('asset') }}"><i class='bx bx-list-check'></i> Daftar Aset</a></li>
+                
+                @if($role != 2) {{-- Approver Tidak Bisa Lihat --}}
+                <li><a href="{{ route('assignment.index') }}"><i class='bx bx-user-pin'></i> Penugasan Aset</a></li>
+                <li><a href="{{ route('category') }}"><i class='bx bx-purchase-tag-alt'></i> Kategori</a></li>
+                <li><a href="{{ route('supplier') }}"><i class='bx bx-store'></i> Supplier</a></li>
+                @endif
+            </ul>
         </li>
 
         <li>
-            <a href="{{ route('regional') }}" class="waves-effect">
-                <i class='bx bx-map-alt'></i>
-                <span key="t-regional">Regional</span>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-transfer'></i>
+                <span key="t-transaction">Transaksi</span>
             </a>
+            <ul class="sub-menu" aria-expanded="false">
+                @if($role != 2)
+                <li><a href="{{ route('transaction.create') }}">Tambah Baru</a></li>
+                @endif
+                <li><a href="{{ route('transaction.index') }}">Riwayat Transaksi</a></li>
+            </ul>
+        </li>
+
+        {{-- LAPORAN & SETTING HANYA UNTUK NON-APPROVER --}}
+        @if($role != 2)
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-printer'></i>
+                <span key="t-report-master">Laporan Cetak</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('monitor.asset') }}">Laporan Aset</a></li>
+                <li><a href="{{ route('monitor.employee') }}">Laporan Pengguna</a></li>
+            </ul>
         </li>
 
         <li>
-            <a href="{{ route('company') }}" class="waves-effect">
-                <i class='bx bxs-business'></i>
-                <span key="t-company">Perusahaan</span>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-cog'></i>
+                <span key="t-settings">Setting</span>
             </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('settings.role') }}">Setting Role</a></li>
+                <li><a href="{{ route('setting-fonnte.index') }}">API Whatsapp</a></li>
+            </ul>
         </li>
+        @endif
 
-        <li>
-            <a href="{{ route('division') }}" class="waves-effect">
-                <i class='bx bx-sitemap'></i>
-                <span key="t-division">Divisi</span>
-            </a>
-        </li>
-
-        <li class="menu-title" key="t-asset">Asset</li>
-
-        <li>
-            <a href="{{ route('category') }}" class="waves-effect">
-                <i class='bx bxs-purchase-tag-alt'></i>
-                <span key="t-category">Kategori</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('supplier') }}" class="waves-effect">
-                <i class='bx bx-paper-plane'></i>
-                <span key="t-supplier">Supplier</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('asset') }}" class="waves-effect">
-                <i class='bx bxs-briefcase'></i>
-                <span key="t-karyawan">Asset</span>
-            </a>
-        </li>
-
-        <li class="menu-title" key="t-apps">Transaksi</li>
-
-        <li>
-            <a href="{{ route('transaction.create') }}" class="waves-effect">
-                <i class='bx bx-transfer-alt'></i>
-                <span key="t-transaction">Tambah Transaksi</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('transaction') }}" class="waves-effect">
-                <i class='bx bx-list-ul'></i>
-                <span key="t-transaction">Daftar Transaksi</span>
-            </a>
-        </li>
-
-        <li class="menu-title" key="t-apps">Monitoring</li>
-
-        <li>
-            <a href="{{ route('monitor.asset') }}" class="waves-effect">
-                <i class='bx bx-list-ul'></i>
-                <span key="t-transaction">Per Asset</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('monitor.employee') }}" class="waves-effect">
-                <i class='bx bx-list-ul'></i>
-                <span key="t-transaction">Per Karyawan</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('monitor.company') }}" class="waves-effect">
-                <i class='bx bx-list-ul'></i>
-                <span key="t-transaction">Per Perusahaan</span>
-            </a>
-        </li>
     </ul>
 </div>

@@ -15,31 +15,33 @@ class DivisionController extends Controller
     {
         $regionals = Regional::all();
         $companies = Company::all();
-
         return view('components.division', compact('regionals', 'companies'));
     }
 
     public function datatable(Request $request)
     {
         if ($request->ajax()) {
-            // $store = Store::where('user_id', auth()->user()->id)->first();
-            $divisions = Division::with('regional', 'company');
-            // dd($order);
+            $divisions = Division::with(['regional', 'company'])->select('divisions.*');
             return DataTables::eloquent($divisions)
                 ->addIndexColumn()
-
                 ->addColumn('action', function ($row) {
                     return '<ul class="list-unstyled hstack gap-1 mb-0">
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="View">
-                                    <a href="job-details.html" class="btn btn-sm btn-soft-primary"><i class="mdi mdi-eye-outline mdi-18px"></i></a>
-                                </li>
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                    <button class="btn btn-sm btn-soft-info btn-edit" data-id="' . $row->id . '"><i class="mdi mdi-pencil-outline mdi-18px"></i></button>
-                                </li>
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="Delete">
-                                    <button data-id="' . $row->id . '" class="btn btn-sm btn-soft-danger btn-delete"><i class="mdi mdi-delete-outline mdi-18px"></i></button>
-                                </li>
-                            </ul>';
+                        <li data-bs-toggle="tooltip" title="View">
+                            <button type="button" class="btn btn-sm btn-soft-primary btn-view" data-id="' . $row->id . '">
+                                <i class="mdi mdi-eye-outline mdi-18px"></i>
+                            </button>
+                        </li>
+                        <li data-bs-toggle="tooltip" title="Edit">
+                            <button type="button" class="btn btn-sm btn-soft-info btn-edit" data-id="' . $row->id . '">
+                                <i class="mdi mdi-pencil-outline mdi-18px"></i>
+                            </button>
+                        </li>
+                        <li data-bs-toggle="tooltip" title="Delete">
+                            <button type="button" data-id="' . $row->id . '" class="btn btn-sm btn-soft-danger btn-delete">
+                                <i class="mdi mdi-delete-outline mdi-18px"></i>
+                            </button>
+                        </li>
+                    </ul>';
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -49,124 +51,69 @@ class DivisionController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'abbreviation' => 'required',
-            'company_id' => 'required',
-            'regional_id' => 'required',
+            'name'         => 'required|string|max:255',
+            'code'         => 'required|max:10|unique:divisions,code',
+            'abbreviation' => 'required|string|max:50',
+            'company_id'   => 'required|exists:companies,id',
+            'regional_id'  => 'required|exists:regionals,id',
         ]);
 
         if ($validator->fails()) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Bad parameter!',
-                'data' => [
-                    'error' => $validator->errors()
-                ]
-            ]);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         try {
-            Division::create([
-                'name'      => $request->name,
-                'abbreviation'      => $request->abbreviation,
-                'company_id'      => $request->company_id,
-                'regional_id'      => $request->regional_id,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Division created successfully',
-            ], 200);
+            Division::create($request->all());
+            return response()->json(['success' => true, 'message' => 'Divisi berhasil ditambahkan!']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
     public function show($id)
     {
         $division = Division::find($id);
-
-        if (is_null($division)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Division not found',
-            ]);
+        if (!$division) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Division retrieved successfully',
-            'data' => $division
-        ]);
+        return response()->json(['success' => true, 'data' => $division]);
     }
 
     public function update(Request $request, $id)
     {
         $division = Division::find($id);
+        if (!$division) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
+        }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'abbreviation' => 'required',
-            'company_id' => 'required',
-            'regional_id' => 'required',
+            'name'         => 'required|string|max:255',
+            'code'         => 'required|max:10|unique:divisions,code,' . $id,
+            'abbreviation' => 'required|string|max:50',
+            'company_id'   => 'required|exists:companies,id',
+            'regional_id'  => 'required|exists:regionals,id',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bad parameter!',
-                'data' => [
-                    'error' => $validator->errors()
-                ]
-            ]);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         try {
-            $division->update([
-                'name'      => $request->name,
-                'abbreviation'      => $request->abbreviation,
-                'company_id'      => $request->company_id,
-                'regional_id'      => $request->regional_id,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Division updated successfully',
-            ], 200);
+            $division->update($request->all());
+            return response()->json(['success' => true, 'message' => 'Divisi berhasil diperbarui!']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
     public function destroy($id)
     {
-        $division = Division::find($id);
-
-        if (is_null($division)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Division not found',
-            ]);
-        }
-
         try {
+            $division = Division::findOrFail($id);
             $division->delete();
-            return response()->json([
-                'success' => true,
-                'message' => 'Division deleted successfully',
-            ]);
+            return response()->json(['success' => true, 'message' => 'Divisi berhasil dihapus!']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ]);
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus data'], 500);
         }
     }
 }

@@ -7,923 +7,402 @@
                 <div class="card-body border-bottom">
                     <div class="d-flex align-items-center">
                         <h5 class="mb-0 card-title flex-grow-1">Daftar Asset</h5>
-                        <div class="flex-shrink-0">
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-add-asset">Tambah
-                                Asset</button>
-                            <a href="#!" class="btn btn-light"><i class="mdi mdi-refresh"></i></a>
+                        <div class="flex-shrink-0 d-flex gap-1">
+                            <button class="btn btn-primary" id="btn-add-modal">
+                                <i class="mdi mdi-plus"></i> Tambah Asset
+                            </button>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-import-asset">
+                                <i class="mdi mdi-file-excel"></i> Import Excel
+                            </button>
+                            <a href="#!" class="btn btn-light" onclick="drawTable()"><i class="mdi mdi-refresh"></i></a>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-
                     <table class="table table-striped align-middle dt-responsive nowrap w-100" id="asset-table">
                         <thead>
-                            <th scope="col" style="width: 10px">No</th>
-                            <th scope="col">Barcode</th>
-                            <th scope="col">Images</th>
-                            <th scope="col">Kategori</th>
-                            <th scope="col">Spesifikasi</th>
-                            <th scope="col">Kondisi</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Created At</th>
-                            <th scope="col" style="width:30px">Action</th>
+                            <tr>
+                                <th style="width: 10px">No</th>
+                                <th>Barcode</th>
+                                <th>Brand</th>
+                                <th>Serial Number</th>
+                                <th>Cost Center (COA)</th> {{-- FIELD BARU --}}
+                                <th>Kategori</th>
+                                <th>Lokasi</th>
+                                <th>Kondisi</th>
+                                <th>Status</th>
+                                <th>Tgl Input</th>
+                                <th>Action</th>
+                            </tr>
                         </thead>
-                        <tbody>
-
-                        </tbody>
+                        <tbody></tbody>
                     </table>
-                    <!--end row-->
                 </div>
             </div>
-            <!--end card-->
         </div>
-        <!--end col-->
-
     </div>
 
-    <div class="modal fade" id="modal-add-asset" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        role="dialog" aria-labelledby="title-add-asset" aria-hidden="true">
+    {{-- MODAL FORM ADD/EDIT --}}
+    <div class="modal fade" id="modal-asset" data-bs-backdrop="static" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="title-add-asset">Tambah Asset
-                    </h5>
+                    <h5 class="modal-title" id="modal-title">Tambah Asset</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="{{ route('asset.store') }}" id="form-add-asset"
-                        enctype="multipart/form-data">
+                    <form id="form-asset">
                         @csrf
+                        <input type="hidden" name="id" id="asset_id">
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="">Kategori</label>
-                                    <select name="category_id" class="form-control select2-add-category" id="">
-                                        <option value="">Pilih Kategori</option>
-                                    </select>
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Kategori</label>
+                                <select name="category_id" id="category_id" class="form-control select2-modal">
+                                    <option value="">Pilih Kategori</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="">Supplier</label>
-                                    <select name="supplier_id" class="form-control select2-add-supplier" id="">
-                                        <option value="">Pilih Supplier</option>
-                                    </select>
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Supplier</label>
+                                <select name="supplier_id" id="supplier_id" class="form-control select2-modal">
+                                    <option value="">Pilih Supplier</option>
+                                    @foreach($suppliers as $sup)
+                                        <option value="{{ $sup->id }}">{{ $sup->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="">Spesifikasi</label>
-                                    <textarea name="specification" class="form-control" id="" cols="30" rows="10"></textarea>
-                                </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Lokasi (Regional)</label>
+                                <select name="regional_id" id="regional_id" class="form-control select2-modal">
+                                    <option value="">Pilih Lokasi</option>
+                                    @foreach($regionals as $reg)
+                                        <option value="{{ $reg->id }}">{{ $reg->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-
-                            <div class="row my-5" id="upload-file">
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto1" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto2" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto3" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto4" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto5" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Brand / Merk</label>
+                                <input type="text" name="brand" id="brand" class="form-control" placeholder="Contoh: Dell, HP, Lenovo">
                             </div>
-
-                            <div class="row mt-3">
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="">Tahun Produksi</label>
-                                        <input type="number" class="form-control" name="production_year">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="">Harga Beli</label>
-                                        <input type="number" class="form-control" name="purchase_price">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="">Tanggal Beli</label>
-                                        <input type="date" class="form-control" name="purchase_date">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="">Kondisi</label>
-                                        <select name="condition" class="form-control select2-add" id="">
-                                            <option value="baru">Baru</option>
-                                            <option value="bekas">Bekas</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Serial Number</label>
+                                <input type="text" name="serial_number" id="serial_number" class="form-control" placeholder="Masukkan S/N">
                             </div>
-
+                            <div class="col-md-12 mb-3">
+                                <label>Spesifikasi</label>
+                                <textarea name="specification" id="specification" class="form-control" rows="2" placeholder="Contoh: Core i5, RAM 16GB, SSD 512GB"></textarea>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Cost Center (COA)</label> {{-- FIELD INPUT BARU --}}
+                                <input type="text" name="cost_center" id="cost_center" class="form-control" placeholder="Contoh: 101-2022">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Tahun Produksi</label>
+                                <input type="number" class="form-control" name="production_year" id="production_year">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Harga Beli</label>
+                                <input type="number" class="form-control" name="purchase_price" id="purchase_price">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Tanggal Beli</label>
+                                <input type="date" class="form-control" name="purchase_date" id="purchase_date">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Kondisi</label>
+                                <select name="condition" id="condition" class="form-control">
+                                    <option value="1">Baru</option>
+                                    <option value="2">Seken</option>
+                                    <option value="3">Rusak</option>
+                                </select>
+                            </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" form="form-add-asset" id="btn-add-submit"
-                        class="btn btn-primary">Save</button>
+                    <button type="submit" form="form-asset" id="btn-submit" class="btn btn-primary">Simpan</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modal-update-asset" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        role="dialog" aria-labelledby="title-update-asset" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    {{-- MODAL VIEW DETAIL --}}
+    <div class="modal fade" id="modal-view-asset" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="title-update-asset">Ubah Asset
-                    </h5>
+                    <h5 class="modal-title">Detail Asset</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form method="POST" id="form-update-asset" enctype="multipart/form-data">
-                        @method('PUT')
-                        @csrf
-
-                        <input type="hidden" name="id">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="">Kategori</label>
-                                    <select name="category_id" class="form-control select2-update-category"
-                                        id="">
-                                        <option value="">Pilih Kategori</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="">Supplier</label>
-                                    <select name="supplier_id" class="form-control select2-update-supplier"
-                                        id="">
-                                        <option value="">Pilih Supplier</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="">Spesifikasi</label>
-                                    <textarea name="specification" class="form-control" id="" cols="30" rows="10"></textarea>
-                                </div>
-                            </div>
-
-                            <div class="row my-5" id="upload-file-update">
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto1" />
-                                            <input type="hidden" name="foto1_old" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto2" />
-                                            <input type="hidden" name="foto2_old" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto3" />
-                                            <input type="hidden" name="foto3_old" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto4" />
-                                            <input type="hidden" name="foto4_old" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md text-center">
-                                    <div class="wrapper">
-                                        <div class="file-upload">
-                                            <input type="file" class="upload-image" name="foto5" />
-                                            <input type="hidden" name="foto5_old" />
-                                            <i class="fa fa-plus"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row mt-3">
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="">Tahun Produksi</label>
-                                        <input type="number" class="form-control" name="production_year">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="">Harga Beli</label>
-                                        <input type="number" class="form-control" name="purchase_price">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="">Tanggal Beli</label>
-                                        <input type="date" class="form-control" name="purchase_date">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label for="">Kondisi</label>
-                                        <select name="condition" class="form-control select2-add" id="">
-                                            <option value="baru">Baru</option>
-                                            <option value="bekas">Bekas</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" form="form-update-asset" class="btn btn-primary">Update</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modal-view-asset" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        role="dialog" aria-labelledby="title-view-asset" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="title-view-asset">View Asset
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-striped align-middle">
-                        <tr>
-                            <td>Barcode</td>
-                            <td>:</td>
-                            <td id="barcode"></td>
-                        </tr>
-
-                        <tr>
-                            <td>Kategori</td>
-                            <td>:</td>
-                            <td id="category"></td>
-                        </tr>
-
-                        <tr>
-                            <td>Supplier</td>
-                            <td>:</td>
-                            <td id="supplier"></td>
-                        </tr>
-
-                        <tr>
-                            <td>Spesifikasi</td>
-                            <td>:</td>
-                            <td id="specification"></td>
-                        </tr>
-
-                        <tr>
-                            <td>Tanggal Pembelian</td>
-                            <td>:</td>
-                            <td id="purchase_date"></td>
-                        </tr>
-
-                        <tr>
-                            <td>Harga Beli</td>
-                            <td>:</td>
-                            <td id="purchase_price"></td>
-                        </tr>
-
-                        <tr>
-                            <td>Tahun Produksi</td>
-                            <td>:</td>
-                            <td id="production_year"></td>
-                        </tr>
-
-                        <tr>
-                            <td>Kondisi</td>
-                            <td>:</td>
-                            <td id="condition"></td>
-                        </tr>
-
-                        <tr>
-                            <td>Status</td>
-                            <td>:</td>
-                            <td id="status_asset"></td>
-                        </tr>
+                <div class="modal-body p-0">
+                    <table class="table table-striped mb-0">
+                        <tr><td width="40%" class="ps-3">Barcode</td><td>:</td><td id="view_barcode"></td></tr>
+                        <tr><td class="ps-3">UID</td><td>:</td><td id="view_uid"></td></tr>
+                        <tr><td class="ps-3">Brand</td><td>:</td><td id="view_brand"></td></tr>
+                        <tr><td class="ps-3">Serial Number</td><td>:</td><td id="view_sn"></td></tr>
+                        <tr><td class="ps-3">Cost Center (COA)</td><td>:</td><td id="view_cost_center"></td></tr> {{-- VIEW BARU --}}
+                        <tr><td class="ps-3">Kategori</td><td>:</td><td id="view_category"></td></tr>
+                        <tr><td class="ps-3">Lokasi</td><td>:</td><td id="view_regional"></td></tr>
+                        <tr><td class="ps-3">Supplier</td><td>:</td><td id="view_supplier"></td></tr>
+                        <tr><td class="ps-3">Spesifikasi</td><td>:</td><td id="view_specification"></td></tr>
+                        <tr><td class="ps-3">Tgl Beli</td><td>:</td><td id="view_purchase_date"></td></tr>
+                        <tr><td class="ps-3">Harga</td><td>:</td><td id="view_purchase_price"></td></tr>
+                        <tr><td class="ps-3">Kondisi</td><td>:</td><td id="view_condition"></td></tr>
+                        <tr><td class="ps-3">Status</td><td>:</td><td id="view_status"></td></tr>
                     </table>
-                    <div class="row mt-3" id="images-view"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modal-image-asset" tabindex="-1" role="dialog" aria-labelledby="title-image-asset"
-        aria-hidden="true">
+    {{-- MODAL IMPORT EXCEL --}}
+    <div class="modal fade" id="modal-import-asset" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
-                <div class="modal-body text-center">
-
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Data Asset</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <form id="form-import-asset" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-info border-0">
+                            <p class="mb-2">Gunakan file Excel (.xlsx) dengan format yang sesuai.</p>
+                            <a href="{{ route('asset.template') }}" class="btn btn-sm btn-info text-white">
+                                <i class="mdi mdi-download"></i> Download Template
+                            </a>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Pilih File</label>
+                            <input type="file" name="file" class="form-control" accept=".xlsx" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" id="btn-import-submit" class="btn btn-success">Mulai Import</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-
-    <form action="" id="form-delete-asset">
-        @csrf
-        @method('DELETE')
-    </form>
 @endsection
 
 @section('css')
-    <!-- DataTables -->
-    <link href="{{ asset('libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet"
-        type="text/css" />
-    <link href="{{ asset('libs/datatables.net-buttons-bs4/css/buttons.bootstrap4.min.css') }}" rel="stylesheet"
-        type="text/css" />
-
-    <!-- Responsive datatable examples -->
-    <link href="{{ asset('libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css') }}" rel="stylesheet"
-        type="text/css" />
-
-    <link href="{{ asset('libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
-    <style>
-        .wrapper {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .wrapper .file-upload {
-            height: 50px;
-            width: 50px;
-            border-radius: 25px;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 4px solid #fff;
-            overflow: hidden;
-            background-image: linear-gradient(to bottom, #2590eb 50%, #fff 50%);
-            background-size: 100% 200%;
-            transition: all 1s;
-            color: #fff;
-            font-size: 25px;
-        }
-
-        .wrapper .file-upload input[type='file'] {
-            height: 50px;
-            width: 50px;
-            position: absolute;
-            top: 0;
-            left: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .wrapper .file-upload:hover {
-            background-position: 0 -100%;
-            color: #2590eb;
-        }
-    </style>
-@endsection
-
-@section('title')
-    Asset
+    <link href="{{ asset('libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet" />
+    <link href="{{ asset('libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css') }}" rel="stylesheet" />
+    <link href="{{ asset('libs/select2/css/select2.min.css') }}" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 @endsection
 
 @section('plugin')
-    <!-- Required datatable js -->
     <script src="{{ asset('libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-
-    <!-- Responsive examples -->
     <script src="{{ asset('libs/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('libs/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js') }}"></script>
     <script src="{{ asset('libs/select2/js/select2.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(function() {
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
+        var table;
+        $(document).ready(function() {
+            $('.select2-modal').select2({ 
+                dropdownParent: $('#modal-asset'), 
+                width: '100%' 
             });
 
-            $('#upload-file').on('change', '.upload-image', function() {
-                var files = [],
-                    fileArr, filename;
-
-                filename = $(this).val().split('\\').pop();
-                $(this).parent().parent().parent().append('<small>' + filename +
-                    '</small>');
-            });
-
-            $('#upload-file-update').on('change', '.upload-image', function() {
-                $(this).parent().parent().parent().find('small').remove();
-                var files = [],
-                    fileArr, filename;
-
-                filename = $(this).val().split('\\').pop();
-                $(this).parent().parent().parent().append('<small>' + filename +
-                    '</small>');
-            });
-
-            var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
-            var table = $("#asset-table").DataTable({
-                lengthChange: !1,
+            table = $("#asset-table").DataTable({
                 processing: true,
                 serverSide: true,
+                responsive: true,
                 ajax: {
                     url: "{{ route('asset.datatable') }}",
                     type: "POST",
                     data: function(d) {
-                        d._token = CSRF_TOKEN;
+                        d._token = "{{ csrf_token() }}";
                     }
                 },
-                columnDefs: [{
-                    className: "align-middle",
-                    targets: "_all"
-                }, ],
-                columns: [{
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center'
-                    },
-                    {
-                        data: '_barcode',
-                        name: 'uid',
-                        className: 'text-center'
-                    },
-                    {
-                        data: '_images',
-                        name: 'uid',
-                        className: 'text-center'
-                    },
-                    {
-                        data: 'category.name',
-                        name: 'category_id'
-                    },
-                    {
-                        data: 'specification',
-                        name: 'specification'
-                    },
-                    {
-                        data: 'condition',
-                        name: 'condition'
-                    },
-                    {
-                        data: '_status',
-                        name: 'status'
-                    },
-                    {
-                        data: 'created_at',
-                        name: 'created_at',
-                        render: function(value) {
-                            if (value === null) return "";
-                            return moment(value).lang('id').format(
-                                'Do MMMM YYYY H:mm:ss');
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: '_barcode', name: 'uid' },
+                    { data: 'brand', name: 'brand', defaultContent: '-' },
+                    { data: 'serial_number', name: 'serial_number', defaultContent: '-' },
+                    { data: 'cost_center', name: 'cost_center', defaultContent: '-' }, // SINKRONISASI FIELD COA
+                    { data: 'category_name', name: 'category.name', defaultContent: '-' },
+                    { data: 'regional_name', name: 'regional.name', defaultContent: '-' },
+                    { 
+                        data: 'condition', 
+                        name: 'condition',
+                        render: function(v) { 
+                            if(v == 1) return 'BARU';
+                            if(v == 2) return 'SEKEN';
+                            if(v == 3) return 'RUSAK';
+                            return '-';
                         }
                     },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
+                    { data: '_status', name: 'status', defaultContent: '-' },
+                    { 
+                        data: 'created_at', 
+                        name: 'created_at',
+                        render: function(v) { return v ? moment(v).format('DD MMM YYYY') : '-'; } 
                     },
+                    { data: 'action', name: 'action', orderable: false, searchable: false },
                 ]
             });
 
-            $('#form-add-asset').submit(function() {
-                $('#form-add-asset small.text-danger').remove();
-                var data = new FormData($(this)[0]);
-
-                $.ajax({
-                    type: "POST",
-                    url: $(this).attr('action'),
-                    data: data,
-                    contentType: false,
-                    processData: false,
-                    dataType: "JSON",
-                    beforeSend: function() {
-                        $('#btn-add-submit').prop('disabled', true);
-                    },
-                    success: function(response) {
-                        $('#btn-add-submit').prop('disabled', false);
-
-                        if (response.success == false) {
-                            if (response.hasOwnProperty('data')) {
-                                $.each(response.data.error, function(i, v) {
-                                    // console.log(v);
-                                    $('#form-add-asset [name="' + i + '"]')
-                                        .after(
-                                            '<small class="text-danger">' + v +
-                                            '</small>');
-                                });
-                            } else {
-                                notification('error', response.message);
-                            }
-
-                            return false;
-                        }
-
-                        notification('success', response.message);
-                        drawTable('add-asset');
-
-                        // console.log(response);
-                    }
-                });
-
-                return false;
+            // TOMBOL TAMBAH
+            $('#btn-add-modal').click(function() {
+                $('#modal-title').text('Tambah Asset');
+                $('#form-asset')[0].reset();
+                $('#asset_id').val('');
+                $('.select2-modal').val(null).trigger('change');
+                $('#modal-asset').modal('show');
             });
 
-            $('#form-update-asset').submit(function() {
-                $('#form-add-asset small.text-danger').remove();
-                var data = new FormData($(this)[0]);
-
-                $.ajax({
-                    type: "POST",
-                    url: $(this).attr('action'),
-                    data: data,
-                    contentType: false,
-                    processData: false,
-                    dataType: "JSON",
-                    beforeSend: function() {
-                        $('#btn-update-asset').prop('disabled', true);
-                    },
-                    success: function(response) {
-                        $('#btn-update-asset').prop('disabled', false);
-                        if (response.success == false) {
-                            if (response.hasOwnProperty('data')) {
-                                $.each(response.data.error, function(i, v) {
-                                    // console.log(v);
-                                    $('#form-update-asset [name="' + i + '"]')
-                                        .after(
-                                            '<small class="text-danger">' + v +
-                                            '</small>');
-                                });
-                            } else {
-                                notification('error', response.message);
-                            }
-
-                            return false;
-                        }
-
-                        notification('success', response.message);
-                        drawTable('update-asset');
-                        // console.log(response);
-                    }
-                });
-
-                return false;
-            });
-
-            $('#form-delete-asset').submit(function() {
-                var data = $(this).serialize();
-
-                $.ajax({
-                    type: "DELETE",
-                    url: $(this).attr('action'),
-                    data: data,
-                    dataType: "JSON",
-                    success: function(response) {
-                        if (response.success == false) {
-                            if (response.hasOwnProperty('data')) {
-                                $.each(response.data.error, function(i, v) {
-                                    // console.log(v);
-                                    $('#form-delete-asset [name="' + i + '"]')
-                                        .after(
-                                            '<small class="text-danger">' + v +
-                                            '</small>');
-                                });
-                            } else {
-                                notification('error', response.message);
-                            }
-
-                            return false;
-                        }
-
-                        notification('success', response.message);
-                        drawTable('delete-asset');
-                        // console.log(response);
-                    }
-                });
-
-                return false;
-            });
-
-
-
+            // TOMBOL VIEW
             $('#asset-table').on('click', '.btn-view', function() {
-                var id = $(this).data('id');
-                $('#modal-view-asset').modal('show');
+                let id = $(this).data('id');
+                $.get("{{ url('asset/edit') }}/" + id, function(res) {
+                    if (res.success) {
+                        let data = res; // Controller Anda mengirim data langsung di root JSON
+                        $('#view_barcode').html(data.uid ? data.uid : '-'); 
+                        $('#view_uid').text(data.uid || '-');
+                        $('#view_brand').text(data.brand || '-');
+                        $('#view_sn').text(data.serial_number || '-');
+                        $('#view_cost_center').text(data.cost_center || '-'); // TAMPILKAN COA
+                        $('#view_category').text(data.category_name || '-');
+                        $('#view_regional').text(data.regional_name || '-');
+                        $('#view_supplier').text(data.supplier_name || '-');
+                        $('#view_specification').text(data.specification || '-');
+                        $('#view_purchase_date').text(data.purchase_date || '-');
+                        
+                        let price = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data.purchase_price || 0);
+                        $('#view_purchase_price').text(price);
 
-                var action = "{{ url('asset/edit') }}/" + id;
+                        let cond = 'BARU';
+                        if(data.condition == 2) cond = 'SEKEN';
+                        if(data.condition == 3) cond = 'RUSAK';
+                        $('#view_condition').text(cond);
+                        
+                        let statusBadge = '<span class="badge bg-success">Standby</span>';
+                        if(data.status == 1) statusBadge = '<span class="badge bg-primary">Assigned</span>';
+                        if(data.status == 2) statusBadge = '<span class="badge bg-danger">Broken</span>';
+                        $('#view_status').html(statusBadge);
 
-                $.ajax({
-                    type: "get",
-                    url: action,
-                    dataType: "JSON",
-                    success: function(response) {
-                        if (response.success) {
-                            $('#modal-view-asset #barcode').html(response.data.barcode);
-                            $('#modal-view-asset #category').html(response.data.category.name);
-                            $('#modal-view-asset #supplier').html(response.data.supplier.name);
-                            $('#modal-view-asset #specification').html(response.data
-                                .specification);
-                            $('#modal-view-asset #production_year').html(response.data
-                                .production_year);
-                            $('#modal-view-asset #purchase_date').html(response.data
-                                .purchase_date);
-                            $('#modal-view-asset #purchase_price').html(response.data
-                                .purchase_price);
-                            $('#modal-view-asset #condition').html(response.data
-                                .condition);
-
-                            if (status == 0) {
-                                $('#modal-view-asset #status_asset').html(
-                                    '<span class="badge bg-success">Standby</span>');
-                            } else {
-                                $('#modal-view-asset #status_asset').html(
-                                    '<span class="badge bg-danger">Not Standby</span>');
-                            }
-
-                            var images = '';
-                            // $.each(response.data, function(i, v) {
-                            //     $('#form-update-asset [name="' + i + '"]').val(v);
-                            // });
-                            var public_path = "{{ asset('images/assets') }}";
-
-                            $.each(response.data.image, function(i, v) {
-                                images += '<div class="col-md">' +
-                                    '           <img src="' + public_path + '/' + v
-                                    .name + '" class="img-fluid">' +
-                                    '       </div>';
-                            });
-
-                            $('#modal-view-asset #images-view').html(images);
-                        } else {
-                            notification('error', response.message);
-                        }
-                        console.log(response);
+                        $('#modal-view-asset').modal('show');
                     }
                 });
+            });
 
-                return false;
-            })
-
+            // TOMBOL EDIT
             $('#asset-table').on('click', '.btn-edit', function() {
-                var id = $(this).data('id');
-                $('#modal-update-asset').modal('show');
-
-                var action = "{{ url('asset/edit') }}/" + id;
-
-                $('#form-update-asset').attr('action', action);
-
-                $.ajax({
-                    type: "get",
-                    url: action,
-                    dataType: "JSON",
-                    success: function(response) {
-                        if (response.success) {
-                            // $('#form-update-asset [name="category_id"]').val(response.data
-                            //     .category.name).trigger('change.select2');
-                            // $('#form-update-asset [name="supplier_id"]').val(response.data
-                            //     .category.name).trigger('change.select2');
-
-                            // $('#form-update-asset [name="specification"]').val(response.data
-                            //     .specification).trigger('change');
-                            // $('#form-update-asset [name="production_year"]').val(response.data
-                            //     .production_year).trigger('change');
-                            // $('#form-update-asset [name="purchase_price"]').val(response.data
-                            //     .purchase_price).trigger('change');
-                            // $('#form-update-asset [name="purchase_date"]').val(response.data
-                            //     .purchase_date).trigger('change');
-                            // $('#form-update-asset [name="condition"]').val(response.data
-                            //     .condition).trigger('change');
-
-                            $.each(response.data, function(i, v) {
-                                $('#form-update-asset [name="' + i + '"]').val(v);
-                            });
-
-                            $.each(response.data.image, function(i, v) {
-                                $('#form-update-asset [name="foto' + (i + 1) + '_old"]')
-                                    .val(v.name).trigger('change');
-                                $('#form-update-asset [name="foto' + (i + 1) + '_old"]')
-                                    .parent().parent().parent().append('<small>' +
-                                        v.name +
-                                        '</small>');
-                            });
-
-                        } else {
-                            notification('error', response.message);
-                        }
-                        console.log(response);
+                let id = $(this).data('id');
+                $.get("{{ url('asset/edit') }}/" + id, function(res) {
+                    if (res.success) {
+                        let data = res;
+                        $('#modal-title').text('Edit Asset');
+                        $('#asset_id').val(data.id);
+                        $('#category_id').val(data.category_id).trigger('change');
+                        $('#supplier_id').val(data.supplier_id).trigger('change');
+                        $('#regional_id').val(data.regional_id).trigger('change');
+                        $('#brand').val(data.brand);
+                        $('#serial_number').val(data.serial_number);
+                        $('#cost_center').val(data.cost_center); // ISI FIELD COA SAAT EDIT
+                        $('#specification').val(data.specification);
+                        $('#production_year').val(data.production_year);
+                        $('#purchase_price').val(data.purchase_price);
+                        $('#purchase_date').val(data.purchase_date);
+                        $('#condition').val(data.condition);
+                        $('#modal-asset').modal('show');
                     }
                 });
+            });
 
-                return false;
-            })
-
+            // TOMBOL DELETE
             $('#asset-table').on('click', '.btn-delete', function() {
-                var id = $(this).data('id');
-                $('#form-delete-asset').attr('action', "{{ url('asset/delete') }}/" + id);
-
+                let id = $(this).data('id');
                 Swal.fire({
-                    title: "Are you sure?",
-                    text: "Apakah anda yakin ingin menghapus asset ini ?",
-                    icon: "warning",
-                    showCancelButton: !0,
-                    confirmButtonColor: "#34c38f",
-                    cancelButtonColor: "#f46a6a",
-                    confirmButtonText: "Yes, delete it!",
-                }).then(function(t) {
-                    if (t.isConfirmed != false) {
-                        $('#form-delete-asset').submit();
+                    title: 'Hapus Asset?',
+                    text: "Data ini tidak bisa dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "{{ url('asset/delete') }}/" + id,
+                            type: "DELETE",
+                            data: { _token: "{{ csrf_token() }}" },
+                            success: function(res) {
+                                if (res.success) {
+                                    table.ajax.reload();
+                                    Swal.fire('Terhapus!', res.message, 'success');
+                                }
+                            }
+                        });
                     }
                 });
             });
 
-            $('#asset-table').on('click', '.image-asset', function() {
-                var src = $(this).find('img').attr('src');
-                $('#modal-image-asset .modal-body img').remove();
-
-                $('#modal-image-asset .modal-body').append('<img class="img-fluid" src="' + src +
-                    '" >');
-                $('#modal-image-asset').modal('show');
-
-            })
-
-            function drawTable(param) {
-                table.draw();
-
-                if (param != null) {
-                    $('#form-' + param)[0].reset();
-                    $('#form-' + param).trigger('reset');
-                    $('#modal-' + param).modal('hide');
-                }
-            }
-
-            $('.select2-add-category').select2({
-                width: '100%',
-                tags: true,
-                dropdownParent: "#modal-add-asset",
-                ajax: {
-                    url: "{{ route('select.category') }}",
-                    type: "get",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term // search term
-                        };
+            // FORM SUBMIT (ADD/EDIT)
+            $('#form-asset').submit(function(e) {
+                e.preventDefault();
+                $('#btn-submit').prop('disabled', true).text('Menyimpan...');
+                $.ajax({
+                    type: "POST",
+                    url: "{{ route('asset.store') }}",
+                    data: $(this).serialize(),
+                    success: function(res) {
+                        $('#btn-submit').prop('disabled', false).text('Simpan');
+                        if (res.success) {
+                            $('#modal-asset').modal('hide');
+                            table.ajax.reload();
+                            Swal.fire('Berhasil!', res.message, 'success');
+                        }
                     },
-                    processResults: function(response) {
-                        return {
-                            results: response
-                        };
-                    },
-                    cache: true
-                }
+                    error: function(err) {
+                        $('#btn-submit').prop('disabled', false).text('Simpan');
+                        let msg = err.responseJSON ? err.responseJSON.message : 'Gagal menyimpan data.';
+                        Swal.fire('Error!', msg, 'error');
+                    }
+                });
             });
 
-            $('.select2-add-supplier').select2({
-                width: '100%',
-                tags: true,
-                dropdownParent: "#modal-add-asset",
-                ajax: {
-                    url: "{{ route('select.supplier') }}",
-                    type: "get",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term // search term
-                        };
+            // FORM IMPORT SUBMIT
+            $('#form-import-asset').submit(function(e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+                $('#btn-import-submit').prop('disabled', true).text('Sedang Import...');
+                
+                $.ajax({
+                    type: "POST",
+                    url: "{{ route('asset.import') }}",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        $('#btn-import-submit').prop('disabled', false).text('Mulai Import');
+                        if (res.success) {
+                            $('#modal-import-asset').modal('hide');
+                            $('#form-import-asset')[0].reset();
+                            table.ajax.reload();
+                            Swal.fire('Berhasil!', res.message, 'success');
+                        } else {
+                            Swal.fire('Gagal!', res.message, 'error');
+                        }
                     },
-                    processResults: function(response) {
-                        return {
-                            results: response
-                        };
-                    },
-                    cache: true
-                }
+                    error: function(err) {
+                        $('#btn-import-submit').prop('disabled', false).text('Mulai Import');
+                        Swal.fire('Error!', 'Gagal memproses file.', 'error');
+                    }
+                });
             });
-
-            $('.select2-update-category').select2({
-                width: '100%',
-                tags: true,
-                dropdownParent: "#modal-update-asset",
-                ajax: {
-                    url: "{{ route('select.category') }}",
-                    type: "get",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term // search term
-                        };
-                    },
-                    processResults: function(response) {
-                        return {
-                            results: response
-                        };
-                    },
-                    cache: true
-                }
-            });
-
-            $('.select2-update-supplier').select2({
-                width: '100%',
-                tags: true,
-                dropdownParent: "#modal-update-asset",
-                ajax: {
-                    url: "{{ route('select.supplier') }}",
-                    type: "get",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term // search term
-                        };
-                    },
-                    processResults: function(response) {
-                        return {
-                            results: response
-                        };
-                    },
-                    cache: true
-                }
-            });
-
         });
+
+        function drawTable() { table.ajax.reload(); }
     </script>
 @endsection

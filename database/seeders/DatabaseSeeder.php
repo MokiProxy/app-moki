@@ -13,14 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        // 1. Master Data Tanpa Relasi (Independent)
         $this->call(UserSeeder::class);
         $this->call(CompanySeeder::class);
-        $this->call(EmployeeSeeder::class);
         $this->call(CategorySeeder::class);
         $this->call(SupplierSeeder::class);
         $this->call(RegionalSeeder::class);
-        $this->call(DivisionSeeder::class);
-        $this->call(AssetSeeder::class);
-        // \App\Models\User::factory(10)->create();
+        $this->call(DivisionSeeder::class); // Pindahkan ke atas sebelum Employee
+
+        // 2. Data Dengan Relasi (Dependent)
+        $this->call(EmployeeSeeder::class); // Butuh DivisionID
+        $this->call(AssetSeeder::class);    // Biasanya butuh Category/Supplier
     }
 }

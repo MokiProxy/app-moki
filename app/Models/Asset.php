@@ -9,44 +9,43 @@ class Asset extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['category_id', 'supplier_id', 'uid', 'specification', 'production_year', 'purchase_date', 'purchase_price', 'condition', 'status'];
+    protected $fillable = [
+    'category_id', 'supplier_id', 'regional_id', 'brand', 
+    'serial_number', 'uid', 'specification', 'production_year', 
+    'purchase_date', 'purchase_price', 'condition', 'status',
+    'cost_center', 'coa_code', // Pastikan kedua ini ADA
+    'location_code', 'sort_number'
+];
+
     /**
-     * Get the category that owns the Asset
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * Relasi ke model Category (Untuk ambil Category Code)
      */
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
     /**
-     * Get the supplier that owns the Asset
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * Relasi ke model Supplier
      */
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     /**
-     * Get all of the transaction_detail for the Asset
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * Relasi ke model Regional (Untuk ambil Nama Regional)
+     */
+    public function regional()
+    {
+        return $this->belongsTo(Regional::class, 'regional_id');
+    }
+
+    /**
+     * Relasi ke TransactionDetail
      */
     public function transaction_detail()
     {
-        return $this->hasMany(TransactionDetail::class);
-    }
-
-    /**
-     * Get all of the image for the Asset
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function image()
-    {
-        return $this->hasMany(AssetImages::class);
+        return $this->hasMany(TransactionDetail::class, 'asset_id');
     }
 }

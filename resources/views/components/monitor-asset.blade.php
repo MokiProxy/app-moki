@@ -3,86 +3,89 @@
 @section('content')
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body border-bottom">
+            <div class="card shadow-sm">
+                <div class="card-body border-bottom bg-light">
                     <div class="d-flex align-items-center">
                         <h5 class="mb-0 card-title flex-grow-1">Monitoring Asset</h5>
                     </div>
                 </div>
                 <div class="card-body">
-
-                    <table class="table table-striped align-middle dt-responsive nowrap w-100" id="monitoring-asset-table">
-                        <thead>
-                            <th scope="col" style="width: 10px">No</th>
-                            <th scope="col">UID</th>
-                            <th scope="col">Kategori</th>
-                            <th scope="col">Spesifikasi</th>
-                            <th scope="col">Jumlah Transaksi</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Created At</th>
-                            <th scope="col" style="width:30px">Action</th>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                    <!--end row-->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered align-middle w-100" id="monitoring-asset-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10px">No</th>
+                                    <th>Nomor Asset / UID</th>
+                                    <th>Kategori</th>
+                                    <th>Brand & S/N</th>
+                                    <th>Spesifikasi</th>
+                                    <th class="text-center">Kondisi</th>
+                                    <th>ID Employee</th>
+                                    <th>Nama Pemakai</th>
+                                    <th class="text-center">Status</th>
+                                    <th style="width:30px" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <!--end card-->
         </div>
-        <!--end col-->
-
     </div>
 
-    <div class="modal fade" id="modal-hitory-transaction" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        role="dialog" aria-labelledby="title-hitory-transaction" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal fade" id="modal-hitory-transaction" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="title-hitory-transaction">History Transaksi Per Asset
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white"><i class="mdi mdi-history me-1"></i> History Transaksi Per Asset</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <table class="table">
-                        <tr>
-                            <td style="width: 20%">UID</td>
-                            <td style="width: 3%">:</td>
-                            <td id="uid-detail"></td>
-                        </tr>
+                    <div class="row mb-4">
+                        <div class="col-md-6 border-end">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <th width="120">ID Asset (UID)</th>
+                                    <td>: <code id="nomor_asset_bast-detail" class="fs-6"></code></td>
+                                </tr>
+                                <tr>
+                                    <th>Kategori</th>
+                                    <td>: <span id="category-detail"></span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <th width="120">Status Saat Ini</th>
+                                    <td>: <span id="status-detail"></span></td>
+                                </tr>
+                                <tr>
+                                    <th>Spesifikasi</th>
+                                    <td>: <span id="specification-detail" class="text-muted small"></span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
 
-                        <tr>
-                            <td style="width: 20%">Kategori</td>
-                            <td style="width: 3%">:</td>
-                            <td id="category-detail"></td>
-                        </tr>
-
-                        <tr>
-                            <td style="width: 20%">Spesifikasi</td>
-                            <td style="width: 3%">:</td>
-                            <td id="specification-detail"></td>
-                        </tr>
-
-                        <tr>
-                            <td style="width: 20%">Status</td>
-                            <td style="width: 3%">:</td>
-                            <td id="status-detail"></td>
-                        </tr>
-                    </table>
-
-                    <h5 class="mt-5">Detail Transaksi</h5>
-                    <table class="table">
-                        <thead>
-                            <th>No</th>
-                            <th>Nama Karyawan</th>
-                            <th>Divisi</th>
-                            <th>Catatan</th>
-                            <th>Status</th>
-                            <th>Tanggal</th>
-                        </thead>
-                        <tbody id="table-body-transaksi"></tbody>
-                    </table>
+                    <h6 class="fw-bold border-bottom pb-2 mb-3"><i class="mdi mdi-format-list-bulleted me-1"></i> Log Pergerakan Asset</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered table-sm align-middle">
+                            <thead class="table-light text-center small">
+                                <tr>
+                                    <th>No</th>
+                                    <th>ID Employee</th>
+                                    <th>Nama Karyawan</th>
+                                    <th>Departemen / Divisi</th>
+                                    <th>Tipe</th>
+                                    <th>Tanggal</th>
+                                    <th>Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-transaksi" class="small"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -90,181 +93,118 @@
 @endsection
 
 @section('css')
-    <!-- DataTables -->
-    <link href="{{ asset('libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet"
-        type="text/css" />
-    <link href="{{ asset('libs/datatables.net-buttons-bs4/css/buttons.bootstrap4.min.css') }}" rel="stylesheet"
-        type="text/css" />
-
-    <!-- Responsive datatable examples -->
-    <link href="{{ asset('libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css') }}" rel="stylesheet"
-        type="text/css" />
-
-    <link href="{{ asset('libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
-@endsection
-
-@section('title')
-    Asset
+    <link href="{{ asset('libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        code { color: #d63384; font-weight: bold; }
+        .badge { font-weight: 500; text-transform: uppercase; padding: 5px 10px; }
+        #monitoring-asset-table thead th { vertical-align: middle; text-align: center; font-size: 13px; }
+        .text-primary.fw-bold { cursor: default; }
+    </style>
 @endsection
 
 @section('plugin')
-    <!-- Required datatable js -->
     <script src="{{ asset('libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-
-    <!-- Responsive examples -->
-    <script src="{{ asset('libs/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('libs/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js') }}"></script>
-    <script src="{{ asset('libs/select2/js/select2.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 
     <script>
         $(function() {
             var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
+            
             var table = $("#monitoring-asset-table").DataTable({
-                lengthChange: !1,
                 processing: true,
                 serverSide: true,
                 ajax: {
                     url: "{{ route('monitor.asset.datatable') }}",
                     type: "POST",
-                    data: function(d) {
-                        d._token = CSRF_TOKEN;
-                    }
+                    data: function(d) { d._token = CSRF_TOKEN; }
                 },
-                columnDefs: [{
-                    className: "align-middle",
-                    targets: "_all"
-                }, ],
-                columns: [{
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center'
-                    },
-                    {
-                        data: 'uid',
-                        name: 'uid'
-                    },
-                    {
-                        data: 'category.name',
-                        name: 'category'
-                    },
-                    {
-                        data: 'specification',
-                        name: 'specification'
-                    },
-                    {
-                        data: '_jumlah_transaksi',
-                        name: '_jumlah_transaksi'
-                    },
-                    {
-                        data: '_status',
-                        name: 'status'
-                    },
-                    {
-                        data: 'created_at',
-                        name: 'created_at',
-                        render: function(value) {
-                            if (value === null) return "";
-                            return moment(value).lang('id').format(
-                                'Do MMMM YYYY H:mm:ss');
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+                    { 
+                        data: 'nomor_asset_bast', 
+                        name: 'nomor_asset_bast',
+                        render: function(data) {
+                            return `<span class="text-primary fw-bold">${data || '-'}</span>`;
                         }
                     },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
+                    { data: 'category.name', name: 'category.name', defaultContent: '-' },
+                    { 
+                        data: 'brand', 
+                        name: 'brand',
+                        render: function(data, type, row) {
+                            return `<strong>${data || '-'}</strong><br><small class="text-muted">SN: ${row.serial_number || '-'}</small>`;
+                        }
                     },
+                    { data: 'specification', name: 'specification', defaultContent: '-' },
+                    { 
+                        data: 'condition', 
+                        className: 'text-center',
+                        render: function(data) {
+                            let map = { 1: ['BARU', 'success'], 2: ['SEKEN', 'primary'], 3: ['RUSAK', 'danger'] };
+                            let res = map[data] || ['-', 'secondary'];
+                            return `<span class="badge bg-${res[1]}">${res[0]}</span>`;
+                        }
+                    },
+                    { data: 'last_employee_id', name: 'last_employee_id', className: 'text-center', defaultContent: '-' },
+                    { data: 'last_employee_name', name: 'last_employee_name', defaultContent: '-' },
+                    { 
+                        data: '_status', 
+                        name: 'status',
+                        className: 'text-center'
+                    },
+                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                 ]
             });
 
-
-            $('#monitoring-asset-table').on('click', '.btn-history', function() {
-                var id = $(this).data('id');
-                var uid = $(this).data('uid');
-                var category = $(this).data('category');
-                var specification = $(this).data('specification');
-                var status = $(this).data('status');
-
+            // Handle Klik Tombol History
+            $('#monitoring-asset-table').on('click', '.btn-history', function(e) {
+                e.preventDefault();
+                var btn = $(this);
+                var id = btn.data('id');
+                
+                // 1. Tampilkan Modal & Reset Body Tabel ke Loading
                 $('#modal-hitory-transaction').modal('show');
+                $('#table-body-transaksi').html('<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm text-primary"></div> Memuat riwayat...</td></tr>');
 
-                var action = "{{ url('monitoring/asset/detail') }}/" + id;
+                // 2. Isi Header Info Modal (Ambil dari data-attribute tombol action)
+                $('#nomor_asset_bast-detail').text(btn.data('nomor_asset_bast') || '-');
+                $('#category-detail').text(btn.data('category') || '-');
+                $('#specification-detail').text(btn.data('specification') || '-');
+                
+                let currentStatus = btn.data('status');
+                let statusBadge = currentStatus == 0 ? 
+                    '<span class="badge bg-success">Standby</span>' : 
+                    '<span class="badge bg-danger">Not Standby</span>';
+                $('#status-detail').html(statusBadge);
 
-                $.ajax({
-                    type: "get",
-                    url: action,
-                    dataType: "JSON",
-                    success: function(response) {
-                        $('#uid-detail').html(uid);
-                        $('#category-detail').html(category);
-                        $('#specification-detail').html(specification);
-
-                        if (status == 0) {
-                            $('#status-detail').html(
-                                '<span class="badge bg-success">Standby</span>');
-                        } else {
-                            $('#status-detail').html(
-                                '<span class="badge bg-danger">Not Standby</span>');
-                        }
-
-                        var html = "";
-
-                        if (response.data.length > 0) {
-                            $.each(response.data, function(i, v) {
-                                var status = '';
-                                if (v.transaction.status == 0) {
-                                    status =
-                                        '<span class="badge bg-success">IN</span>';
-                                } else {
-                                    status =
-                                        '<span class="badge bg-danger">OUT</span>';
-                                }
-
-                                if (v.transaction.note == null) {
-                                    v.transaction.note = "";
-                                }
-
-                                var created_at = moment(v.transaction.created_at).lang(
-                                        'id')
-                                    .format(
-                                        'Do MMMM YYYY H:mm:ss')
-
-                                html += '<tr>' +
-                                    '       <td>' + (i + 1) + '</td>' +
-                                    '       <td>' + v.transaction.employee.name +
-                                    '</td>' +
-                                    '       <td>' + v.transaction.division.name +
-                                    '</td>' +
-                                    '       <td>' + v.transaction.note + '</td>' +
-                                    '       <td>' + status + '</td>' +
-                                    '       <td>' + created_at + '</td>' +
-                                    '    </tr>';
-                            });
-                        } else {
-                            html =
-                                '<tr><td colspan="6" class="text-center">Tidak ada data</td></tr>';
-                        }
-
-
-                        $('#table-body-transaksi').html(html);
-                        // console.log(response)
+                // 3. Tarik Data History via AJAX
+                $.get("{{ url('monitoring/asset/transaction') }}/" + id, function(response) {
+                    var html = "";
+                    if (response.success && response.data.length > 0) {
+                        $.each(response.data, function(i, item) {
+                            // Penyesuaian variabel sesuai hasil mapping Controller
+                            let typeBadge = item.history_type === 'IN' ? 'success' : 'danger';
+                            
+                            html += `<tr>
+                                <td class="text-center">${i + 1}</td>
+                                <td class="text-center"><code>${item.history_emp_id}</code></td>
+                                <td>${item.history_emp_name}</td>
+                                <td>${item.history_division}</td>
+                                <td class="text-center"><span class="badge bg-${typeBadge}">${item.history_type}</span></td>
+                                <td>${item.history_date}</td>
+                                <td>${item.history_note || '-'}</td>
+                            </tr>`;
+                        });
+                    } else {
+                        html = '<tr><td colspan="7" class="text-center text-muted py-3">Belum ada log pergerakan untuk asset ini.</td></tr>';
                     }
+                    $('#table-body-transaksi').html(html);
+                }).fail(function(xhr) {
+                    $('#table-body-transaksi').html(`<tr><td colspan="7" class="text-center text-danger">Gagal mengambil data riwayat.</td></tr>`);
                 });
-
-                return false;
-            })
-
-            function drawTable(param) {
-                table.draw();
-
-                if (param != null) {
-                    $('#form-' + param)[0].reset();
-                    $('#form-' + param).trigger('reset');
-                    $('#modal-' + param).modal('hide');
-                }
-            }
+            });
         });
     </script>
 @endsection

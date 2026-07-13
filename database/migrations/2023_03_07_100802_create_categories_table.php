@@ -11,15 +11,16 @@ class CreateCategoriesTable extends Migration
      *
      * @return void
      */
-    public function up()
-    {
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
-    }
-
+   public function up()
+{
+    Schema::create('categories', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        // Hapus ->after('name'), cukup letakkan di sini
+        $table->string('code', 10)->nullable(); 
+        $table->timestamps();
+    });
+}
     /**
      * Reverse the migrations.
      *

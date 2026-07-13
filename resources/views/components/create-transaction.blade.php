@@ -1,337 +1,316 @@
 @extends('layouts.App')
 
 @section('content')
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body border-bottom">
-                    <div class="d-flex align-items-center">
-                        <h5 class="mb-0 card-title flex-grow-1">Tambah Transaksi</h5>
-                        <div class="flex-shrink-0">
-                            <button type="submit" class="btn btn-primary" form="form-add-transaction">Kirim</button>
-                            <a href="#!" class="btn btn-light"><i class="mdi mdi-refresh"></i></a>
-                        </div>
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 38px !important;
+        border: 1px solid #ced4da !important;
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        top: 1px !important;
+    }
+    .select2-container { width: 100% !important; display: block; }
+    .select2-selection__rendered { line-height: 38px !important; padding-left: 12px !important; }
+    .bg-soft-warning { background-color: #fff3cd !important; border-color: #ffeeba !important; }
+</style>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow-sm">
+            <div class="card-body border-bottom bg-light">
+                <div class="d-flex align-items-center">
+                    <h5 class="mb-0 card-title flex-grow-1">Tambah Transaksi (BAST)</h5>
+                    <div class="flex-shrink-0 d-flex gap-1">
+                        <button type="submit" class="btn btn-primary" form="form-add-transaction">
+                            <i class="mdi mdi-content-save-outline me-1"></i> Simpan Transaksi
+                        </button>
+                        <a href="{{ route('transaction') }}" class="btn btn-light">
+                            <i class="mdi mdi-arrow-left"></i> Kembali
+                        </a>
                     </div>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ route('transaction.store') }}" id="form-add-transaction"
-                        class="needs-validation" novalidate>
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="">Karyawan</label>
-                                    <select name="employee_id"
-                                        class="form-control select2-employee @error('employee_id') is-invalid @enderror">
-                                        <option value="">Pilih Karyawan</option>
-                                    </select>
-                                </div>
-
-                                @error('employee_id')
-                                    <span class="invalid-feedback" role="alert">
-                                        {{ $message }}
-                                    </span>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="mb-3">
-                                    <label for="">Divisi</label>
-                                    <select name="division_id"
-                                        class="form-control select2-division @error('division_id') is-invalid @enderror"
-                                        id="">
-                                        <option value="">Pilih Divisi</option>
-                                    </select>
-                                </div>
-
-                                @error('division_id')
-                                    <span class="invalid-feedback" role="alert">
-                                        {{ $message }}
-                                    </span>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-2">
-                                <div class="mb-3">
-                                    <label for="">Status</label>
-                                    <select name="status"
-                                        class="form-control select2-status @error('status') is-invalid @enderror"
-                                        id="">
-                                        <option value="">Pilih Status</option>
-                                        <option value="0">IN</option>
-                                        <option value="1">OUT</option>
-                                    </select>
-                                </div>
-
-                                @error('status')
-                                    <span class="invalid-feedback" role="alert">
-                                        {{ $message }}
-                                    </span>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="">Note</label>
-                                    <input type="text" class="form-control @error('note') is-invalid @enderror"
-                                        name="note">
-                                </div>
-
-                                @error('note')
-                                    <span class="invalid-feedback" role="alert">
-                                        {{ $message }}
-                                    </span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col-md">
-                                <table class="table align-middle" id="table-asset">
-                                    <thead>
-                                        <th>UID</th>
-                                        <th>Kategori</th>
-                                        <th>Spesifikasi</th>
-                                        <th>Tahun Produksu</th>
-                                        <th>Tanggal Pembelian</th>
-                                        <th>Harga</th>
-                                        <th>Kondisi</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <select name="uid[0]" class="form-control select2-asset" id="">
-                                                    <option value="">Cari Asset</option>
-                                                </select>
-                                            </td>
-                                            <td class="category"></td>
-                                            <td class="specification"></td>
-                                            <td class="production_year"></td>
-                                            <td class="purchase_date"></td>
-                                            <td class="purchase_price"></td>
-                                            <td class="condition"></td>
-                                            <td class="status"></td>
-                                            <td class="action"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </form>
-                </div>
             </div>
-            <!--end card-->
+            <div class="card-body p-4">
+                <form method="POST" action="{{ route('transaction.store') }}" id="form-add-transaction" class="needs-validation" novalidate>
+                    @csrf
+                    
+                    <div class="row">
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label fw-bold small text-danger">Tipe Transaksi</label>
+                            <select name="status" id="transaction_status" class="form-select fw-bold" required>
+                                <option value="OUT">ASSET OUT (Pinjam)</option>
+                                <option value="IN" selected>ASSET IN (Kembali)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label fw-bold small">NIK Karyawan</label>
+                            <select name="employee_id" id="employee_id_select" class="form-control" required>
+                                <option value="">Cari NIK...</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->id }}" 
+                                            data-nama="{{ $emp->name }}" 
+                                            data-jabatan="{{ $emp->jabatan ?? '-' }}"
+                                            data-dept="{{ $emp->division->name ?? '-' }}"
+                                            data-division="{{ $emp->division_id }}"> 
+                                        {{ $emp->employee_id }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label fw-bold small">Nama Karyawan</label>
+                            <input type="text" id="display_nama" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label fw-bold small">Jabatan</label>
+                            <input type="text" id="display_jabatan" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label fw-bold small">Departemen</label>
+                            <input type="text" id="display_dept" class="form-control bg-light" readonly>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label fw-bold small text-primary">ID Transaksi</label>
+                            <input type="text" id="generated_bast_number" class="form-control bg-light fw-bold text-primary text-center" readonly placeholder="AUTO">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold small">Catatan / Komentar</label>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="Input catatan tambahan di sini..."></textarea>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="division_id" id="division_id_hidden">
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+                        <h6 class="fw-bold mb-0"><i class="mdi mdi-format-list-bulleted me-1"></i>Daftar Item Aset</h6>
+                        <button type="button" class="btn btn-sm btn-success" id="btn-add-row">
+                            <i class="mdi mdi-plus"></i> Tambah Baris
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle" id="table-asset">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 35%;">Pilih Aset Master (Search)</th>
+                                    <th style="width: 25%;">Generated UID</th>
+                                    <th>Serial Number</th>
+                                    <th>Brand / Model</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="asset-row">
+                                    <td>
+                                        <select class="form-control select2-asset-ajax" name="asset_id[]" required>
+                                            <option value="">Cari Nama / SN / UID...</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="generated_uids[]" class="form-control form-control-sm bg-soft-warning gen-uid text-center fw-bold" readonly placeholder="UID-AUTO">
+                                    </td>
+                                    <td class="serial_number text-center">-</td>
+                                    <td class="brand text-muted">-</td>
+                                    <td class="action text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete"><i class="mdi mdi-trash-can-outline"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
         </div>
-        <!--end col-->
-
     </div>
-@endsection
-
-@section('css')
-    <link href="{{ asset('libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
-@endsection
-
-@section('title')
-    Asset
+</div>
 @endsection
 
 @section('plugin')
+    <link href="{{ asset('libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ asset('libs/select2/js/select2.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(function() {
-            var i = 0;
-            select2();
+        $(document).ready(function() {
+            // Inisialisasi Select2 Karyawan
+            $('#employee_id_select').select2({ placeholder: 'Cari NIK...', width: '100%' });
 
-            var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
-
-            $('#form-add-transaction').submit(function() {
-                $('#form-add-transaction small.text-danger').remove();
-
-                var data = $(this).serialize();
-
-                var arr = [];
-                var duplicates = false;
-
-                $('.select2-asset').each(function() {
-                    var value = $(this).val();
-                    if (arr.indexOf(value) == -1) {
-                        arr.push(value);
-                    } else {
-                        duplicates = true;
-                    }
-                });
-
-                // console.log(arr);
-
-                if (duplicates) {
-                    notification('error',
-                        'Ada asset yang sama, silahkan diubah terlebih dahulu!');
-                    return false;
-                }
-
-                $.ajax({
-                    type: "POST",
-                    url: $(this).attr('action'),
-                    data: data,
-                    dataType: "JSON",
-                    success: function(response) {
-                        if (response.success == false) {
-                            if (response.hasOwnProperty('data')) {
-                                $.each(response.data.error, function(i, v) {
-                                    // console.log(v);
-                                    $('#form-add-transaction [name="' + i + '"]').after(
-                                        '<small class="text-danger">' + v +
-                                        '</small>');
-                                });
-                            } else {
-                                notification('error', response.message);
-                            }
-
-                            return false;
-                        }
-
-                        notification('success', response.message);
-                        window.location.href = "{{ route('transaction') }}";
-                    }
-                });
-
-                return false;
-            });
-
-            function select2() {
-                $('.select2-asset').select2({
+            // Fungsi Inisialisasi Select2 Aset (AJAX)
+            function initSelect2Asset(element) {
+                $(element).select2({
+                    placeholder: 'Cari Nama / SN / UID...',
                     width: '100%',
                     ajax: {
                         url: "{{ route('select.asset') }}",
-                        type: "get",
                         dataType: 'json',
                         delay: 250,
-                        data: function(params) {
-                            return {
-                                search: params.term // search term
-                            };
+                        data: function (params) { 
+                            return { 
+                                q: params.term, 
+                                status: $('#transaction_status').val() 
+                            }; 
                         },
-                        processResults: function(response) {
-                            return {
-                                results: response
-                            };
-                        },
+                        processResults: function (data) { return { results: data }; },
                         cache: true
                     }
                 });
             }
 
-            $('#table-asset').on('change', '.select2-asset', function() {
-                var id = $(this).val();
-                var row = $(this);
+            initSelect2Asset('.select2-asset-ajax');
+
+            // Handle Perubahan Karyawan
+            $('#employee_id_select').on('change', function() {
+                var opt = $(this).find('option:selected');
+                if ($(this).val()) {
+                    $('#display_nama').val(opt.data('nama'));
+                    $('#display_jabatan').val(opt.data('jabatan'));
+                    $('#display_dept').val(opt.data('dept'));
+                    $('#division_id_hidden').val(opt.data('division'));
+                    
+                    // Generate Nomor Referensi Visual (BAST Number)
+                    var dateNow = moment().format('YYYYMMDD');
+                    var employeeNik = opt.text().trim();
+                    $('#generated_bast_number').val("TRX-" + dateNow + "-" + employeeNik);
+
+                    // Re-trigger asset UID generation jika aset sudah dipilih sebelumnya agar UID terupdate ke NIK baru
+                    $('.select2-asset-ajax').each(function() {
+                        if ($(this).val()) {
+                            $(this).trigger('change');
+                        }
+                    });
+                }
+            });
+
+            // Handle Pilih Aset & Generate UID via Server
+            $(document).on('change', '.select2-asset-ajax', function() {
+                var assetId = $(this).val();
+                var empId   = $('#employee_id_select').val();
+                var row     = $(this).closest('tr');
+
+                if (!assetId) return;
+
+                // PROTEKSI: Harus pilih karyawan dulu sebelum pilih aset
+                if (!empId) {
+                    Swal.fire({
+                        title: 'Perhatian',
+                        text: 'Silakan pilih NIK Karyawan terlebih dahulu agar UID dapat dibuat!',
+                        icon: 'warning',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    $(this).val(null).trigger('change');
+                    return;
+                }
+
+                row.find('.gen-uid').val('Generating...');
 
                 $.ajax({
-                    type: "get",
-                    url: "{{ URL('select/asset') }}/" + id,
-                    dataType: "JSON",
-                    success: function(response) {
-                        row.attr('name', 'uid[' + i + ']');
-                        row.parent().parent().find('.category').html(response.category.name);
-                        row.parent().parent().find('.specification').html(response
-                            .specification);
-                        row.parent().parent().find('.production_year').html(response
-                            .production_year);
-                        row.parent().parent().find('.purchase_date').html(response
-                            .purchase_date);
-                        row.parent().parent().find('.purchase_price').html(response
-                            .purchase_price);
-                        row.parent().parent().find('.condition').html(response.condition);
-
-                        var status = '';
-                        if (response.status == 0) {
-                            status =
-                                '<span class="badge bg-success">Standby</span>';
-                        } else {
-                            status =
-                                '<span class="badge bg-danger">Not Standby</span>';
-                        }
-
-                        row.parent().parent().find('.status').html(status);
-                        row.parent().parent().find('.action').html(
-                            '<a href="#" class="text-danger btn-delete"><i class="bx bx-x-circle bx-sm"></i></a>'
-                        );
-
-                        if (row.attr('add') != 'yes') {
-                            $('#table-asset tbody').append('<tr>' +
-                                '                              <td>' +
-                                '                                  <select name="" class="form-control select2-asset" id="">' +
-                                '                                      <option value="">Cari Asset</option>' +
-                                '                                  </select>' +
-                                '                              </td>' +
-                                '                              <td class="category"></td>' +
-                                '                              <td class="specification"></td>' +
-                                '                              <td class="production_year"></td>' +
-                                '                              <td class="purchase_date"></td>' +
-                                '                              <td class="purchase_price"></td>' +
-                                '                              <td class="condition"></td>' +
-                                '                              <td class="status"></td>' +
-                                '                              <td class="action"></td>' +
-                                '                          </tr>');
-                        }
-
-                        row.attr('add', 'yes');
-
-                        // $('.select2-asset').select2();
-                        select2();
-                        i++;
+                    url: "{{ url('/select/asset') }}/" + assetId,
+                    type: "GET",
+                    data: { employee_id: empId }, // Mengirimkan employee_id agar Controller bisa merakit UID
+                    success: function(res) {
+                        row.find('.brand').text(res.brand || '-');
+                        row.find('.serial_number').html('<code class="text-primary">' + (res.serial_number || '-') + '</code>');
+                        // Memasukkan hasil rincian UID dari server ke kolom kuning
+                        row.find('.gen-uid').val(res.generated_uid);
+                    },
+                    error: function(xhr) {
+                        row.find('.gen-uid').val('ERR-UID');
+                        console.error("Error Detail:", xhr.responseText);
                     }
                 });
-
-                return false;
             });
 
-            $('#table-asset').on('click', '.btn-delete', function() {
-                $(this).closest('tr').remove();
-            })
+            // Tombol Tambah Baris (Manual)
+            $('#btn-add-row').click(function() {
+                var html = `<tr class="asset-row">
+                    <td>
+                        <select class="form-control select2-asset-ajax" name="asset_id[]" required>
+                            <option value="">Cari Nama / SN / UID...</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" name="generated_uids[]" class="form-control form-control-sm bg-soft-warning gen-uid text-center fw-bold" readonly placeholder="UID-AUTO">
+                    </td>
+                    <td class="serial_number text-center">-</td>
+                    <td class="brand text-muted">-</td>
+                    <td class="action text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete"><i class="mdi mdi-trash-can-outline"></i></button>
+                    </td>
+                </tr>`;
+                $('#table-asset tbody').append(html);
+                initSelect2Asset($('#table-asset tbody tr:last').find('.select2-asset-ajax'));
+            });
 
-            $('.select2-employee').select2({
-                width: '100%',
-                ajax: {
-                    url: "{{ route('select.employee') }}",
-                    type: "get",
-                    dataType: 'json',
-                    data: function(params) {
-                        return {
-                            search: params.term // search term
-                        };
-                    },
-                    processResults: function(response) {
-                        return {
-                            results: response
-                        };
-                    },
-                    cache: true
+            // Tombol Hapus Baris
+            $(document).on('click', '.btn-delete', function() {
+                if ($('#table-asset tbody tr').length > 1) { 
+                    $(this).closest('tr').remove(); 
+                } else {
+                    Swal.fire('Info', 'Minimal harus ada 1 item aset dalam daftar.', 'info');
                 }
             });
 
-            $('.select2-division').select2({
-                width: '100%',
-                ajax: {
-                    url: "{{ route('select.division') }}",
-                    type: "get",
-                    dataType: 'json',
-                    data: function(params) {
-                        return {
-                            search: params.term // search term
-                        };
-                    },
-                    processResults: function(response) {
-                        return {
-                            results: response
-                        };
-                    },
-                    cache: true
+            // Submit Form via AJAX
+            $('#form-add-transaction').submit(function(e) {
+                e.preventDefault();
+                var form = $(this);
+                
+                // Cek Validasi HTML5
+                if (!form[0].checkValidity()) {
+                    form[0].reportValidity();
+                    return;
                 }
-            });
 
+                Swal.fire({
+                    title: 'Simpan Transaksi?',
+                    text: "Pastikan data karyawan dan aset sudah benar.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Simpan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({ 
+                            title: 'Memproses...', 
+                            allowOutsideClick: false, 
+                            didOpen: () => { Swal.showLoading(); } 
+                        });
+
+                        $.ajax({
+                            url: form.attr('action'),
+                            type: 'POST',
+                            data: form.serialize(),
+                            success: function(res) {
+                                if (res.success) {
+                                    Swal.fire('Berhasil!', res.message, 'success').then(() => {
+                                        window.location.href = "{{ route('transaction') }}";
+                                    });
+                                } else {
+                                    Swal.fire('Gagal!', res.message, 'error');
+                                }
+                            },
+                            error: function(xhr) {
+                                let errorMsg = "Terjadi kesalahan sistem.";
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    errorMsg = xhr.responseJSON.message;
+                                }
+                                Swal.fire('Error!', errorMsg, 'error');
+                            }
+                        });
+                    }
+                });
+            });
         });
     </script>
 @endsection

@@ -11,15 +11,15 @@ class CreateAssetImagesTable extends Migration
      *
      * @return void
      */
-    public function up()
-    {
-        Schema::create('asset_images', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('asset_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
-            $table->string('name');
-            $table->timestamps();
-        });
-    }
+   public function up()
+{
+    Schema::create('asset_images', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('asset_id')->constrained('assets')->onDelete('cascade');
+        $table->string('image_path');
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

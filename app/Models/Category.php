@@ -9,14 +9,13 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
-    /**
-     * Get all of the asset for the Category
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function asset()
+    protected $table = 'categories'; // Pastikan nama tabel benar
+    protected $guarded = [];
+
+    // --- TAMBAHKAN FUNGSI INI ---
+    public function assets()
     {
-        return $this->hasMany(Asset::class);
+        // Parameter kedua adalah foreign key di tabel assets (category_id)
+        return $this->hasMany(Asset::class, 'category_id', 'id');
     }
 }

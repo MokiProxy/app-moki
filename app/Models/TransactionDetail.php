@@ -9,12 +9,12 @@ class TransactionDetail extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['transaction_id', 'asset_id'];
-    /**
-     * Get the transaction that owns the TransactionDetail
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
+    protected $fillable = [
+    'transaction_id',
+    'asset_id',
+    'new_uid', // Tambahkan ini jika belum ada
+];
+
     public function transaction()
     {
         return $this->belongsTo(Transaction::class);

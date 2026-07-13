@@ -2,74 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use DNS2D;
 use App\Models\Asset;
-use App\Models\AssetImages;
 use App\Models\Category;
 use App\Models\Supplier;
+use App\Models\Regional;
 use Milon\Barcode\DNS1D;
 use Illuminate\Http\Request;
-use Image;
+use App\Imports\AssetImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\File;
 
 class AssetController extends Controller
 {
     public function index()
     {
-        // echo DNS2D::getBarcodeHTML('https://psikotesdaring.com', 'QRCODE');
-        // echo '<img src="data:image/png;base64,' . DNS1D::getBarcodePNG('454541255', 'I25+', 2, 40, array(1, 1, 1), true) . '" alt="barcode"   />';
-        // die;
         $categories = Category::all();
         $suppliers = Supplier::all();
+        $regionals = Regional::all();
 
-        return view('components.asset', compact('categories', 'suppliers'));
+        return view('components.asset', compact('categories', 'suppliers', 'regionals'));
     }
 
     public function datatable(Request $request)
     {
         if ($request->ajax()) {
-            // $store = Store::where('user_id', auth()->user()->id)->first();
-            $assets = Asset::with('category', 'supplier', 'image');
-            // dd($order);
+            $assets = Asset::with(['category', 'supplier', 'regional'])->select('assets.*');
+
             return DataTables::eloquent($assets)
                 ->addIndexColumn()
+                ->addColumn('category_name', function ($row) {
+                    return $row->category->name ?? '-';
+                })
+                ->addColumn('regional_name', function ($row) {
+                    return $row->regional->name ?? '-';
+                })
                 ->addColumn('_status', function ($row) {
-                    if ($row->status == 0) {
-                        return '<span class="badge bg-success">Standby</span>';
-                    } else {
-                        return '<span class="badge bg-danger">Not Standby</span>';
-                    }
+                    if ($row->status == 0) return '<span class="badge bg-success">Standby</span>';
+                    if ($row->status == 1) return '<span class="badge bg-primary">Assigned</span>';
+                    return '<span class="badge bg-danger">Broken</span>';
                 })
                 ->addColumn('_barcode', function ($row) {
-                    return '<img class="img-fluid" src="data:image/png;base64,' . DNS1D::getBarcodePNG($row->uid, 'I25+', 2, 40, array(1, 1, 1), true) . '" alt="barcode"   />';
-                })
-                ->addColumn('_images', function ($row) {
-                    $html = '';
-                    foreach ($row->image as $key => $image) {
-                        $html .= '  <div class="avatar-group-item">
-                                        <a href="javascript: void(0);" class="d-inline-block image-asset">
-                                            <img src="' . asset('images/assets/' . $image->name) . '" alt="" class="rounded-circle avatar-xs">
-                                        </a>
-                                    </div>';
+                    $uid = (string) $row->uid;
+                    try {
+                        return '<img style="height: 30px; width: 100%; max-width: 150px;" src="data:image/png;base64,' . DNS1D::getBarcodePNG($uid, 'C128', 1, 33, array(1, 1, 1), true) . '" alt="barcode" /><br><small>'.$uid.'</small>';
+                    } catch (\Exception $e) {
+                        return '<span class="text-danger">Invalid Format</span>';
                     }
-
-                    return '<div class="avatar-group">' . $html . '</div>';
                 })
                 ->addColumn('action', function ($row) {
                     return '<ul class="list-unstyled hstack gap-1 mb-0">
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="View">
-                                    <button class="btn btn-sm btn-soft-primary btn-view" data-id="' . $row->id . '"><i class="mdi mdi-eye-outline mdi-18px"></i></button>
-                                </li>
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
-                                    <button class="btn btn-sm btn-soft-info btn-edit" data-id="' . $row->id . '"><i class="mdi mdi-pencil-outline mdi-18px"></i></button>
-                                </li>
-                                <li data-bs-toggle="tooltip" data-bs-placement="top" title="Delete">
-                                    <button data-id="' . $row->id . '" class="btn btn-sm btn-soft-danger btn-delete"><i class="mdi mdi-delete-outline mdi-18px"></i></button>
-                                </li>
+                                <li><button class="btn btn-sm btn-soft-primary btn-view" data-id="' . $row->id . '"><i class="mdi mdi-eye-outline"></i></button></li>
+                                <li><button class="btn btn-sm btn-soft-info btn-edit" data-id="' . $row->id . '"><i class="mdi mdi-pencil-outline"></i></button></li>
+                                <li><button data-id="' . $row->id . '" class="btn btn-sm btn-soft-danger btn-delete"><i class="mdi mdi-delete-outline"></i></button></li>
                             </ul>';
                 })
-                ->rawColumns(['action', '_status', '_barcode', '_images'])
+                ->editColumn('purchase_price', function($row){
+                    return number_format($row->purchase_price, 0, ',', '.');
+                })
+                // Menampilkan Data Center & COA Code di Datatables
+                ->addColumn('cost_center', function($row){
+                    return $row->cost_center ?? '-';
+                })
+                ->addColumn('coa_code', function($row){
+                    return $row->coa_code ?? '-';
+                })
+                ->rawColumns(['action', '_status', '_barcode']) 
                 ->make(true);
         }
     }
@@ -77,318 +76,154 @@ class AssetController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'category_id' => 'required',
-            'supplier_id' => 'required',
-            'specification' => 'required',
-            'purchase_date' => 'required|date',
+            'category_id'    => 'required',
+            'supplier_id'    => 'required',
+            'regional_id'    => 'required',
+            'brand'          => 'required|string|max:255',
+            'serial_number'  => 'nullable|string|max:255',
+            'specification'  => 'required',
+            'purchase_date'  => 'required|date',
             'purchase_price' => 'required|numeric',
-            'condition' => 'required',
-            'foto1'     => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'foto2'     => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'foto3'     => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'foto4'     => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'foto5'     => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'condition'      => 'required',
+            'cost_center'    => 'nullable|string|max:255', 
+            'coa_code'       => 'nullable|string|max:255', // Validasi COA Code
         ]);
 
-        // dd($request);
-
         if ($validator->fails()) {
-
             return response()->json([
                 'success' => false,
-                'message' => 'Bad parameter!',
-                'data' => [
-                    'error' => $validator->errors()
-                ]
-            ]);
+                'message' => 'Validasi gagal!',
+                'errors'  => $validator->errors()
+            ], 422);
         }
 
-        $category = $request->category_id;
-        $supplier = $request->supplier_id;
-
-        $cat = Category::where('id', $request->category_id)->count();
-        // dd($cat);
-        if ($cat == 0) {
-            $inCategory = Category::create([
-                'name' => $request->category_id
-            ]);
-
-            $category = $inCategory->id;
-        }
-
-        $sup = Supplier::where('id', $request->supplier_id)->count();
-        // dd($supplier);
-        if ($sup == 0) {
-            $inSupplier = Supplier::create([
-                'name' => $request->supplier_id
-            ]);
-
-            $supplier = $inSupplier->id;
-        }
-
-        $foto1 = $request->file('foto1');
-        $foto2 = $request->file('foto2');
-        $foto3 = $request->file('foto3');
-        $foto4 = $request->file('foto4');
-        $foto5 = $request->file('foto5');
-
-        $images = [];
-
-        if ($foto1) {
-            $images[1] = time() . '1.' . $foto1->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto1->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[1]);
-        }
-
-        if ($foto2) {
-            $images[2] = time() . '2.' . $foto2->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto2->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[2]);
-        }
-
-        if ($foto3) {
-            $images[3] = time() . '3.' . $foto3->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto3->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[3]);
-        }
-
-        if ($foto4) {
-            $images[4] = time() . '4.' . $foto4->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto4->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[4]);
-        }
-
-        if ($foto5) {
-            $images[5] = time() . '5.' . $foto5->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto5->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[5]);
-        }
-
-        // dd($images);
         try {
-            $asset = Asset::create([
-                'category_id'      => intval($category),
-                'supplier_id'      => intval($supplier),
-                'uid'              => date('dmYHis'),
-                'specification'    => $request->specification,
-                'production_year'  => $request->production_year,
-                'purchase_date'    => $request->purchase_date,
-                'purchase_price'   => $request->purchase_price,
-                'condition'        => $request->condition,
-            ]);
-
-            foreach ($images as $key => $image) {
-                AssetImages::create([
-                    'asset_id'  => $asset->id,
-                    'name'      => $image
-                ]);
+            $categoryId = $request->category_id;
+            if (!is_numeric($categoryId)) {
+                $cat = Category::firstOrCreate(['name' => $categoryId]);
+                $categoryId = $cat->id;
             }
+
+            $supplierId = $request->supplier_id;
+            if (!is_numeric($supplierId)) {
+                $sup = Supplier::firstOrCreate(['name' => $supplierId]);
+                $supplierId = $sup->id;
+            }
+
+            $existingAsset = $request->id ? Asset::find($request->id) : null;
+            
+            $uid = $existingAsset ? $existingAsset->uid : 'AST-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2)));
+            $status = $existingAsset ? $existingAsset->status : 0;
+
+            $asset = Asset::updateOrCreate(
+                ['id' => $request->id],
+                [
+                    'category_id'     => $categoryId,
+                    'supplier_id'     => $supplierId,
+                    'regional_id'     => $request->regional_id,
+                    'brand'           => $request->brand,
+                    'serial_number'   => $request->serial_number,
+                    'uid'             => $uid,
+                    'specification'   => $request->specification,
+                    'production_year' => $request->production_year,
+                    'purchase_date'   => $request->purchase_date,
+                    'purchase_price'  => $request->purchase_price,
+                    'condition'       => $request->condition,
+                    'status'          => $status,
+                    'cost_center'     => $request->cost_center, 
+                    'coa_code'        => $request->coa_code, // Simpan COA Code ke Database
+                ]
+            );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Asset created successfully',
+                'message' => $request->id ? 'Asset berhasil diperbarui' : 'Asset berhasil ditambahkan',
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
-            ]);
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
     public function show($id)
     {
-        $asset = Asset::with('image', 'category', 'supplier')->find($id);
-
-        if (is_null($asset)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Asset not found',
-            ]);
+        $asset = Asset::with(['category', 'regional', 'supplier'])->find($id);
+        
+        if (!$asset) {
+            return response()->json(['success' => false, 'message' => 'Asset tidak ditemukan'], 404);
         }
-
-        $asset->barcode =
-            '<img class="img-fluid" src="data:image/png;base64,' . DNS1D::getBarcodePNG($asset->uid, 'I25+', 2, 40, array(1, 1, 1), true) . '" alt="barcode"   />';
 
         return response()->json([
-            'success' => true,
-            'message' => 'Asset retrieved successfully',
-            'data' => $asset
+            'success'         => true,
+            'id'              => $asset->id,
+            'uid'             => $asset->uid,
+            'brand'           => $asset->brand ?? '-',
+            'serial_number'   => $asset->serial_number ?? '-',
+            'category_id'     => $asset->category_id,
+            'category_name'   => $asset->category->name ?? '-',
+            'supplier_id'     => $asset->supplier_id,
+            'supplier_name'   => $asset->supplier->name ?? '-',
+            'regional_id'     => $asset->regional_id,
+            'regional_name'   => $asset->regional->name ?? '-',
+            'specification'   => $asset->specification,
+            'production_year' => $asset->production_year,
+            'purchase_date'   => $asset->purchase_date,
+            'purchase_price'  => $asset->purchase_price,
+            'condition'       => $asset->condition,
+            'status'          => $asset->status,
+            'cost_center'     => $asset->cost_center ?? '-', 
+            'coa_code'        => $asset->coa_code ?? '-', // Tampilkan COA Code saat edit/view
         ]);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $asset = Asset::find($id);
-
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'required',
-            'supplier_id' => 'required',
-            'specification' => 'required',
-            'purchase_date' => 'required|date',
-            'purchase_price' => 'required|numeric',
-            'condition' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bad parameter!',
-                'data' => [
-                    'error' => $validator->errors()
-                ]
-            ]);
-        }
-
-        $foto1 = $request->file('foto1');
-        $foto2 = $request->file('foto2');
-        $foto3 = $request->file('foto3');
-        $foto4 = $request->file('foto4');
-        $foto5 = $request->file('foto5');
-
-        $images = [];
-
-        if ($foto1) {
-            $images[1] = time() . '1.' . $foto1->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto1->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[1]);
-
-            unlink('images/assets/' . $request->foto1_old);
-            $foto1 = AssetImages::where('name', $request->foto1_old)->delete();
-        }
-
-        if ($foto2) {
-            $images[2] = time() . '2.' . $foto2->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto2->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[2]);
-
-            unlink('images/assets/' . $request->foto2_old);
-            $foto2 = AssetImages::where('name', $request->foto2_old)->delete();
-        }
-
-        if ($foto3) {
-            $images[3] = time() . '3.' . $foto3->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto3->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[3]);
-
-            unlink('images/assets/' . $request->foto3_old);
-            $foto3 = AssetImages::where('name', $request->foto3_old)->delete();
-        }
-
-        if ($foto4) {
-            $images[4] = time() . '4.' . $foto4->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto4->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[4]);
-
-            unlink('images/assets/' . $request->foto4_old);
-            $foto4 = AssetImages::where('name', $request->foto4_old)->delete();
-        }
-
-        if ($foto5) {
-            $images[5] = time() . '5.' . $foto5->extension();
-
-            $destinationPath = public_path('/images/assets');
-            $img = Image::make($foto5->path());
-            $img->resize(480, 360, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $images[5]);
-
-            unlink('images/assets/' . $request->foto5_old);
-            $foto5 = AssetImages::where('name', $request->foto5_old)->delete();
-        }
-
-        try {
-            $asset->update([
-                'category_id'      => $request->category_id,
-                'supplier_id'      => $request->supplier_id,
-                'specification'      => $request->specification,
-                'production_year'      => $request->production_year,
-                'purchase_date'      => $request->purchase_date,
-                'purchase_price'      => $request->purchase_price,
-                'condition'      => $request->condition,
-            ]);
-
-            foreach ($images as $key => $image) {
-                AssetImages::create([
-                    'asset_id'  => $asset->id,
-                    'name'      => $image
-                ]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Asset updated successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ]);
-        }
     }
 
     public function destroy($id)
     {
-        $asset = Asset::find($id);
-
-        if (is_null($asset)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Asset not found',
-            ]);
-        }
-
         try {
-            foreach ($asset->Image as $key => $image) {
-                unlink('images/assets/' . $image->name);
-            }
-
+            $asset = Asset::findOrFail($id);
             $asset->delete();
-            return response()->json([
-                'success' => true,
-                'message' => 'Asset deleted successfully',
-            ]);
+            return response()->json(['success' => true, 'message' => 'Asset berhasil dihapus']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ]);
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        try {
+            Excel::import(new AssetImport, $request->file('file'));
+            return response()->json(['success' => true, 'message' => 'Data asset berhasil diimport!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal import: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $directory = public_path('templates');
+        $filename = 'template_asset.csv';
+        $path = $directory . DIRECTORY_SEPARATOR . $filename;
+
+        if (!File::isDirectory($directory)) {
+            File::makeDirectory($directory, 0755, true);
+        }
+
+        if (!file_exists($path)) {
+            $columns = [
+                'category_id', 'supplier_id', 'regional_id', 'brand', 
+                'serial_number', 'specification', 'production_year', 
+                'purchase_price', 'purchase_date', 'condition', 'cost_center', 'coa_code'
+            ];
+            
+            $file = fopen($path, 'w');
+            fputcsv($file, $columns);
+            fputcsv($file, ['1', '1', '1', 'HP', 'SN123', 'Spek', '2025', '20000000', '2025-02-27', '1', '8086', 'COA-999']);
+            fclose($file);
+        }
+
+        return response()->download($path, 'Template_Asset_Import.csv');
     }
 }
