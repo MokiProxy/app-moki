@@ -4,10 +4,10 @@
             <div class="navbar-brand-box bg-primary text-center">
                 <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
                     <span class="logo-sm">
-                        <h5 class="text-white mt-4">AMS</h5>
+                        <h5 class="text-white mt-4">Help Desk</h5>
                     </span>
                     <span class="logo-lg">
-                        <h5 class="text-white mt-4">Aplikasi AMS</h5>
+                        <h5 class="text-white mt-4">Aplikasi Help Desk</h5>
                     </span>
                 </a>
             </div>

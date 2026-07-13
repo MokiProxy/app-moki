@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Slider; 
+use App\Models\Slider;
 use Illuminate\Support\Facades\Auth;
 
 class PortalController extends Controller
@@ -26,38 +26,38 @@ class PortalController extends Controller
         // 1. Data Menu Aplikasi
         $menus = [
             [
-                'title' => 'AMS', 
-                'sub'   => 'Asset Management', 
-                'icon'  => 'mdi-database-settings', 
-                'color' => '#4e73df', 
+                'title' => 'AMS',
+                'sub'   => 'Asset Management',
+                'icon'  => 'mdi-database-settings',
+                'color' => '#4e73df',
                 'link'  => route('transaction.index')
             ],
             [
-                'title' => 'HELPDESK', 
-                'sub'   => 'IT Support Ticket', 
-                'icon'  => 'mdi-face-agent', 
-                'color' => '#1cc88a', 
-                'link'  => '#' 
+                'title' => 'HELPDESK',
+                'sub'   => 'IT Support Ticket',
+                'icon'  => 'mdi-face-agent',
+                'color' => '#1cc88a',
+                'link'  => route('helpdesk.index')
             ],
             [
-                'title' => 'FORM IT', 
-                'sub'   => 'Digital Request', 
-                'icon'  => 'mdi-file-document-edit', 
-                'color' => '#36b9cc', 
+                'title' => 'FORM IT',
+                'sub'   => 'Digital Request',
+                'icon'  => 'mdi-file-document-edit',
+                'color' => '#36b9cc',
                 'link'  => '#'
             ],
             [
-                'title' => 'SOP IT', 
-                'sub'   => 'Standard Procedure', 
-                'icon'  => 'mdi-book-open-variant', 
-                'color' => '#f6c23e', 
+                'title' => 'SOP IT',
+                'sub'   => 'Standard Procedure',
+                'icon'  => 'mdi-book-open-variant',
+                'color' => '#f6c23e',
                 'link'  => '#'
             ],
             [
-                'title' => 'MORE', 
-                'sub'   => 'Other Apps', 
-                'icon'  => 'mdi-apps', 
-                'color' => '#858796', 
+                'title' => 'MORE',
+                'sub'   => 'Other Apps',
+                'icon'  => 'mdi-apps',
+                'color' => '#858796',
                 'link'  => '#'
             ],
         ];
