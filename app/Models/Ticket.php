@@ -25,4 +25,9 @@ class Ticket extends Model
         "created_at",
         "updated_at"
     ];
+
+    public function attachments()
+    {
+        return $this->hasMany(TicketAttachment::class);
+    }
 }

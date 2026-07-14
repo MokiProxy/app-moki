@@ -4,10 +4,12 @@ namespace App\Http\Controllers\HelpDesk;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use App\Models\TicketAttachment;
 use App\Models\TicketCategory;
 use App\Models\TicketPriority;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class TicketController extends Controller
 {
@@ -62,12 +64,14 @@ class TicketController extends Controller
             'ticket_category_id' => 'required',
             'ticket_priority_id' => 'required',
             'sla' => 'required',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar',
         ]);
 
         try {
             $ticketNumber = $this->generateTicketNumber();
             $timestamp = strtotime("+$request->sla hours");
-            Ticket::create([
+            $ticket = Ticket::create([
                 "ticket_number" => $ticketNumber,
                 "requester_id" => auth()->user()->id,
                 "ticket_category_id" => $request->ticket_category_id,
@@ -78,7 +82,22 @@ class TicketController extends Controller
                 "due_time" =>  date('Y-m-d H:i:s', $timestamp),
                 "status" => "OPEN"
             ]);
-            return response()->json(['success' => true, 'message' => 'Prioritas Tiket berhasil ditambahkan!']);
+
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $filePath = $file->store('ticket-attachments', 'public');
+                    TicketAttachment::create([
+                        'ticket_id'   => $ticket->id,
+                        'uploaded_by' => auth()->id(),
+                        'file_name'   => $file->getClientOriginalName(),
+                        'file_path'   => $filePath,
+                        'mime_type'   => $file->getMimeType(),
+                        'file_size'   => $file->getSize(),
+                    ]);
+                }
+            }
+
+            return response()->json(['success' => true, 'message' => 'Tiket berhasil dibuat!']);
         } catch (Exception $err) {
             return response()->json(["success" => false, "message" => $err->getMessage()]);
         }

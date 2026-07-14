@@ -54,7 +54,17 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label fw-bold">Upload Attachment</label>
-                                    <input type="file" name="attachments" id="tc-ticket_attachment" class="form-control" multiple>
+                                    <div id="attachment-container">
+                                        <div class="attachment-row input-group mb-2">
+                                            <input type="file" name="attachments[]" class="form-control">
+                                            <button type="button" class="btn btn-outline-danger btn-remove-attachment" title="Hapus" style="display:none;">
+                                                <i class="mdi mdi-close"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mt-1" id="btn-add-attachment">
+                                        <i class="mdi mdi-plus"></i> Tambah Attachment
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -79,18 +89,46 @@
     $(document).ready(function() {
         var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
 
+        // Tambah attachment
+        $('#btn-add-attachment').on('click', function() {
+            var $container = $('#attachment-container');
+            var $row = $container.find('.attachment-row:first').clone();
+            $row.find('input').val('');
+            $container.append($row);
+            updateRemoveButtons();
+        });
+
+        // Hapus attachment
+        $(document).on('click', '.btn-remove-attachment', function() {
+            $(this).closest('.attachment-row').remove();
+            updateRemoveButtons();
+        });
+
+        // Update visibility tombol hapus
+        function updateRemoveButtons() {
+            var count = $('#attachment-container .attachment-row').length;
+            if (count > 1) {
+                $('.btn-remove-attachment').show();
+            } else {
+                $('.btn-remove-attachment').hide();
+            }
+        }
+
         // Submit Ajax
         $('#form-ticket').submit(function(e) {
             e.preventDefault();
-            // Aktifkan sementara agar data terkirim
             $('#form-ticket input, #form-ticket select').prop('disabled', false);
             $('.select2-modal').val('').trigger('change');
             $('#form-method').val('POST');
             $('#form-ticket').attr('action', "{{ route('helpdesk.tickets.store') }}");
+
+            var formData = new FormData(this);
             $.ajax({
                 url: $(this).attr('action'),
                 type: "POST",
-                data: $(this).serialize(),
+                data: formData,
+                processData: false,
+                contentType: false,
                 success: function(res) {
                     if (res.success) {
                         Swal.fire('Berhasil', res.message, 'success');
