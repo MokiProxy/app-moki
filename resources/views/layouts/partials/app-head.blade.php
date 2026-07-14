@@ -22,5 +22,6 @@
     <link href="{{ asset('css/icons.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- App Css-->
     <link href="{{ asset('css/app.min.css') }}" rel="stylesheet" type="text/css" />
+    <style></style>
 
 </head>

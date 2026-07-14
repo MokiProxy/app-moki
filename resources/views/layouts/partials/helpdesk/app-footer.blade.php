@@ -4,7 +4,7 @@
             <div class="col-sm-6">
                 <script>
                     document.write(new Date().getFullYear())
-                </script> Help Desk
+                </script> Help Desk IT MSI SBS
             </div>
             {{-- <div class="col-sm-6">
                 <div class="text-sm-end d-none d-sm-block">

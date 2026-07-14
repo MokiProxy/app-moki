@@ -11,22 +11,22 @@
 
     <style>
         html, body { height: 100%; margin: 0; padding: 0; }
-        body { 
-            background-color: #f4f7f6; 
-            font-family: 'Inter', sans-serif; 
-            color: #1e293b; 
-            display: flex; 
-            flex-direction: column; 
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
         }
 
         .portal-container { flex: 1 0 auto; padding-bottom: 40px; }
-        
-        .header-portal { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            border-radius: 0; 
-            padding: 15px 40px; 
-            color: white; 
-            margin-bottom: 25px; 
+
+        .header-portal {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 0;
+            padding: 15px 40px;
+            color: white;
+            margin-bottom: 25px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             display: flex;
             flex-wrap: wrap;
@@ -42,11 +42,11 @@
             flex: 1;
             min-width: 250px;
         }
-        
+
         .logo-img { height: 45px; width: auto; object-fit: contain; }
         .brand-text h1 { font-size: 1.25rem; margin-bottom: 0; font-weight: 800; }
         .brand-text p { font-size: 0.8rem; opacity: 0.7; margin-bottom: 0; }
-        
+
         .profile-section {
             display: flex;
             align-items: center;
@@ -84,16 +84,16 @@
         .content-wrapper { max-width: 1300px; margin: 0 auto; width: 100%; padding: 0 20px; }
 
         .carousel-inner { border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
-        .slider-content { 
-            height: 180px; 
-            position: relative; 
-            display: flex; align-items: center; 
-            padding: 0 40px; color: white; 
+        .slider-content {
+            height: 180px;
+            position: relative;
+            display: flex; align-items: center;
+            padding: 0 40px; color: white;
         }
-        .slider-overlay { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(to right, rgba(0,0,0,0.85), transparent); 
-            z-index: 1; 
+        .slider-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.85), transparent);
+            z-index: 1;
         }
         .slider-text { position: relative; z-index: 2; }
 
@@ -105,10 +105,10 @@
             border: 1px solid #edf2f7;
         }
 
-        .menu-card { 
-            border: 1px solid #f1f5f9; 
-            border-radius: 10px; 
-            transition: all 0.3s ease; 
+        .menu-card {
+            border: 1px solid #f1f5f9;
+            border-radius: 10px;
+            transition: all 0.3s ease;
             background: #ffffff;
             text-decoration: none !important;
             position: relative;
@@ -126,8 +126,8 @@
             transform: translateY(5px);
             transition: transform 0.3s ease;
         }
-        .menu-card:hover { 
-            transform: translateY(-5px); 
+        .menu-card:hover {
+            transform: translateY(-5px);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
         }
         .menu-card:hover::after { transform: translateY(0); }
@@ -138,9 +138,9 @@
             flex-direction: column;
             align-items: center;
         }
-        .icon-circle { 
-            width: 55px; height: 55px; border-radius: 12px; 
-            display: flex; align-items: center; justify-content: center; 
+        .icon-circle {
+            width: 55px; height: 55px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
             margin-bottom: 12px; font-size: 24px; background-color: #f8fafc;
         }
         .menu-card h6 { font-size: 0.85rem; font-weight: 800; margin-bottom: 3px; color: #1e293b; text-transform: uppercase; }
@@ -149,7 +149,7 @@
         .footer-portal {
             flex-shrink: 0;
             padding: 18px 0;
-            background: #0f172a; 
+            background: #0f172a;
             color: #94a3b8;
             font-size: 0.75rem;
         }
@@ -178,7 +178,7 @@
                 <div class="small fw-bold text-white-50">{{ date('l, d F Y') }}</div>
                 <div class="small">Selamat Datang, <strong>{{ auth()->user()->name ?? 'Harmoko' }}</strong></div>
             </div>
-            
+
             <div class="dropdown">
                 <div class="profile-icon" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="mdi mdi-account text-white"></i>
@@ -228,17 +228,17 @@
                         $isComingSoon = ($menu['link'] == '#' || empty($menu['link']));
                     @endphp
 
-                    <a @if($isComingSoon) 
-                        onclick="showComingSoon('{{ $menu['title'] }}')" 
-                       @else 
-                        href="{{ $menu['link'] }}" 
-                       @endif 
-                       class="menu-card text-center" 
+                    <a @if($isComingSoon)
+                        onclick="showComingSoon('{{ $menu['title'] }}')"
+                       @else
+                        href="{{ $menu['link'] }}"
+                       @endif
+                       class="menu-card text-center"
                        style="--menu-color: {{ $menu['color'] }};">
-                        
+
                         <div class="card-body-wrapper">
                             <div class="icon-circle mx-auto" style="color: {{ $menu['color'] }};">
-                                <i class="mdi {{ $menu['icon'] }}"></i>
+                                
                             </div>
                             <h6>{{ $menu['title'] }}</h6>
                             <p>{{ $menu['sub'] }}</p>

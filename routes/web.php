@@ -25,6 +25,7 @@ use PHPUnit\TextUI\Help;
 use App\Http\Controllers\HelpDesk\DashboardController as HelpDeskDashboardController;
 use App\Http\Controllers\HelpDesk\TicketCategoryController as HelpDeskTicketCategoryController;
 use App\Http\Controllers\HelpDesk\TicketPriorityController as HelpDeskTicketPriorityController;
+use App\Http\Controllers\HelpDesk\TicketController as HelpDeskTicketController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,10 +50,17 @@ Route::group(['middleware' => ['auth']], function () {
     // FITUR HELPDESK
     Route::prefix('helpdesk')->name('helpdesk.')->group(function() {
         Route::get("/", [HelpDeskDashboardController::class, 'index'])->name('index');
+
+        // Ticket Category
         Route::resource('ticket-categories', HelpDeskTicketCategoryController::class);
-        Route::resource('ticket-priorities', HelpDeskTicketPriorityController::class);
         Route::post('ticket-categories/datatable', [HelpDeskTicketCategoryController::class, 'datatable'])->name('ticket-categories.datatable');
+
+        // Ticket Priority
+        Route::resource('ticket-priorities', HelpDeskTicketPriorityController::class);
         Route::post('ticket-priorities/datatable', [HelpDeskTicketPriorityController::class, 'datatable'])->name('ticket-priorities.datatable');
+
+        // Ticket
+        Route::resource("tickets", HelpDeskTicketController::class);
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
