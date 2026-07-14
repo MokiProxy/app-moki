@@ -17,8 +17,13 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ApprovedController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\WhatsappController;
-use App\Http\Controllers\PortalController; 
+use App\Http\Controllers\PortalController;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\TextUI\Help;
+
+// HelpDesk
+use App\Http\Controllers\HelpDesk\DashboardController as HelpDeskDashboardController;
+use App\Http\Controllers\HelpDesk\TicketCategoryController as HelpDeskTicketCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,10 +44,16 @@ Route::group(['middleware' => ['guest']], function () {
 
 // --- AUTH AREA (Harus login) ---
 Route::group(['middleware' => ['auth']], function () {
-    
+
+    // FITUR HELPDESK
+    Route::prefix('helpdesk')->name('helpdesk.')->group(function() {
+        Route::get("/", [HelpDeskDashboardController::class, 'index'])->name('index');
+        Route::resource('ticket-categories', HelpDeskTicketCategoryController::class);
+    });
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // PORTAL UTAMA 
+    // PORTAL UTAMA
     Route::get('/dashboard', [PortalController::class, 'index'])->name('dashboard');
 
     // DASHBOARD ANALYTIK AMS
@@ -65,14 +76,14 @@ Route::group(['middleware' => ['auth']], function () {
     });
 
     // MASTER DATA
-        Route::get('/regional', [RegionalController::class, 'index'])->name('regional');
+    Route::get('/regional', [RegionalController::class, 'index'])->name('regional');
     Route::post('/regional', [RegionalController::class, 'store'])->name('regional.store');
     Route::get('/regional/edit/{id}', [RegionalController::class, 'show'])->name('regional.show');
     Route::put('/regional/edit/{id}', [RegionalController::class, 'update'])->name('regional.update');
     Route::delete('/regional/delete/{id}', [RegionalController::class, 'destroy'])->name('regional.delete');
     Route::post('/regional/datatable', [RegionalController::class, 'datatable'])->name('regional.datatable');
 
-  Route::get('/company', [CompanyController::class, 'index'])->name('company');
+    Route::get('/company', [CompanyController::class, 'index'])->name('company');
     Route::post('/company', [CompanyController::class, 'store'])->name('company.store');
     Route::get('/company/edit/{id}', [CompanyController::class, 'show'])->name('company.show');
     Route::put('/company/edit/{id}', [CompanyController::class, 'update'])->name('company.update');
@@ -104,35 +115,35 @@ Route::group(['middleware' => ['auth']], function () {
 
 
     // ASSET
- Route::get('/asset', [AssetController::class, 'index'])->name('asset');
-Route::post('/asset/datatable', [AssetController::class, 'datatable'])->name('asset.datatable');
+    Route::get('/asset', [AssetController::class, 'index'])->name('asset');
+    Route::post('/asset/datatable', [AssetController::class, 'datatable'])->name('asset.datatable');
 
-// PENTING: Gunakan GET untuk mengambil data ke modal
-Route::get('/asset/edit/{id}', [AssetController::class, 'show'])->name('asset.show'); 
+    // PENTING: Gunakan GET untuk mengambil data ke modal
+    Route::get('/asset/edit/{id}', [AssetController::class, 'show'])->name('asset.show');
 
-// Gunakan POST untuk simpan (Tambah/Update) agar tidak perlu pusing dengan spoofing PUT di AJAX
-Route::post('/asset/store', [AssetController::class, 'store'])->name('asset.store');
+    // Gunakan POST untuk simpan (Tambah/Update) agar tidak perlu pusing dengan spoofing PUT di AJAX
+    Route::post('/asset/store', [AssetController::class, 'store'])->name('asset.store');
 
-Route::delete('/asset/delete/{id}', [AssetController::class, 'destroy'])->name('asset.delete');
-Route::post('asset/import', [AssetController::class, 'import'])->name('asset.import');
-Route::get('asset/template', [AssetController::class, 'downloadTemplate'])->name('asset.template');
+    Route::delete('/asset/delete/{id}', [AssetController::class, 'destroy'])->name('asset.delete');
+    Route::post('asset/import', [AssetController::class, 'import'])->name('asset.import');
+    Route::get('asset/template', [AssetController::class, 'downloadTemplate'])->name('asset.template');
 
     // TRANSACTION (AMS)
     Route::get('/transaction', [TransactionController::class, 'index'])->name('transaction.index');
     // Route::get('/transaction', [TransactionController::class, 'index'])->name('transaction');
     // Route::get('/transactions', [TransactionController::class, 'index'])->name('transaction');
-Route::get('/transaction/create', [TransactionController::class, 'create'])->name('transaction.create');
-Route::get('/transaction/detail/{id}', [TransactionController::class, 'show'])->name('transaction.detail');
-Route::get('/transaction/pdf/{id}', [TransactionController::class, 'exportPDF'])->name('transaction.pdf');
-Route::post('/transaction/store', [TransactionController::class, 'store'])->name('transaction.store'); // Hanya satu saja
-Route::post('/transaction/datatable', [TransactionController::class, 'datatable'])->name('transaction.datatable');
-Route::delete('/transaction/delete/{id}', [TransactionController::class, 'destroy'])->name('transaction.delete');
-Route::post('/transaction/update-status/{id}', [TransactionController::class, 'updateStatus'])->name('transaction.updateStatus');
+    Route::get('/transaction/create', [TransactionController::class, 'create'])->name('transaction.create');
+    Route::get('/transaction/detail/{id}', [TransactionController::class, 'show'])->name('transaction.detail');
+    Route::get('/transaction/pdf/{id}', [TransactionController::class, 'exportPDF'])->name('transaction.pdf');
+    Route::post('/transaction/store', [TransactionController::class, 'store'])->name('transaction.store'); // Hanya satu saja
+    Route::post('/transaction/datatable', [TransactionController::class, 'datatable'])->name('transaction.datatable');
+    Route::delete('/transaction/delete/{id}', [TransactionController::class, 'destroy'])->name('transaction.delete');
+    Route::post('/transaction/update-status/{id}', [TransactionController::class, 'updateStatus'])->name('transaction.updateStatus');
 
-// Sesuaikan URL-nya dengan yang ada di JavaScript Anda
-Route::delete('/transaction/delete/{id}', [TransactionController::class, 'destroy'])->name('transaction.destroy');
-Route::get('/select/employee', [TransactionController::class, 'selectEmployee'])->name('select.employee');
-Route::get('/select/asset/{id?}', [TransactionController::class, 'selectAsset'])->name('select.asset');
+    // Sesuaikan URL-nya dengan yang ada di JavaScript Anda
+    Route::delete('/transaction/delete/{id}', [TransactionController::class, 'destroy'])->name('transaction.destroy');
+    Route::get('/select/employee', [TransactionController::class, 'selectEmployee'])->name('select.employee');
+    Route::get('/select/asset/{id?}', [TransactionController::class, 'selectAsset'])->name('select.asset');
 
 
 
@@ -199,7 +210,4 @@ Route::prefix('settings/role')->group(function () {
     Route::delete('/delete/{id}', [UserRoleController::class, 'destroy'])->name('settings.role.delete');
     // Route::post('settings/role/set-password', [UserRoleController::class, 'setPassword'])->name('settings.role.set-password');
     Route::post('/settings/role/set-password', [UserRoleController::class, 'setPassword'])->name('settings.role.set-password');
-
-    });
-
-
+});
