@@ -24,6 +24,7 @@ use PHPUnit\TextUI\Help;
 // HelpDesk
 use App\Http\Controllers\HelpDesk\DashboardController as HelpDeskDashboardController;
 use App\Http\Controllers\HelpDesk\TicketCategoryController as HelpDeskTicketCategoryController;
+use App\Http\Controllers\HelpDesk\TicketPriorityController as HelpDeskTicketPriorityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,6 +50,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::prefix('helpdesk')->name('helpdesk.')->group(function() {
         Route::get("/", [HelpDeskDashboardController::class, 'index'])->name('index');
         Route::resource('ticket-categories', HelpDeskTicketCategoryController::class);
+        Route::resource('ticket-priorities', HelpDeskTicketPriorityController::class);
+        Route::post('ticket-categories/datatable', [HelpDeskTicketCategoryController::class, 'datatable'])->name('ticket-categories.datatable');
+        Route::post('ticket-priorities/datatable', [HelpDeskTicketPriorityController::class, 'datatable'])->name('ticket-priorities.datatable');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

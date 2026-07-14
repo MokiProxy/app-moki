@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\HelpDesk;
 
 use App\Http\Controllers\Controller;
-use App\Models\TicketCategory;
+use App\Models\TicketPriority;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 
-class TicketCategoryController extends Controller
+class TicketPriorityController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,21 +16,24 @@ class TicketCategoryController extends Controller
      */
     public function index()
     {
-        $ticketCategories = TicketCategory::all();
-        return view('helpdesk.ticket-categories.index', compact('ticketCategories'));
+        $ticketPriorities = TicketPriority::all();
+        return view('helpdesk.ticket-priorities.index', compact('ticketPriorities'));
     }
 
-    // Main Data Table
+    // Data Table
     public function datatable(Request $request)
     {
-        $data = TicketCategory::all();
+        $data = TicketPriority::all();
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('name', function ($row) {
                 return $row->name;
             })
-            ->addColumn('description', function ($row) {
-                return $row->description ?? '-';
+            ->addColumn('level', function ($row) {
+                return $row->level ?? '-';
+            })
+            ->addColumn('color', function ($row) {
+                return "<div style='display: flex; align-items: center; gap: 5px;'><div style='width: 15px; height: 15px; background-color: $row->color; border-radius: 100%;'></div>" . ucfirst($row->color) . "</span>" ?? '-';
             })
             ->addColumn('action', function ($row) {
                 // Pastikan atribut data-id dan atribut lainnya lengkap untuk JS
@@ -42,7 +45,7 @@ class TicketCategoryController extends Controller
                     <button class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="mdi mdi-trash-can"></i></button>
                 </div>';
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['color', 'action'])
             ->make(true);
     }
 
@@ -66,11 +69,12 @@ class TicketCategoryController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'description' => 'required'
+            'level' => 'required|unique:ticket_priorities,level',
+            'color' => 'required'
         ]);
 
-        TicketCategory::create($request->all());
-        return response()->json(['success' => true, 'message' => 'Kategori Tiket berhasil ditambahkan!']);
+        TicketPriority::create($request->all());
+        return response()->json(['success' => true, 'message' => 'Prioritas Tiket berhasil ditambahkan!']);
     }
 
     /**
@@ -81,8 +85,8 @@ class TicketCategoryController extends Controller
      */
     public function show($id)
     {
-        $ticketCategory = TicketCategory::find($id);
-        return response()->json(['success' => true, 'data' => $ticketCategory]);
+        $ticketPriority = TicketPriority::find($id);
+        return response()->json(['success' => true, 'data' => $ticketPriority]);
     }
 
     /**
@@ -105,9 +109,9 @@ class TicketCategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $ticketCategory = TicketCategory::findOrFail($id);
-        $ticketCategory->update($request->all());
-        return response()->json(['success' => true, 'message' => 'Data Kategori Tiket berhasil diperbarui!']);
+        $ticketPriority = TicketPriority::findOrFail($id);
+        $ticketPriority->update($request->all());
+        return response()->json(['success' => true, 'message' => 'Data Prioritas Tiket berhasil diperbarui!']);
     }
 
     /**
@@ -118,7 +122,7 @@ class TicketCategoryController extends Controller
      */
     public function destroy($id)
     {
-        TicketCategory::destroy($id);
-        return response()->json(['success' => true, 'message' => 'Kategori Tiket dihapus!']);
+        TicketPriority::destroy($id);
+        return response()->json(['success' => true, 'message' => 'Prioritas Tiket dihapus!']);
     }
 }

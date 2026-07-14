@@ -6,22 +6,23 @@
         <div class="card shadow-sm">
             <div class="card-body border-bottom bg-light">
                 <div class="d-flex align-items-center">
-                    <h5 class="mb-0 card-title flex-grow-1">Daftar Kategori Tiket</h5>
+                    <h5 class="mb-0 card-title flex-grow-1">Daftar Prioritas Tiket</h5>
                     <div class="flex-shrink-0 d-flex gap-1">
-                        <button class="btn btn-primary" id="btn-add-ticket-category">
-                            <i class="mdi mdi-plus me-1"></i> Tambah Kategori Tiket
+                        <button class="btn btn-primary" id="btn-add-ticket-priority">
+                            <i class="mdi mdi-plus me-1"></i> Tambah Prioritas Tiket
                         </button>
                         <a href="#!" class="btn btn-light" id="btn-refresh"><i class="mdi mdi-refresh"></i></a>
                     </div>
                 </div>
             </div>
             <div class="card-body">
-                <table class="table table-hover align-middle dt-responsive nowrap w-100" id="ticket-category-table">
+                <table class="table table-hover align-middle dt-responsive nowrap w-100" id="ticket-priority-table">
                     <thead class="table-light">
                         <tr>
                             <th style="width: 50px">No</th>
                             <th>Nama</th>
-                            <th>Deskripsi</th>
+                            <th>Level</th>
+                            <th>Color</th>
                             <th style="width: 80px" class="text-center">Action</th>
                         </tr>
                     </thead>
@@ -31,31 +32,35 @@
     </div>
 </div>
 
-<div class="modal fade" id="modal-ticket-category" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modal-ticket-priority" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0">
             <div class="modal-header bg-primary">
-                <h5 class="modal-title text-white" id="ticket-category-title">Form Kategori Tiket</h5>
+                <h5 class="modal-title text-white" id="ticket-priority-title">Form Prioritas Tiket</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="form-ticket-category">
+            <form id="form-ticket-priority">
                 @csrf
                 <input type="hidden" name="_method" id="form-method" value="POST">
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Nama Kategori</label>
-                            <input type="text" name="name" id="tc-ticket_category_name" class="form-control" required>
+                        <div class="col">
+                            <label class="form-label fw-bold">Nama Prioritas</label>
+                            <input type="text" name="name" id="tc-ticket_priority_name" class="form-control" required>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Deskripsi</label>
-                            <textarea name="description" id="tc-ticket_description" class="form-control" rows="2"></textarea>
+                        <div class="col">
+                            <label class="form-label fw-bold">Level</label>
+                            <input type="number" name="level" id="tc-ticket_priority_level" class="form-control" required>
+                        </div>
+                        <div class="col-2">
+                            <label class="form-label fw-bold">Color</label>
+                            <input type="color" name="color" id="tc-ticket_priority_color" class="form-control"  required>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="submit" class="btn btn-primary" id="btn-save-helpdesk.ticket-categories">Simpan Data</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-helpdesk.ticket-priorities">Simpan Data</button>
                 </div>
             </form>
         </div>
@@ -72,20 +77,44 @@
 <script>
     var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
     // 1. DATA TABLE
-    var table = $("#ticket-category-table").DataTable({
+    var table = $("#ticket-priority-table").DataTable({
         processing: true,
         serverSide: true,
         responsive: true,
         ajax: {
-            url: "{{ route('helpdesk.ticket-categories.datatable') }}",
+            url: "{{ route('helpdesk.ticket-priorities.datatable') }}",
             type: "POST",
-            data: { _token: CSRF_TOKEN }
+            data: {
+                _token: CSRF_TOKEN
+            }
         },
-        columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-            { data: 'name', name: 'name' },
-            { data: 'description', name: 'description', defaultContent: '-' },
-            { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
+        columns: [{
+                data: 'DT_RowIndex',
+                name: 'DT_RowIndex',
+                orderable: false,
+                searchable: false
+            },
+            {
+                data: 'name',
+                name: 'name'
+            },
+            {
+                data: 'level',
+                name: 'level',
+                defaultContent: '-'
+            },
+            {
+                data: 'color',
+                name: 'color',
+                defaultContent: '-'
+            },
+            {
+                data: 'action',
+                name: 'action',
+                orderable: false,
+                searchable: false,
+                className: 'text-center'
+            }
         ]
     });
 
@@ -95,47 +124,50 @@
         // Helper: Reset & Mode
         function setupModal(mode = 'edit') {
             const isReadonly = mode === 'view';
-            $('#form-ticket-category input, #form-ticket-category textarea, #form-ticket-category select').prop('disabled', isReadonly);
-            isReadonly ? $('#btn-save-helpdesk.ticket-categories').hide() : $('#btn-save-helpdesk.ticket-categories').show();
+            $('#form-ticket-priority input, #form-ticket-priority textarea, #form-ticket-priority select').prop('disabled', isReadonly);
+            isReadonly ? $('#btn-save-helpdesk.ticket-priorities').hide() : $('#btn-save-helpdesk.ticket-priorities').show();
         }
 
         // Helper: Fill Form
         function fillForm(data) {
-            $('#tc-ticket_category_name').val(data.name);
-            $('#tc-ticket_description').val(data.description);
+            $('#tc-ticket_priority_name').val(data.name);
+            $('#tc-ticket_priority_level').val(data.level);
+            $('#tc-ticket_priority_color').val(data.color);
         }
 
         // Tombol Tambah
-        $('#btn-add-ticket-category').on('click', function() {
-            $('#form-ticket-category')[0].reset();
+        $('#btn-add-ticket-priority').on('click', function() {
+            $('#form-ticket-priority')[0].reset();
             $('.select2-modal').val('').trigger('change');
             $('#form-method').val('POST');
-            $('#form-ticket-category').attr('action', "{{ route('helpdesk.ticket-categories.store') }}");
-            $('#ticket-category-title').text('Tambah Kategori Tiket Baru');
+            $('#form-ticket-priority').attr('action', "{{ route('helpdesk.ticket-priorities.store') }}");
+            $('#ticket-priority-title').text('Tambah Prioritas Tiket Baru');
             setupModal('edit');
-            $('#modal-ticket-category').modal('show');
+            $('#modal-ticket-priority').modal('show');
         });
 
         // Tombol Edit
         $(document).on('click', '.btn-edit', function() {
+            console.log("test");
+
             var id = $(this).data('id');
             $('#form-method').val('PUT');
-            $('#form-ticket-category').attr('action', "{{ url('helpdesk/ticket-categories') }}/" + id);
-            $.get("{{ url('helpdesk/ticket-categories') }}/" + id, function(res) {
+            $('#form-ticket-priority').attr('action', "{{ url('helpdesk/ticket-priorities') }}/" + id);
+            $.get("{{ url('helpdesk/ticket-priorities') }}/" + id, function(res) {
                 if (res.success) {
                     fillForm(res.data);
-                    $('#ticket-category-title').text('Ubah Data Kategori Tiket');
+                    $('#ticket-priority-title').text('Ubah Data Prioritas Tiket');
                     setupModal('edit');
-                    $('#modal-ticket-category').modal('show');
+                    $('#modal-ticket-priority').modal('show');
                 }
             });
         });
 
         // Submit Ajax
-        $('#form-ticket-category').submit(function(e) {
+        $('#form-ticket-priority').submit(function(e) {
             e.preventDefault();
             // Aktifkan sementara agar data terkirim
-            $('#form-ticket-category input, #form-ticket-category select').prop('disabled', false);
+            $('#form-ticket-priority input, #form-ticket-priority select').prop('disabled', false);
 
             $.ajax({
                 url: $(this).attr('action'),
@@ -144,11 +176,12 @@
                 success: function(res) {
                     if (res.success) {
                         Swal.fire('Berhasil', res.message, 'success');
-                        $('#modal-ticket-category').modal('hide');
+                        $('#modal-ticket-priority').modal('hide');
                         table.ajax.reload(null, false);
                     }
                 },
                 error: function(xhr) {
+                    console.log(xhr.status)
                     Swal.fire('Error', xhr.responseJSON.message || 'Error Sistem', 'error');
                 }
             });
@@ -158,7 +191,7 @@
         $(document).on('click', '.btn-delete', function() {
             var id = $(this).data('id');
             Swal.fire({
-                title: "Hapus data kategori tiket?",
+                title: "Hapus data prioritas tiket?",
                 text: "Data yang terhapus tidak dapat dikembalikan!",
                 icon: "warning",
                 showCancelButton: true,
@@ -168,7 +201,7 @@
                 if (result.isConfirmed) {
                     $.ajax({
                         type: "DELETE",
-                        url: "{{ url('helpdesk/ticket-categories') }}/" + id,
+                        url: "{{ url('helpdesk/ticket-priorities') }}/" + id,
                         data: {
                             _token: CSRF_TOKEN,
                             _method: "DELETE"

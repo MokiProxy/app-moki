@@ -31,7 +31,7 @@ $role = session('user_role');
             </a>
             <ul class="sub-menu" aria-expanded="false">
                 <li><a href="{{ route('helpdesk.ticket-categories.index') }}"><i class='mdi mdi-file'></i>Kategori Tiket</a></li>
-                <li><a href="{{ route('regional') }}"><i class='mdi mdi-alert-box'></i>Prioritas Tiket</a></li>
+                <li><a href="{{ route('helpdesk.ticket-priorities.index') }}"><i class='mdi mdi-alert-box'></i>Prioritas Tiket</a></li>
             </ul>
         </li>
         @endif

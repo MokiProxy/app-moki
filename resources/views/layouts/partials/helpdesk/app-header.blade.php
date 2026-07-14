@@ -6,8 +6,10 @@
                     <span class="logo-sm">
                         <h5 class="text-white mt-4">Help Desk</h5>
                     </span>
-                    <span class="logo-lg">
-                        <h5 class="text-white mt-4">Aplikasi Help Desk</h5>
+                    <span class="logo-lg mt-4">
+                        <div class="flex">
+                            <h5 class="text-white mt-4">Aplikasi Help Desk</h5>
+                        </div>
                     </span>
                 </a>
             </div>

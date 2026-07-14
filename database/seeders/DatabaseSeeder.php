@@ -24,5 +24,9 @@ class DatabaseSeeder extends Seeder
         // 2. Data Dengan Relasi (Dependent)
         $this->call(EmployeeSeeder::class); // Butuh DivisionID
         $this->call(AssetSeeder::class);    // Biasanya butuh Category/Supplier
+
+        // Help Desk
+        $this->call(TicketCategorySeeder::class);
+        $this->call(TicketPrioritySeeder::class);
     }
 }

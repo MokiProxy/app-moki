@@ -17,47 +17,46 @@ class EmployeeController extends Controller
     {
         $divisions = Division::all();
         $regionals = Regional::all();
-       return view('components.employee', compact('divisions', 'regionals'));
+        return view('components.employee', compact('divisions', 'regionals'));
     }
 
-public function datatable(Request $request)
-{
-    // Eager loading division dan regional
-    $data = Employee::with(['division', 'regional'])->latest();
-
-    return DataTables::of($data)
-        ->addIndexColumn()
-        ->addColumn('departemen', function($row){
-            return $row->division->name ?? '-';
-        })
-        ->addColumn('kode_dept', function($row){
-            // Menampilkan kode dari tabel divisions
-            return $row->division->code ?? '-';
-        })
-        ->addColumn('regional', function($row){
-            return $row->regional->name ?? '-';
-        })
-        ->addColumn('action', function($row){
-            // Pastikan atribut data-id dan atribut lainnya lengkap untuk JS
-            return '
+    public function datatable(Request $request)
+    {
+        // Eager loading division dan regional
+        $data = Employee::with(['division', 'regional'])->latest();
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('departemen', function ($row) {
+                return $row->division->name ?? '-';
+            })
+            ->addColumn('kode_dept', function ($row) {
+                // Menampilkan kode dari tabel divisions
+                return $row->division->code ?? '-';
+            })
+            ->addColumn('regional', function ($row) {
+                return $row->regional->name ?? '-';
+            })
+            ->addColumn('action', function ($row) {
+                // Pastikan atribut data-id dan atribut lainnya lengkap untuk JS
+                return '
                 <div class="btn-group">
-                    <button class="btn btn-sm btn-info btn-view" data-id="'.$row->id.'" title="Detail"><i class="mdi mdi-eye"></i></button>
-                    <button class="btn btn-sm btn-primary btn-edit" 
-                        data-id="'.$row->id.'" 
-                        data-division-id="'.$row->division_id.'" 
-                        data-division-code="'.($row->division->code ?? '').'"
+                    <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
+                    <button class="btn btn-sm btn-primary btn-edit"
+                        data-id="' . $row->id . '"
+                        data-division-id="' . $row->division_id . '"
+                        data-division-code="' . ($row->division->code ?? '') . '"
                         title="Edit"><i class="mdi mdi-pencil"></i></button>
-                    <button class="btn btn-sm btn-danger btn-delete" data-id="'.$row->id.'" title="Hapus"><i class="mdi mdi-trash-can"></i></button>
+                    <button class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="mdi mdi-trash-can"></i></button>
                 </div>';
-        })
-        ->rawColumns(['action'])
-        ->make(true);
-}
+            })
+            ->rawColumns(['action'])
+            ->make(true);
+    }
 
     public function store(Request $request)
     {
         $request->validate(['employee_id' => 'required|unique:employees', 'name' => 'required']);
-        
+
         Employee::create($request->all());
         return response()->json(['success' => true, 'message' => 'Karyawan berhasil ditambahkan!']);
     }
