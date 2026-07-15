@@ -11,10 +11,10 @@ class Division extends Model
 
     // Tambahkan 'code' ke dalam fillable
     protected $fillable = [
-        'name', 
-        'code', 
-        'company_id', 
-        'regional_id', 
+        'name',
+        'code',
+        'company_id',
+        'regional_id',
         'abbreviation'
     ];
 

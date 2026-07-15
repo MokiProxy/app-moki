@@ -43,7 +43,7 @@ $role = session('user_role');
                 <span key="t-master-data">Manajemen Tiket</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                <li><a href="{{ route('employee') }}"><i class='mdi mdi-ticket'></i>Semua Tiket</a></li>
+                <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Semua Tiket</a></li>
                 @if ($role == "")
                 <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-ticket'></i>Buat Tiket</a></li>
                 @endif

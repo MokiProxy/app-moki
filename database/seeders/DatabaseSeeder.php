@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call(RegionalSeeder::class);
         $this->call(DivisionSeeder::class); // Pindahkan ke atas sebelum Employee
 
-        // 2. Data Dengan Relasi (Dependent)
+        // // 2. Data Dengan Relasi (Dependent)
         $this->call(EmployeeSeeder::class); // Butuh DivisionID
         $this->call(AssetSeeder::class);    // Biasanya butuh Category/Supplier
 
@@ -30,6 +30,10 @@ class DatabaseSeeder extends Seeder
         $this->call(TicketPrioritySeeder::class);
 
         // Hierarchy Organisasi
-        $this->call(HierarchySeeder::class);
+        // $this->call(HierarchySeeder::class);
+
+        // Master Data Sederhana
+        $this->call(GolonganDarahSeeder::class);
+        $this->call(JenisKelaminSeeder::class);
     }
 }

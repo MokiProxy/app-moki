@@ -14,4 +14,8 @@ class TicketPriority extends Model
         "level",
         "color"
     ];
+
+    public function ticket() {
+        $this->hasMany(Ticket::class, "id", "ticket_priority_id");
+    }
 }

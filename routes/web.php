@@ -61,6 +61,7 @@ Route::group(['middleware' => ['auth']], function () {
 
         // Ticket
         Route::resource("tickets", HelpDeskTicketController::class);
+        Route::post('tickets/datatable', [HelpDeskTicketController::class, 'datatable'])->name('tickets.datatable');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

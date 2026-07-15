@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Ticket;
+use App\Models\Ticket as ModelsTicket;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -67,4 +71,19 @@ class User extends Authenticatable
     {
         return $this->role_id === self::ROLE_ATASAN;
     }
+
+    public function requester()
+    {
+        $this->hasMany(ModelsTicket::class, "id", "requester_id");
+    }
+    public function assignedTo()
+    {
+        $this->hasMany(ModelsTicket::class, "id", "assigned_to");
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
 }

@@ -19,6 +19,7 @@ class UserSeeder extends Seeder
 
         User::create([
             'name'        => 'MOKODEV',
+            "nopeg"       => '12345678',
             'email'       => 'admin@admin.com',
             'password'    => Hash::make('password'),
             'role_id'     => User::ROLE_SUPERADMIN, // Otomatis jadi Superadmin (1)

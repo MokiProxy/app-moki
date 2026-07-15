@@ -4,12 +4,14 @@ namespace App\Http\Controllers\HelpDesk;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use App\Models\Ticket as ModelsTicket;
 use App\Models\TicketAttachment;
 use App\Models\TicketCategory;
 use App\Models\TicketPriority;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\DataTables;
 
 class TicketController extends Controller
 {
@@ -20,7 +22,51 @@ class TicketController extends Controller
      */
     public function index()
     {
-        //
+        return view("helpdesk.tickets.index");
+    }
+
+    // Data Table
+    public function datatable(Request $request)
+    {
+        $data = Ticket::with(["requester.employee.division"])->latest();
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('ticket_number', function ($row) {
+                $ticketNumber = $row->ticket_number;
+                return "<p class='fw-bold m-0 p-0'>$ticketNumber</p>";
+            })
+            ->addColumn('requester_name', function ($row) {
+                return $row->requester->employee->name . " - " . $row->requester->employee->division->name ?? '-';
+            })
+            ->addColumn('assigned_to_name', function ($row) {
+                return $row->assignedTo->name ?? 'Belum Ditugaskan';
+            })
+            ->addColumn('ticket_category_name', function ($row) {
+                return $row->ticketCategory->name ?? '-';
+            })
+            ->addColumn('ticket_priority_name', function ($row) {
+                $color = $row->ticketPriority->color;
+                $name = $row->ticketPriority->name;
+                return "<div style='display: flex; align-items: center; gap: 5px;'><div style='width: 13px; height: 13px; background-color: $color; border-radius: 100%;'></div>" . ucfirst($name) . "</span>" ?? '-';
+            })
+            ->addColumn('title', function ($row) {
+                return $row->title ?? '-';
+            })
+            ->addColumn('due_time', function ($row) {
+                return $row->due_time ?? '-';
+            })
+            ->addColumn('status', function ($row) {
+                return "<p class='m-0 bg-success text-center p-1 rounded fw-bold text-white'>" . ucfirst($row->status) . "</p>" ?? '-';
+            })
+            ->addColumn('action', function ($row) {
+                // Pastikan atribut data-id dan atribut lainnya lengkap untuk JS
+                return '
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
+                </div>';
+            })
+            ->rawColumns(['ticket_number', 'assigned_to_name', 'ticket_priority_name', 'status', 'action'])
+            ->make(true);
     }
 
     /**
@@ -45,7 +91,7 @@ class TicketController extends Controller
     public function generateTicketNumber()
     {
         $latestTicket = Ticket::latest()->first();
-        if($latestTicket == null) {
+        if ($latestTicket == null) {
             return "TIX-" . date("Ymd") . "-0001";
         } else {
             $lastTicket =  explode("-", $latestTicket["ticket_number"])[2] ?? "0000";
@@ -110,8 +156,9 @@ class TicketController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    {
-        //
+{
+        $ticket = ModelsTicket::with(["requester.employee.division", "assignedTo", "ticketCategory", "ticketPriority"])->find($id);
+        return response()->json(['success' => true, 'data' => $ticket]);
     }
 
     /**

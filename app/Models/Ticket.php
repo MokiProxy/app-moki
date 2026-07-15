@@ -30,4 +30,21 @@ class Ticket extends Model
     {
         return $this->hasMany(TicketAttachment::class);
     }
+
+    public function requester() {
+        return $this->belongsTo(User::class, "requester_id", "id");
+    }
+
+    public function assignedTo() {
+        return $this->belongsTo(User::class, "assigned_to", "id");
+    }
+
+    public function ticketCategory() {
+        return $this->belongsTo(TicketCategory::class, "ticket_category_id", "id");
+    }
+
+    public function ticketPriority() {
+        return $this->belongsTo(TicketPriority::class, "ticket_priority_id", "id");
+    }
+
 }

@@ -4,7 +4,7 @@
             <div class="navbar-brand-box bg-primary text-center">
                 <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
                     <span class="logo-sm">
-                        <h5 class="text-white mt-4">Help Desk</h5>
+                        <h5 class="text-white mt-3">Help Desk</h5>
                     </span>
                     <span class="logo-lg mt-4">
                         <div class="flex">
