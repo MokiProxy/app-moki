@@ -8,22 +8,40 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
+        $users = [
+            [
+                'name'        => 'MOKODEV',
+                "nopeg"       => '12345678',
+                'email'       => 'admin@admin.com',
+                'password'    => Hash::make('password'),
+                'role_id'     => User::ROLE_SUPERADMIN,
+                'employee_id' => null,
+            ],
+            [
+                'name'        => 'Teknisi A',
+                "nopeg"       => 'TEK001',
+                'email'       => 'teknisi.a@company.com',
+                'password'    => Hash::make('password'),
+                'role_id'     => User::ROLE_TEKNISI,
+                'employee_id' => null,
+            ],
+            [
+                'name'        => 'Teknisi B',
+                "nopeg"       => 'TEK002',
+                'email'       => 'teknisi.b@company.com',
+                'password'    => Hash::make('password'),
+                'role_id'     => User::ROLE_TEKNISI,
+                'employee_id' => null,
+            ],
+        ];
 
-
-        User::create([
-            'name'        => 'MOKODEV',
-            "nopeg"       => '12345678',
-            'email'       => 'admin@admin.com',
-            'password'    => Hash::make('password'),
-            'role_id'     => User::ROLE_SUPERADMIN, // Otomatis jadi Superadmin (1)
-            'employee_id' => null, // Admin utama biasanya tidak terikat data karyawan fisik
-        ]);
+        foreach ($users as $user) {
+            User::firstOrCreate(
+                ['nopeg' => $user['nopeg']],
+                $user
+            );
+        }
     }
 }

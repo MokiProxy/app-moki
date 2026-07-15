@@ -37,6 +37,7 @@
                                     <option value="1">Super Admin</option>
                                     <option value="2">Approver</option>
                                     <option value="3">User/Staff</option>
+                                    <option value="4">Teknisi Help Desk</option>
                                 </select>
                             </div>
                         </div>

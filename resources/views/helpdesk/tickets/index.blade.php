@@ -47,9 +47,9 @@
                     <div>
                         <div class="d-flex justify-content-between">
                             <p class="m-0 p-0" id="tc-ticket_number"></p>
-                            <p class="m-0 p-1 ps-2 pe-2 bg-success rounded fw-bold text-white" id="tc-ticket_status">OPEN</p>
+                            <p class="m-0 p-1 ps-2 pe-2 bg-success rounded fw-bold text-white" id="tc-ticket_status"></p>
                         </div>
-                        <h3 id="tc-ticket_title"></h3>
+                        <h2 id="tc-ticket_title"></h2>
                         <div class="d-flex align-items-center gap-2 mt-3">
                             <div id="tc-ticket_category" class="bg-primary m-0 p-1 ps-2 pe-2 fw-bold text-white rounded"></div>
                             <div class="bg-primary m-0 p-1 ps-2 pe-2 fw-bold text-white rounded">
@@ -72,6 +72,31 @@
                                 <div class="col">
                                     <label class="form-label fw-bold">Batas Waktu</label>
                                     <input type="text" name="title" id="tc-ticket_due_time" class="form-control" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6 class="fw-bold">
+                                File Attachment
+                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="btn-toggle-folder">
+                                    <i class="mdi mdi-folder" id="folder-icon"></i> <span id="folder-label">Buka Folder</span>
+                                </button>
+                            </h6>
+                            <div id="attachment-list" class="ps-3" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                        <div class="mt-3" id="assign-teknisi-section">
+                            <hr>
+                            <h6 class="fw-bold">Assign Teknisi</h6>
+                            <div class="row g-2 align-items-center">
+                                <div class="col">
+                                    <select class="form-control" id="select-teknisi">
+                                        <option value="">-- Pilih Teknisi --</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-primary" id="btn-assign-teknisi">Pilih</button>
                                 </div>
                             </div>
                         </div>
@@ -161,7 +186,9 @@
 
         // Helper: Fill Form
         function fillForm(data) {
-            $('#tc-ticket_number').html(data.ticket_number);
+            $('#tc-ticket_status').html(data.status)
+            $('#tc-ticket_number').html(data.ticket_number).data('id', data.id);
+            $('#tc-ticket_number').attr('data-id', data.id);
             $('#tc-ticket_title').html(data.title);
             $('#tc-ticket_description').html(data.description);
             $('#tc-ticket_category').html(data.ticket_category.name);
@@ -172,6 +199,75 @@
             $('#tc-ticket_assignedto_color').css('background-color', data.assigned_to?.name ? "green" : "red");
             $('#tc-ticket_sla').val(data.sla);
             $('#tc-ticket_due_time').val(data.due_time);
+
+            // Reset folder
+            $('#attachment-list').hide();
+            $('#folder-icon').removeClass('mdi-folder-open').addClass('mdi-folder');
+            $('#folder-label').text('Buka Folder');
+
+            renderAttachments(data.attachments || []);
+
+            loadTeknisiDropdown(data.assigned_to);
+        }
+
+        function loadTeknisiDropdown(selectedId) {
+            $.get("{{ route('helpdesk.tickets.teknisi') }}", function(res) {
+                if (res.success) {
+                    var select = $('#select-teknisi');
+                    select.empty().append('<option value="">-- Pilih Teknisi --</option>');
+                    $.each(res.data, function(i, teknisi) {
+                        var isSelected = teknisi.id == selectedId ? 'selected' : '';
+                        select.append('<option value="' + teknisi.id + '" ' + isSelected + '>' + teknisi.name + '</option>');
+                    });
+                    if (selectedId) {
+                        $('#assign-teknisi-section').hide();
+                    } else {
+                        $('#assign-teknisi-section').show();
+                    }
+                }
+            });
+        }
+
+        function renderAttachments(attachments) {
+            var container = $('#attachment-list');
+            container.empty();
+
+            if (attachments.length === 0) {
+                container.html('<p class="text-muted small">Tidak ada file attachment</p>');
+                return;
+            }
+
+            var html = '<ul class="list-unstyled m-0 p-0">';
+            $.each(attachments, function(i, file) {
+                var icon = getFileIcon(file.mime_type);
+                var url = "{{ url('helpdesk/tickets/attachments') }}/" + file.id + "/download";
+                html += '<li class="py-1">';
+                html += '  <a href="' + url + '" target="_blank" class="text-decoration-none file-attachment-link">';
+                html += icon + ' ' + $('<span>').text(file.file_name).html();
+                html += '  </a>';
+                html += '  <span class="text-muted small ms-2">(' + formatFileSize(file.file_size) + ')</span>';
+                html += '</li>';
+            });
+            html += '</ul>';
+            container.html(html);
+        }
+
+        function getFileIcon(mime) {
+            if (mime === 'application/pdf') return '<i class="mdi mdi-file-pdf text-danger"></i>';
+            if (mime.includes('word') || mime.includes('document')) return '<i class="mdi mdi-file-word text-primary"></i>';
+            if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('sheet')) return '<i class="mdi mdi-file-excel text-success"></i>';
+            if (mime.includes('presentation') || mime.includes('powerpoint') || mime.includes('slides')) return '<i class="mdi mdi-file-powerpoint text-warning"></i>';
+            if (mime.includes('image')) return '<i class="mdi mdi-file-image text-info"></i>';
+            if (mime.includes('zip') || mime.includes('rar')) return '<i class="mdi mdi-folder-zip"></i>';
+            return '<i class="mdi mdi-file"></i>';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            var k = 1024;
+            var sizes = ['B', 'KB', 'MB', 'GB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         // Tombol View
@@ -184,6 +280,53 @@
                     $('#modal-ticket').modal('show');
                 }
             });
+        });
+
+        // Tombol Assign Teknisi
+        $(document).on('click', '#btn-assign-teknisi', function() {
+            var ticketId = $('#tc-ticket_number').data('id');
+            var teknisiId = $('#select-teknisi').val();
+
+            if (!teknisiId) {
+                Swal.fire('Peringatan', 'Silakan pilih teknisi terlebih dahulu', 'warning');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ url('helpdesk/tickets') }}/" + ticketId,
+                type: "POST",
+                data: {
+                    _token: CSRF_TOKEN,
+                    _method: 'PUT',
+                    assigned_to: teknisiId,
+                },
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('Berhasil', res.message, 'success');
+                        $('#modal-ticket').modal('hide');
+                        table.ajax.reload();
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.message || 'Error Sistem', 'error');
+                }
+            });
+        });
+
+        // Tombol toggle folder attachment
+        $(document).on('click', '#btn-toggle-folder', function() {
+            var list = $('#attachment-list');
+            var icon = $('#folder-icon');
+            var label = $('#folder-label');
+            if (list.is(':visible')) {
+                list.slideUp();
+                icon.removeClass('mdi-folder-open').addClass('mdi-folder');
+                label.text('Buka Folder');
+            } else {
+                list.slideDown();
+                icon.removeClass('mdi-folder').addClass('mdi-folder-open');
+                label.text('Tutup Folder');
+            }
         });
 
         $('#btn-refresh').click(function() {

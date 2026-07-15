@@ -17,7 +17,7 @@ class CreateUsersTable extends Migration
             $table->id();
             // Hapus ->after('id'), cukup letakkan di bawah $table->id()
             $table->unsignedBigInteger('employee_id')->nullable();
-            $table->string("nopeg")->unique();
+            $table->string("nopeg")->unique()->nullable();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

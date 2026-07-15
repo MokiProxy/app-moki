@@ -23,7 +23,6 @@ $role = session('user_role');
         </li>
 
         {{-- JIKA BUKAN APPROVER, TAMPILKAN MASTER DATA --}}
-        @if($role != 2)
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
@@ -34,9 +33,7 @@ $role = session('user_role');
                 <li><a href="{{ route('helpdesk.ticket-priorities.index') }}"><i class='mdi mdi-alert-box'></i>Prioritas Tiket</a></li>
             </ul>
         </li>
-        @endif
 
-        @if($role != 2)
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='mdi mdi-ticket'></i>
@@ -44,15 +41,12 @@ $role = session('user_role');
             </a>
             <ul class="sub-menu" aria-expanded="false">
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Semua Tiket</a></li>
-                @if ($role == "")
+                <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Tiket Saya</a></li>
                 <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-ticket'></i>Buat Tiket</a></li>
-                @endif
                 <li><a href="{{ route('regional') }}"><i class='mdi mdi-ticket'></i>Prioritas Tiket</a></li>
             </ul>
         </li>
-        @endif
 
-        @if($role != 2)
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-file'></i>
@@ -63,7 +57,6 @@ $role = session('user_role');
                 <li><a href="{{ route('regional') }}"><i class='bx bx-map-alt'></i>Prioritas Tiket</a></li>
             </ul>
         </li>
-        @endif
 
     </ul>
 </div>

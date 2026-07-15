@@ -8,6 +8,7 @@ use App\Models\Ticket as ModelsTicket;
 use App\Models\TicketAttachment;
 use App\Models\TicketCategory;
 use App\Models\TicketPriority;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +22,10 @@ class TicketController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
+    {
+        return view("helpdesk.tickets.index");
+    }
+    public function me()
     {
         return view("helpdesk.tickets.index");
     }
@@ -156,8 +161,8 @@ class TicketController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-{
-        $ticket = ModelsTicket::with(["requester.employee.division", "assignedTo", "ticketCategory", "ticketPriority"])->find($id);
+    {
+        $ticket = ModelsTicket::with(["requester.employee.division", "assignedTo", "ticketCategory", "ticketPriority", "attachments"])->find($id);
         return response()->json(['success' => true, 'data' => $ticket]);
     }
 
@@ -172,6 +177,15 @@ class TicketController extends Controller
         //
     }
 
+    public function getTeknisi()
+    {
+        $teknisi = User::where('role_id', User::ROLE_TEKNISI)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        return response()->json(['success' => true, 'data' => $teknisi]);
+    }
+
     /**
      * Update the specified resource in storage.
      *
@@ -181,7 +195,21 @@ class TicketController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $request->validate([
+            'assigned_to' => 'required|exists:users,id',
+        ]);
+
+        try {
+            $ticket = Ticket::findOrFail($id);
+            $ticket->update([
+                'assigned_to' => $request->assigned_to,
+                'status' => 'ASSIGNED',
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Teknisi berhasil ditugaskan!']);
+        } catch (Exception $err) {
+            return response()->json(['success' => false, 'message' => $err->getMessage()]);
+        }
     }
 
     /**

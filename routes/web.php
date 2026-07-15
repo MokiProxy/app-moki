@@ -26,6 +26,8 @@ use App\Http\Controllers\HelpDesk\DashboardController as HelpDeskDashboardContro
 use App\Http\Controllers\HelpDesk\TicketCategoryController as HelpDeskTicketCategoryController;
 use App\Http\Controllers\HelpDesk\TicketPriorityController as HelpDeskTicketPriorityController;
 use App\Http\Controllers\HelpDesk\TicketController as HelpDeskTicketController;
+use App\Http\Controllers\HelpDesk\TicketAttachmentController as HelpDeskTicketAttachmentController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +50,7 @@ Route::group(['middleware' => ['guest']], function () {
 Route::group(['middleware' => ['auth']], function () {
 
     // FITUR HELPDESK
-    Route::prefix('helpdesk')->name('helpdesk.')->group(function() {
+    Route::prefix('helpdesk')->name('helpdesk.')->group(function () {
         Route::get("/", [HelpDeskDashboardController::class, 'index'])->name('index');
 
         // Ticket Category
@@ -61,7 +63,10 @@ Route::group(['middleware' => ['auth']], function () {
 
         // Ticket
         Route::resource("tickets", HelpDeskTicketController::class);
+        Route::get("tickets/me", [HelpDeskTicketController::class, "me"])->name("tickets.me");
         Route::post('tickets/datatable', [HelpDeskTicketController::class, 'datatable'])->name('tickets.datatable');
+        Route::get('tickets/attachments/{id}/download', [HelpDeskTicketAttachmentController::class, 'download'])->name('tickets.attachments.download');
+        Route::get('technicians', [HelpDeskTicketController::class, 'getTeknisi'])->name('tickets.teknisi');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
