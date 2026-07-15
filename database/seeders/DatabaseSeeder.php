@@ -28,5 +28,8 @@ class DatabaseSeeder extends Seeder
         // Help Desk
         $this->call(TicketCategorySeeder::class);
         $this->call(TicketPrioritySeeder::class);
+
+        // Hierarchy Organisasi
+        $this->call(HierarchySeeder::class);
     }
 }
