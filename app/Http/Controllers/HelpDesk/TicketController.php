@@ -36,6 +36,8 @@ class TicketController extends Controller
         $authUserId = auth()->user()->id;
         if ($role == 4) {
             $data = Ticket::with(["requester.employee.division"])->where('assigned_to', "=", $authUserId)->get();
+        } else if ($role == 3) {
+            $data = Ticket::with(["requester.employee.division"])->where('requester_id', "=", $authUserId)->get();
         } else {
             $data = Ticket::with(["requester.employee.division"])->latest();
         }
@@ -75,12 +77,12 @@ class TicketController extends Controller
                         return '
                         <div class="btn-group">
                             <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
+                            <button class="btn btn-sm btn-success btn-resolved" data-id="' . $row->id . '" title="Resolved"><i class="mdi mdi-check-all"></i></button>
                         </div>';
                     } else {
                         return '
                         <div class="btn-group">
                             <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
-                            <button class="btn btn-sm btn-warning btn-approve" data-id="' . $row->id . '" title="Approve"><i class="mdi mdi-check"></i></button>
                         </div>';
                     }
                 } else {
@@ -131,7 +133,7 @@ class TicketController extends Controller
         try {
             $ticketNumber = $this->generateTicketNumber();
             $timestamp = strtotime("+$request->sla hours");
-            
+
             $ticket = Ticket::create([
                 "ticket_number" => $ticketNumber,
                 "requester_id" => auth()->user()->id,
@@ -181,7 +183,7 @@ class TicketController extends Controller
             ->with('user')
             ->orderBy('created_at', 'ASC')
             ->get();
-            
+
         return response()->json(['success' => true, 'data' => $histories]);
     }
 
@@ -204,14 +206,14 @@ class TicketController extends Controller
         try {
             $ticket = Ticket::findOrFail($id);
             $oldAgent = $ticket->assigned_to;
-            
+
             $ticket->update([
                 'assigned_to' => $request->assigned_to,
                 'status' => 'ASSIGNED',
             ]);
 
             $this->historyService->assigned($ticket, $oldAgent, $request->assigned_to);
-            
+
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Teknisi berhasil ditugaskan!']);
         } catch (Exception $err) {
@@ -252,7 +254,7 @@ class TicketController extends Controller
         try {
             $ticket = Ticket::findOrFail($id);
             $oldStatus = $ticket->status;
-            
+
             $ticket->update([
                 'status' => 'IN_PROGRESS',
             ]);
@@ -261,6 +263,28 @@ class TicketController extends Controller
 
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Tiket Berhasil Disetujui!']);
+        } catch (Exception $err) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $err->getMessage()]);
+        }
+    }
+
+    public function resolved($id)
+    {
+        DB::beginTransaction();
+        try {
+            $ticket = Ticket::findOrFail($id);
+            $oldStatus = $ticket->status;
+
+            $ticket->update([
+                'status' => 'RESOLVED',
+                'resolved_at' => now(),
+            ]);
+
+            $this->historyService->statusChanged($ticket, $oldStatus, 'RESOLVED');
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Tiket berhasil diselesaikan!']);
         } catch (Exception $err) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $err->getMessage()]);

@@ -19,22 +19,6 @@ class UserSeeder extends Seeder
                 'role_id'     => User::ROLE_SUPERADMIN,
                 'employee_id' => null,
             ],
-            [
-                'name'        => 'Teknisi A',
-                "nopeg"       => 'TEK001',
-                'email'       => 'teknisi.a@company.com',
-                'password'    => Hash::make('password'),
-                'role_id'     => User::ROLE_TEKNISI,
-                'employee_id' => null,
-            ],
-            [
-                'name'        => 'Teknisi B',
-                "nopeg"       => 'TEK002',
-                'email'       => 'teknisi.b@company.com',
-                'password'    => Hash::make('password'),
-                'role_id'     => User::ROLE_TEKNISI,
-                'employee_id' => null,
-            ],
         ];
 
         foreach ($users as $user) {

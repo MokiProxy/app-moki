@@ -103,6 +103,29 @@ $authUserRoleId = auth()->user()->role_id;
                             <div id="timeline-list"></div>
                         </div>
                     </div>
+                    <div class="mt-3" id="chat-section">
+                        <hr>
+                        <h6 class="fw-bold">
+                            <i class="mdi mdi-chat-processing me-1"></i> Diskusi
+                        </h6>
+                        <div id="chat-container" class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
+                            <div id="chat-messages"></div>
+                        </div>
+                        <div id="chat-attachment-preview" class="mt-2" style="display:none;">
+                            <span class="badge bg-info" id="chat-file-name"></span>
+                            <button type="button" class="btn btn-sm btn-outline-danger ms-1" id="btn-remove-chat-file">&times;</button>
+                        </div>
+                        <div class="input-group mt-2">
+                            <label class="input-group-text" for="chat-file-input" style="cursor:pointer;">
+                                <i class="mdi mdi-paperclip"></i>
+                            </label>
+                            <input type="file" id="chat-file-input" class="d-none" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar">
+                            <input type="text" id="chat-input" class="form-control" placeholder="Ketik pesan..." autocomplete="off">
+                            <button type="button" class="btn btn-primary" id="btn-send-chat">
+                                <i class="mdi mdi-send"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="mt-3" id="assign-teknisi-section">
                         <hr>
                         <h6 class="fw-bold">Assign Teknisi</h6>
@@ -143,6 +166,34 @@ $authUserRoleId = auth()->user()->role_id;
     .tl-diff { font-size: 0.78rem; margin-top: 2px; }
     .tl-diff .old { color: #dc3545; text-decoration: line-through; }
     .tl-diff .new { color: #198754; font-weight: 600; }
+
+    .chat-bubble {
+        max-width: 75%; padding: 10px 14px; border-radius: 16px;
+        font-size: 0.9rem; word-wrap: break-word; margin-bottom: 4px;
+        display: inline-block; width: fit-content;
+    }
+    .chat-bubble-right {
+        background-color: #0d6efd; color: #fff;
+        margin-left: auto; border-bottom-right-radius: 4px;
+    }
+    .chat-bubble-left {
+        background-color: #fff; color: #212529; border: 1px solid #dee2e6;
+        margin-right: auto; border-bottom-left-radius: 4px;
+    }
+    .chat-avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0;
+    }
+    .chat-meta { font-size: 0.72rem; color: #6c757d; margin-top: 2px; }
+    .chat-file-link {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 8px; border-radius: 8px; font-size: 0.8rem;
+        text-decoration: none; margin-top: 4px;
+    }
+    .chat-bubble-right .chat-file-link { background: rgba(255,255,255,0.15); color: #fff; }
+    .chat-bubble-left .chat-file-link { background: #f0f0f0; color: #333; }
+    #chat-container { scroll-behavior: smooth; }
 </style>
 
 <script src="{{ asset('libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
@@ -270,6 +321,194 @@ $authUserRoleId = auth()->user()->role_id;
         });
     }
 
+    // ==================== CHAT SYSTEM ====================
+    var authUserId = {{ auth()->id() }};
+    var authUserName = "{{ auth()->user()->name }}";
+    var chatPollingTimer = null;
+    var chatSeenIds = new Set();
+    var chatSelectedFile = null;
+    var chatSending = false;
+
+    function getInitials(name) {
+        if (!name) return '??';
+        var parts = name.trim().split(/\s+/);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    }
+
+    function formatChatTime(dateStr) {
+        var m = moment(dateStr).locale('id');
+        return m.format('DD MMM, HH:mm');
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+    }
+
+    function renderChatMessage(comment) {
+        var isOwn = comment.user_id == authUserId;
+        var userName = comment.user ? comment.user.name : 'Unknown';
+        var initials = getInitials(userName);
+        var msgText = escapeHtml(comment.comment);
+        var time = formatChatTime(comment.created_at);
+        var avatarColor = isOwn ? 'bg-primary' : 'bg-secondary';
+
+        var fileHtml = '';
+        if (comment.attachment) {
+            var url = "{{ url('helpdesk/tickets/attachments') }}/" + comment.attachment.id + "/download";
+            var icon = 'mdi-file';
+            var mime = comment.attachment.mime_type || '';
+            if (mime === 'application/pdf') icon = 'mdi-file-pdf text-danger';
+            else if (mime.includes('word') || mime.includes('document')) icon = 'mdi-file-word text-primary';
+            else if (mime.includes('spreadsheet') || mime.includes('excel')) icon = 'mdi-file-excel text-success';
+            else if (mime.includes('image')) icon = 'mdi-file-image text-info';
+            else if (mime.includes('zip') || mime.includes('rar')) icon = 'mdi-folder-zip';
+
+            fileHtml = '<br><a href="' + url + '" target="_blank" class="chat-file-link">' +
+                '<i class="mdi ' + icon + '"></i> ' + escapeHtml(comment.attachment.file_name) + '</a>';
+        }
+
+        var bubbleHtml = '<div class="chat-bubble ' + (isOwn ? 'chat-bubble-right' : 'chat-bubble-left') + '">' +
+            (msgText ? msgText : '') + fileHtml + '</div>';
+
+        if (isOwn) {
+            return '<div class="d-flex mb-3 align-items-end justify-content-end">' +
+                '<div class="text-end">' +
+                    '<div class="chat-meta">' + time + '</div>' +
+                    bubbleHtml +
+                '</div>' +
+                '<div class="chat-avatar ' + avatarColor + ' ms-2">' + initials + '</div>' +
+            '</div>';
+        } else {
+            return '<div class="d-flex mb-3 align-items-end">' +
+                '<div class="chat-avatar ' + avatarColor + ' me-2">' + initials + '</div>' +
+                '<div>' +
+                    '<div class="chat-meta">' + escapeHtml(userName) + ' &middot; ' + time + '</div>' +
+                    bubbleHtml +
+                '</div>' +
+            '</div>';
+        }
+    }
+
+    function loadChatMessages(ticketId) {
+        var container = $('#chat-messages');
+        container.html('<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div> Memuat pesan...</div>');
+
+        $.get("{{ url('helpdesk/tickets') }}/" + ticketId + "/comments", function(res) {
+            chatSeenIds.clear();
+            if (res.success && res.data.length > 0) {
+                var html = '';
+                $.each(res.data, function(i, item) {
+                    html += renderChatMessage(item);
+                    chatSeenIds.add(item.id);
+                });
+                container.html(html);
+            } else {
+                container.html('<p class="text-muted small fst-italic text-center py-2">Belum ada pesan. Mulai diskusi!</p>');
+            }
+            scrollChatToBottom();
+        }).fail(function() {
+            container.html('<p class="text-danger small">Gagal memuat pesan.</p>');
+        });
+    }
+
+    function pollNewMessages(ticketId) {
+        if (chatSending) return;
+
+        $.get("{{ url('helpdesk/tickets') }}/" + ticketId + "/comments", function(res) {
+            if (res.success && res.data.length > 0) {
+                var hasNew = false;
+                $.each(res.data, function(i, item) {
+                    if (!chatSeenIds.has(item.id)) {
+                        $('#chat-messages').append(renderChatMessage(item));
+                        chatSeenIds.add(item.id);
+                        hasNew = true;
+                    }
+                });
+                if (hasNew) scrollChatToBottom();
+            }
+        });
+    }
+
+    function scrollChatToBottom() {
+        var container = $('#chat-container');
+        container.scrollTop(container[0].scrollHeight);
+    }
+
+    function startChatPolling(ticketId) {
+        stopChatPolling();
+        chatPollingTimer = setInterval(function() {
+            pollNewMessages(ticketId);
+        }, 5000);
+    }
+
+    function stopChatPolling() {
+        if (chatPollingTimer) {
+            clearInterval(chatPollingTimer);
+            chatPollingTimer = null;
+        }
+    }
+
+    function sendChatMessage(ticketId) {
+        var text = $('#chat-input').val().trim();
+        var fileInput = document.getElementById('chat-file-input');
+        var file = fileInput.files[0];
+
+        if (!text && !file) return;
+
+        chatSending = true;
+        var formData = new FormData();
+        if (text) formData.append('comment', text);
+        if (file) formData.append('attachment', file);
+        formData.append('_token', CSRF_TOKEN);
+
+        var sendBtn = $('#btn-send-chat');
+        sendBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+        $.ajax({
+            url: "{{ url('helpdesk/tickets') }}/" + ticketId + "/comments",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                if (res.success) {
+                    if ($('#chat-messages .text-muted.fst-italic').length) {
+                        $('#chat-messages').empty();
+                    }
+                    $('#chat-messages').append(renderChatMessage(res.data));
+                    chatSeenIds.add(res.data.id);
+                    scrollChatToBottom();
+
+                    $('#chat-input').val('');
+                    resetChatFilePreview();
+                }
+            },
+            error: function(xhr) {
+                chatSending = false;
+                Swal.fire('Error', xhr.responseJSON?.message || 'Gagal mengirim pesan', 'error');
+            },
+            complete: function() {
+                chatSending = false;
+                sendBtn.prop('disabled', false).html('<i class="mdi mdi-send"></i>');
+            }
+        });
+    }
+
+    function resetChatFilePreview() {
+        chatSelectedFile = null;
+        $('#chat-file-input').val('');
+        $('#chat-attachment-preview').hide();
+        $('#chat-file-name').text('');
+    }
+
+    // ==================== END CHAT SYSTEM ====================
+
     $(document).ready(function() {
         var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
 
@@ -378,6 +617,10 @@ $authUserRoleId = auth()->user()->role_id;
                     $('#timeline-label').text('Tampilkan Riwayat');
                     loadTimeline(id);
 
+                    // Load chat
+                    loadChatMessages(id);
+                    startChatPolling(id);
+
                     $('#modal-ticket').modal('show');
                 }
             });
@@ -420,7 +663,45 @@ $authUserRoleId = auth()->user()->role_id;
                 }
             });
         });
-    
+
+        // Tombol Resolved
+        $(document).on('click', '.btn-resolved', function() {
+            var ticketId = $(this).data('id');
+
+            Swal.fire({
+                title: 'Tandai Selesai?',
+                text: "Status tiket akan berubah menjadi Resolved.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Selesai!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ url('helpdesk/tickets/resolve') }}/" + ticketId,
+                        type: "POST",
+                        data: {
+                            _token: CSRF_TOKEN,
+                            _method: 'PUT',
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Berhasil', res.message, 'success');
+                                table.ajax.reload();
+                            } else {
+                                Swal.fire('Gagal', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.fire('Error', xhr.responseJSON?.message || 'Error Sistem', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
         // Tombol Assign Teknisi
         $(document).on('click', '#btn-assign-teknisi', function() {
             var ticketId = $('#tc-ticket_number').data('id');
@@ -484,6 +765,47 @@ $authUserRoleId = auth()->user()->role_id;
         $('#btn-refresh').click(function() {
             table.ajax.reload();
         });
+
+        // ==================== CHAT EVENT HANDLERS ====================
+
+        // Stop polling when modal closed
+        $('#modal-ticket').on('hidden.bs.modal', function () {
+            stopChatPolling();
+            resetChatFilePreview();
+            $('#chat-input').val('');
+        });
+
+        // Send message button
+        $(document).on('click', '#btn-send-chat', function() {
+            var ticketId = $('#tc-ticket_number').data('id');
+            if (ticketId) sendChatMessage(ticketId);
+        });
+
+        // Enter key to send
+        $(document).on('keypress', '#chat-input', function(e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                var ticketId = $('#tc-ticket_number').data('id');
+                if (ticketId) sendChatMessage(ticketId);
+            }
+        });
+
+        // File input change
+        $(document).on('change', '#chat-file-input', function() {
+            var file = this.files[0];
+            if (file) {
+                chatSelectedFile = file;
+                $('#chat-file-name').text(file.name);
+                $('#chat-attachment-preview').show();
+            }
+        });
+
+        // Remove selected file
+        $(document).on('click', '#btn-remove-chat-file', function() {
+            resetChatFilePreview();
+        });
+
+        // ==================== END CHAT EVENT HANDLERS ====================
     });
 </script>
 @endsection

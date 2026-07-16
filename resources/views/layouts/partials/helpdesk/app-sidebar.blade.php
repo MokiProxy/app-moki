@@ -45,7 +45,7 @@ $authUserRoleId = auth()->user()->role_id;
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Semua Tiket</a></li>
                 @endif
 
-                @if(in_array($authUserRoleId, [4]))
+                @if(in_array($authUserRoleId, [4, 3]))
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Tiket Saya</a></li>
                 @endif
 

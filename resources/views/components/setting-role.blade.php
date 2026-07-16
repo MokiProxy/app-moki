@@ -75,6 +75,8 @@
                                 <td class="text-center">
                                     @if($row->role_id == 1) <span class="badge bg-danger">Super Admin</span>
                                     @elseif($row->role_id == 2) <span class="badge bg-warning text-dark">Approver</span>
+                                    @elseif($row->role_id == 3) <span class="badge bg-info text-dark">Staff</span>
+                                    @elseif($row->role_id == 4) <span class="badge bg-success text-dark">Teknisi Help Desk</span>
                                     @else <span class="badge bg-info">Staff</span> @endif
                                 </td>
                                 <td class="p-0 text-center">

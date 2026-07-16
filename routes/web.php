@@ -27,6 +27,7 @@ use App\Http\Controllers\HelpDesk\TicketCategoryController as HelpDeskTicketCate
 use App\Http\Controllers\HelpDesk\TicketPriorityController as HelpDeskTicketPriorityController;
 use App\Http\Controllers\HelpDesk\TicketController as HelpDeskTicketController;
 use App\Http\Controllers\HelpDesk\TicketAttachmentController as HelpDeskTicketAttachmentController;
+use App\Http\Controllers\HelpDesk\TicketCommentController as HelpDeskTicketCommentController;
 
 
 /*
@@ -65,10 +66,15 @@ Route::group(['middleware' => ['auth']], function () {
         Route::resource("tickets", HelpDeskTicketController::class);
         Route::put('tickets/assign/{id}', [HelpDeskTicketController::class, 'assignTeknisi'])->name('tickets.assign');
         Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
+        Route::put('tickets/resolve/{id}', [HelpDeskTicketController::class, 'resolved'])->name('tickets.resolve');
         Route::post('tickets/datatable', [HelpDeskTicketController::class, 'datatable'])->name('tickets.datatable');
         Route::get('tickets/attachments/{id}/download', [HelpDeskTicketAttachmentController::class, 'download'])->name('tickets.attachments.download');
         Route::get('technicians', [HelpDeskTicketController::class, 'getTeknisi'])->name('tickets.teknisi');
         Route::get('tickets/{id}/timeline', [HelpDeskTicketController::class, 'timeline'])->name('tickets.timeline');
+
+        // Ticket Comments (Chat)
+        Route::get('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'index'])->name('tickets.comments.index');
+        Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
