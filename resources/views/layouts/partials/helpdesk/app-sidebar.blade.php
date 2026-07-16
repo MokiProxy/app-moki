@@ -1,20 +1,18 @@
 @php
 $role = session('user_role');
 $authUserRoleId = auth()->user()->role_id;
+
+if($authUserRoleId == 1) {
+$roleColor = "danger";
+} else if ($authUserRoleId == 3) {
+$roleColor = "success";
+} else if ($authUserRoleId == 4) {
+$roleColor = "primary";
+}
 @endphp
 
 <div id="sidebar-menu">
     <ul class="metismenu list-unstyled" id="side-menu">
-
-        <li class="menu-title" key="t-portal">Main Navigation</li>
-        <li>
-            <a href="{{ route('portal.index') }}" class="waves-effect" style="color: #f46a6a;">
-                <i class="bx bx-grid-alt" style="color: #f46a6a;"></i>
-                <span key="t-back-portal" class="fw-bold">Back to Portal</span>
-            </a>
-        </li>
-
-        <li class="menu-title" key="t-menu">Ticket Management</li>
 
         <li>
             <a href="{{ route('helpdesk.index') }}" class="waves-effect">
@@ -49,8 +47,9 @@ $authUserRoleId = auth()->user()->role_id;
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Tiket Saya</a></li>
                 @endif
 
+                @if(in_array($authUserRoleId, [3]))
                 <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-ticket'></i>Buat Tiket</a></li>
-                <li><a href="{{ route('regional') }}"><i class='mdi mdi-ticket'></i>Prioritas Tiket</a></li>
+                @endif
             </ul>
         </li>
 
@@ -63,6 +62,13 @@ $authUserRoleId = auth()->user()->role_id;
                 <li><a href="{{ route('employee') }}"><i class='bx bx-user-circle'></i>Semua Tiket</a></li>
                 <li><a href="{{ route('regional') }}"><i class='bx bx-map-alt'></i>Prioritas Tiket</a></li>
             </ul>
+        </li>
+
+        <li>
+            <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">
+                <i class="bx bx-grid-alt text-{{ $roleColor }}"></i>
+                <span key="t-back-portal" class="fw-bold">Back to Portal</span>
+            </a>
         </li>
 
     </ul>

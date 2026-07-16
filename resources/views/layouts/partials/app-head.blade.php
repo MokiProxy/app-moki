@@ -27,6 +27,14 @@ $authUserRoleId = auth()->user()->role_id;
     <link href="{{ asset('css/icons.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- App Css-->
     <link href="{{ asset('css/app.min.css') }}" rel="stylesheet" type="text/css" />
-    <style></style>
+    <style>
+        .bg-dark-success {
+            background-color: #495749;
+        }
+
+        .bg-dark-primary {
+            background-color: #2B3142;
+        }
+    </style>
 
 </head>

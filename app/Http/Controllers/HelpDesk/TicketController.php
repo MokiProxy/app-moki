@@ -68,7 +68,7 @@ class TicketController extends Controller
                 return $row->due_time ?? '-';
             })
             ->addColumn('status', function ($row) {
-                return "<p class='m-0 bg-success text-center p-1 rounded fw-bold text-white'>" . ucfirst($row->status) . "</p>" ?? '-';
+                return "<div class='d-flex flex-column gap-2'><p class='m-0 bg-success text-center p-1 rounded fw-bold text-white'>" . ucfirst($row->status) . "</p><p class='text-center'><i class='bx bx-star'></i>" . $row->rating . "/5</p></div>" ?? '-';
             })
             ->addColumn('action', function ($row) {
                 $role = session('user_role');
@@ -78,6 +78,19 @@ class TicketController extends Controller
                         <div class="btn-group">
                             <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
                             <button class="btn btn-sm btn-success btn-resolved" data-id="' . $row->id . '" title="Resolved"><i class="mdi mdi-check-all"></i></button>
+                        </div>';
+                    } else {
+                        return '
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
+                        </div>';
+                    }
+                } elseif ($role == 3) {
+                    if ($row->status == "RESOLVED") {
+                        return '
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
+                            <button class="btn btn-sm btn-primary btn-confirm" data-id="' . $row->id . '" title="Confirm"><i class="mdi mdi-check-circle"></i></button>
                         </div>';
                     } else {
                         return '

@@ -238,7 +238,7 @@
 
                         <div class="card-body-wrapper">
                             <div class="icon-circle mx-auto" style="color: {{ $menu['color'] }};">
-                                
+
                             </div>
                             <h6>{{ $menu['title'] }}</h6>
                             <p>{{ $menu['sub'] }}</p>

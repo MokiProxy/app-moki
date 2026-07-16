@@ -21,6 +21,7 @@ class Ticket extends Model
         "sla",
         "due_time",
         "status",
+        "rating",
         "resolved_at",
         "closed_at",
         "created_at",

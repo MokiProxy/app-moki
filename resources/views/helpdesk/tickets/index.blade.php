@@ -11,7 +11,7 @@ $authUserRoleId = auth()->user()->role_id;
         <div class="card shadow-sm">
             <div class="card-body border-bottom bg-light">
                 <div class="d-flex align-items-center">
-                    <h5 class="mb-0 card-title flex-grow-1">{{ in_array($authUserRoleId, [4]) ? "Daftar Tiket Saya" : "Daftar Semua Tiket" }}</h5>
+                    <h5 class="mb-0 card-title flex-grow-1">{{ in_array($authUserRoleId, [4, 3]) ? "Daftar Tiket Saya" : "Daftar Semua Tiket" }}</h5>
                     <div class="flex-shrink-0 d-flex gap-1">
                         <a href="#!" class="btn btn-light" id="btn-refresh"><i class="mdi mdi-refresh"></i></a>
                     </div>
@@ -148,6 +148,37 @@ $authUserRoleId = auth()->user()->role_id;
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modal-confirm" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">Konfirmasi Penyelesaian</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <i class="mdi mdi-check-circle-outline text-success" style="font-size: 48px;"></i>
+                <h5 class="mt-2">Apakah tiket ini sudah sesuai dikerjakan?</h5>
+                <p class="text-muted small">Beri rating untuk pengerjaan tiket ini</p>
+                <div id="star-rating" class="my-3">
+                    <i class="mdi mdi-star-outline star-btn" data-value="1"></i>
+                    <i class="mdi mdi-star-outline star-btn" data-value="2"></i>
+                    <i class="mdi mdi-star-outline star-btn" data-value="3"></i>
+                    <i class="mdi mdi-star-outline star-btn" data-value="4"></i>
+                    <i class="mdi mdi-star-outline star-btn" data-value="5"></i>
+                </div>
+                <input type="hidden" id="rating-value" value="0">
+                <p class="small text-muted" id="rating-text">Pilih rating</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="btn-submit-confirm">
+                    <i class="mdi mdi-check-all me-1"></i> Konfirmasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('plugin')
@@ -194,6 +225,13 @@ $authUserRoleId = auth()->user()->role_id;
     .chat-bubble-right .chat-file-link { background: rgba(255,255,255,0.15); color: #fff; }
     .chat-bubble-left .chat-file-link { background: #f0f0f0; color: #333; }
     #chat-container { scroll-behavior: smooth; }
+
+    .star-btn {
+        font-size: 2rem; cursor: pointer; color: #dee2e6;
+        transition: color 0.15s;
+    }
+    .star-btn:hover,
+    .star-btn.active { color: #ffc107; }
 </style>
 
 <script src="{{ asset('libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
@@ -698,6 +736,85 @@ $authUserRoleId = auth()->user()->role_id;
                             Swal.fire('Error', xhr.responseJSON?.message || 'Error Sistem', 'error');
                         }
                     });
+                }
+            });
+        });
+
+        // Tombol Confirm (Atasan)
+        var confirmTicketId = null;
+
+        $(document).on('click', '.btn-confirm', function() {
+            confirmTicketId = $(this).data('id');
+            $('#rating-value').val(0);
+            $('#rating-text').text('Pilih rating');
+            $('#star-rating .star-btn').removeClass('active').removeClass('mdi-star').addClass('mdi-star-outline');
+            $('#modal-confirm').modal('show');
+        });
+
+        // Star rating hover
+        $(document).on('mouseenter', '#star-rating .star-btn', function() {
+            var val = $(this).data('value');
+            $('#star-rating .star-btn').each(function() {
+                if ($(this).data('value') <= val) {
+                    $(this).removeClass('mdi-star-outline').addClass('mdi-star active');
+                } else {
+                    $(this).removeClass('mdi-star active').addClass('mdi-star-outline');
+                }
+            });
+        });
+
+        $(document).on('mouseleave', '#star-rating', function() {
+            var current = parseInt($('#rating-value').val()) || 0;
+            $('#star-rating .star-btn').each(function() {
+                if ($(this).data('value') <= current) {
+                    $(this).removeClass('mdi-star-outline').addClass('mdi-star active');
+                } else {
+                    $(this).removeClass('mdi-star active').addClass('mdi-star-outline');
+                }
+            });
+        });
+
+        // Star rating click
+        $(document).on('click', '#star-rating .star-btn', function() {
+            var val = $(this).data('value');
+            $('#rating-value').val(val);
+            var labels = ['', 'Sangat Kurang', 'Kurang', 'Cukup', 'Baik', 'Sangat Baik'];
+            $('#rating-text').text(labels[val]);
+        });
+
+        // Submit confirm
+        $(document).on('click', '#btn-submit-confirm', function() {
+            var rating = parseInt($('#rating-value').val());
+            if (!rating || rating < 1) {
+                Swal.fire('Peringatan', 'Silakan pilih rating terlebih dahulu', 'warning');
+                return;
+            }
+
+            var btn = $(this);
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Memproses...');
+
+            $.ajax({
+                url: "{{ url('helpdesk/tickets/confirm') }}/" + confirmTicketId,
+                type: "POST",
+                data: {
+                    _token: CSRF_TOKEN,
+                    _method: 'PUT',
+                    rating: rating,
+                },
+                success: function(res) {
+                    if (res.success) {
+                        $('#modal-confirm').modal('hide');
+                        Swal.fire('Berhasil', res.message, 'success');
+                        table.ajax.reload();
+                    } else {
+                        Swal.fire('Gagal', res.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.message || 'Error Sistem', 'error');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="mdi mdi-check-all me-1"></i> Konfirmasi');
                 }
             });
         });

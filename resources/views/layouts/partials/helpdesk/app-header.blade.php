@@ -1,14 +1,27 @@
+@php
+$role = session('user_role');
+$authUserRoleId = auth()->user()->role_id;
+
+if($authUserRoleId == 1) {
+$roleColor = "danger";
+} else if ($authUserRoleId == 3) {
+$roleColor = "success";
+} else if ($authUserRoleId == 4) {
+$roleColor = "primary";
+}
+@endphp
+
 <header id="page-topbar">
     <div class="navbar-header">
         <div class="d-flex">
-            <div class="navbar-brand-box bg-primary text-center">
+            <div class="navbar-brand-box bg-dark-primary text-start">
                 <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
                     <span class="logo-sm">
-                        <h5 class="text-white mt-3">Help Desk</h5>
+                        <h5 class="text-white mt-3 fw-bold"><span class="text-{{ $roleColor }}">Help</span> Desk</h5>
                     </span>
                     <span class="logo-lg mt-4">
                         <div class="flex">
-                            <h5 class="text-white mt-4">Aplikasi Help Desk</h5>
+                            <h3 class="text-white mt-4 fw-bold"><span class="text-{{ $roleColor }}">Help</span> Desk</h3>
                         </div>
                     </span>
                 </a>
@@ -18,12 +31,6 @@
                 <i class="fa fa-fw fa-bars"></i>
             </button>
 
-            <form class="app-search d-none d-lg-block">
-                <div class="position-relative">
-                    <input type="text" class="form-control" placeholder="Search...">
-                    <span class="bx bx-search-alt"></span>
-                </div>
-            </form>
         </div>
 
         <div class="d-flex">
