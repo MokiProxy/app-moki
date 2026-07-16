@@ -1,5 +1,6 @@
 @php
 $role = session('user_role');
+$authUserRoleId = auth()->user()->role_id;
 @endphp
 
 <div id="sidebar-menu">
@@ -40,8 +41,14 @@ $role = session('user_role');
                 <span key="t-master-data">Manajemen Tiket</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
+                @if ($authUserRoleId == 1)
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Semua Tiket</a></li>
+                @endif
+
+                @if(in_array($authUserRoleId, [4]))
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Tiket Saya</a></li>
+                @endif
+
                 <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-ticket'></i>Buat Tiket</a></li>
                 <li><a href="{{ route('regional') }}"><i class='mdi mdi-ticket'></i>Prioritas Tiket</a></li>
             </ul>

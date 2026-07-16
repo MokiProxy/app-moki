@@ -1,3 +1,8 @@
+@php
+$role = session('user_role');
+$authUserRoleId = auth()->user()->role_id;
+@endphp
+
 @extends('layouts.Helpdesk')
 
 @section('content')
@@ -6,7 +11,7 @@
         <div class="card shadow-sm">
             <div class="card-body border-bottom bg-light">
                 <div class="d-flex align-items-center">
-                    <h5 class="mb-0 card-title flex-grow-1">Daftar Semua Tiket</h5>
+                    <h5 class="mb-0 card-title flex-grow-1">{{ in_array($authUserRoleId, [4]) ? "Daftar Tiket Saya" : "Daftar Semua Tiket" }}</h5>
                     <div class="flex-shrink-0 d-flex gap-1">
                         <a href="#!" class="btn btn-light" id="btn-refresh"><i class="mdi mdi-refresh"></i></a>
                     </div>
@@ -86,24 +91,36 @@
                             </div>
                         </div>
                     </div>
-                        <div class="mt-3" id="assign-teknisi-section">
-                            <hr>
-                            <h6 class="fw-bold">Assign Teknisi</h6>
-                            <div class="row g-2 align-items-center">
-                                <div class="col">
-                                    <select class="form-control" id="select-teknisi">
-                                        <option value="">-- Pilih Teknisi --</option>
-                                    </select>
-                                </div>
-                                <div class="col-auto">
-                                    <button type="button" class="btn btn-primary" id="btn-assign-teknisi">Pilih</button>
-                                </div>
+                    <div class="mt-3">
+                        <h6 class="fw-bold">
+                            <i class="mdi mdi-history me-1"></i> Riwayat Aktivitas
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="btn-toggle-timeline">
+                                <i class="mdi mdi-clock-outline" id="timeline-icon"></i>
+                                <span id="timeline-label">Tampilkan Riwayat</span>
+                            </button>
+                        </h6>
+                        <div id="timeline-container" class="ps-2 mt-2" style="display: none;">
+                            <div id="timeline-list"></div>
+                        </div>
+                    </div>
+                    <div class="mt-3" id="assign-teknisi-section">
+                        <hr>
+                        <h6 class="fw-bold">Assign Teknisi</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col">
+                                <select class="form-control" id="select-teknisi">
+                                    <option value="">-- Pilih Teknisi --</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-primary" id="btn-assign-teknisi">Pilih</button>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
             </form>
         </div>
     </div>
@@ -111,6 +128,23 @@
 @endsection
 
 @section('plugin')
+<style>
+    .tl-item { position: relative; padding-left: 0; }
+    .tl-icon {
+        width: 34px; height: 34px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; font-size: 15px;
+    }
+    .tl-content {
+        border-left: 2px solid #e9ecef; padding-left: 14px; padding-bottom: 4px;
+    }
+    .tl-item:last-child .tl-content { border-left-color: transparent; }
+    .tl-meta { font-size: 0.8rem; color: #6c757d; }
+    .tl-diff { font-size: 0.78rem; margin-top: 2px; }
+    .tl-diff .old { color: #dc3545; text-decoration: line-through; }
+    .tl-diff .new { color: #198754; font-weight: 600; }
+</style>
+
 <script src="{{ asset('libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 <script src="{{ asset('libs/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
@@ -173,6 +207,68 @@
             }
         ]
     });
+
+    // Timeline helpers
+    var timelineMap = {
+        'TICKET_CREATED':     { icon: 'mdi-plus-circle',       color: 'primary',  desc: 'Tiket dibuat' },
+        'ASSIGNED_AGENT':     { icon: 'mdi-account-plus',      color: 'info',     desc: 'Ditugaskan ke teknisi' },
+        'REASSIGNED_AGENT':   { icon: 'mdi-account-switch',    color: 'warning',  desc: 'Ditugaskan ulang' },
+        'STATUS_CHANGED':     { icon: 'mdi-arrow-right-bold-circle', color: 'secondary', desc: 'Status berubah' },
+        'PRIORITY_CHANGED':   { icon: 'mdi-flag',              color: 'warning',  desc: 'Prioritas berubah' },
+        'CATEGORY_CHANGED':   { icon: 'mdi-tag',               color: 'primary',  desc: 'Kategori berubah' },
+        'ATTACHMENT_UPLOADED': { icon: 'mdi-paperclip',        color: 'success',  desc: 'Lampiran diunggah' },
+        'COMMENT_ADDED':      { icon: 'mdi-comment-text',      color: 'info',     desc: 'Komentar ditambahkan' },
+        'TICKET_RESOLVED':    { icon: 'mdi-check-circle',      color: 'success',  desc: 'Tiket diselesaikan' },
+        'TICKET_CLOSED':      { icon: 'mdi-close-circle',      color: 'secondary',desc: 'Tiket ditutup' },
+        'TICKET_REOPENED':    { icon: 'mdi-refresh',           color: 'danger',   desc: 'Tiket dibuka kembali' },
+    };
+
+    function renderTimelineItem(item) {
+        var cfg = timelineMap[item.action] || { icon: 'mdi-circle', color: 'secondary', desc: item.action };
+        var userName = item.user ? item.user.name : 'Sistem';
+        var time = moment(item.created_at).locale('id').fromNow();
+        var timeFull = moment(item.created_at).locale('id').format('DD MMM YYYY, HH:mm');
+
+        var diff = '';
+        if (item.old_value && item.new_value && item.action !== 'ATTACHMENT_UPLOADED') {
+            diff = '<div class="tl-diff"><span class="old">' + $('<span>').text(item.old_value).html() +
+                   '</span> &rarr; <span class="new">' + $('<span>').text(item.new_value).html() + '</span></div>';
+        } else if (item.new_value && item.action === 'ATTACHMENT_UPLOADED') {
+            diff = '<div class="tl-diff"><span class="new"><i class="mdi mdi-file"></i> ' +
+                   $('<span>').text(item.new_value).html() + '</span></div>';
+        }
+
+        return '<div class="tl-item d-flex mb-3">' +
+            '<div class="tl-icon bg-' + cfg.color + ' me-3"><i class="mdi ' + cfg.icon + ' text-white"></i></div>' +
+            '<div class="tl-content flex-grow-1">' +
+                '<div class="d-flex justify-content-between align-items-start">' +
+                    '<strong class="small">' + cfg.desc + '</strong>' +
+                    '<span class="tl-meta ms-2" title="' + timeFull + '">' + time + '</span>' +
+                '</div>' +
+                '<div class="tl-meta">oleh ' + $('<span>').text(userName).html() + '</div>' +
+                diff +
+            '</div>' +
+        '</div>';
+    }
+
+    function loadTimeline(ticketId) {
+        var container = $('#timeline-list');
+        container.html('<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div> Memuat riwayat...</div>');
+
+        $.get("{{ url('helpdesk/tickets') }}/" + ticketId + "/timeline", function(res) {
+            if (res.success && res.data.length > 0) {
+                var html = '';
+                $.each(res.data, function(i, item) {
+                    html += renderTimelineItem(item);
+                });
+                container.html(html);
+            } else {
+                container.html('<p class="text-muted small fst-italic">Belum ada riwayat aktivitas.</p>');
+            }
+        }).fail(function() {
+            container.html('<p class="text-danger small">Gagal memuat riwayat.</p>');
+        });
+    }
 
     $(document).ready(function() {
         var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
@@ -275,13 +371,56 @@
             var id = $(this).data('id');
             $.get("{{ url('helpdesk/tickets') }}/" + id, function(res) {
                 if (res.success) {
-                    console.log(res.data)
-                    fillForm(res.data)
+                    fillForm(res.data);
+
+                    // Reset timeline
+                    $('#timeline-container').hide();
+                    $('#timeline-label').text('Tampilkan Riwayat');
+                    loadTimeline(id);
+
                     $('#modal-ticket').modal('show');
                 }
             });
         });
 
+        // Tombol Approve
+        $(document).on('click', '.btn-approve', function() {
+            var ticketId = $(this).data('id');
+
+            Swal.fire({
+                title: 'Approve Tiket?',
+                text: "Tiket akan disetujui dan status berubah menjadi In Progress.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Approve!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ url('helpdesk/tickets/approve') }}/" + ticketId,
+                        type: "POST",
+                        data: {
+                            _token: CSRF_TOKEN,
+                            _method: 'PUT',
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('Berhasil', res.message, 'success');
+                                table.ajax.reload();
+                            } else {
+                                Swal.fire('Gagal', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.fire('Error', xhr.responseJSON?.message || 'Error Sistem', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    
         // Tombol Assign Teknisi
         $(document).on('click', '#btn-assign-teknisi', function() {
             var ticketId = $('#tc-ticket_number').data('id');
@@ -293,7 +432,7 @@
             }
 
             $.ajax({
-                url: "{{ url('helpdesk/tickets') }}/" + ticketId,
+                url: "{{ url('helpdesk/tickets/assign') }}/" + ticketId,
                 type: "POST",
                 data: {
                     _token: CSRF_TOKEN,
@@ -326,6 +465,19 @@
                 list.slideDown();
                 icon.removeClass('mdi-folder').addClass('mdi-folder-open');
                 label.text('Tutup Folder');
+            }
+        });
+
+        // Tombol toggle timeline
+        $(document).on('click', '#btn-toggle-timeline', function() {
+            var list = $('#timeline-container');
+            var label = $('#timeline-label');
+            if (list.is(':visible')) {
+                list.slideUp();
+                label.text('Tampilkan Riwayat');
+            } else {
+                list.slideDown();
+                label.text('Sembunyikan Riwayat');
             }
         });
 

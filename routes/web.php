@@ -63,10 +63,12 @@ Route::group(['middleware' => ['auth']], function () {
 
         // Ticket
         Route::resource("tickets", HelpDeskTicketController::class);
-        Route::get("tickets/me", [HelpDeskTicketController::class, "me"])->name("tickets.me");
+        Route::put('tickets/assign/{id}', [HelpDeskTicketController::class, 'assignTeknisi'])->name('tickets.assign');
+        Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
         Route::post('tickets/datatable', [HelpDeskTicketController::class, 'datatable'])->name('tickets.datatable');
         Route::get('tickets/attachments/{id}/download', [HelpDeskTicketAttachmentController::class, 'download'])->name('tickets.attachments.download');
         Route::get('technicians', [HelpDeskTicketController::class, 'getTeknisi'])->name('tickets.teknisi');
+        Route::get('tickets/{id}/timeline', [HelpDeskTicketController::class, 'timeline'])->name('tickets.timeline');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Enums;
+
+class TicketAction
+{
+    const TICKET_CREATED     = 'TICKET_CREATED';
+    const ASSIGNED_AGENT     = 'ASSIGNED_AGENT';
+    const REASSIGNED_AGENT   = 'REASSIGNED_AGENT';
+    const STATUS_CHANGED     = 'STATUS_CHANGED';
+    const PRIORITY_CHANGED   = 'PRIORITY_CHANGED';
+    const CATEGORY_CHANGED   = 'CATEGORY_CHANGED';
+    const COMMENT_ADDED      = 'COMMENT_ADDED';
+    const ATTACHMENT_UPLOADED = 'ATTACHMENT_UPLOADED';
+    const TICKET_RESOLVED    = 'TICKET_RESOLVED';
+    const TICKET_CLOSED      = 'TICKET_CLOSED';
+    const TICKET_REOPENED    = 'TICKET_REOPENED';
+}
