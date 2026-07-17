@@ -49,7 +49,6 @@ class DashboardController extends Controller
             ->pluck('total', 'name');
 
         $user = auth()->user();
-
         $divisionCounts = collect();
         if ($user->role_id === User::ROLE_SUPERADMIN) {
             $divisionCounts = Ticket::select('divisions.name', DB::raw('count(*) as total'))

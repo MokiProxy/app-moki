@@ -35,7 +35,7 @@ $authUserRoleId = auth()->user()->role_id;
         .bg-dark-primary {
             background-color: #2B3142;
         }
-
+/*
         .page-content{padding:calc(30px + 0px) calc(24px * .75) 60px calc(24px * .75)}
         .vertical-menu {
             top: 0%;
@@ -47,7 +47,7 @@ $authUserRoleId = auth()->user()->role_id;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-        }
+        } */
     </style>
 
 </head>

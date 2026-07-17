@@ -8,7 +8,7 @@
     <!-- Begin page -->
     <div id="layout-wrapper">
 
-        <!-- @include('layouts.partials.helpdesk.app-header') -->
+        @include('layouts.partials.helpdesk.app-header')
 
         <!-- ========== Left Sidebar Start ========== -->
         <div class="vertical-menu">

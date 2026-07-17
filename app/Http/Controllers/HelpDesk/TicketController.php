@@ -139,7 +139,6 @@ class TicketController extends Controller
                 } else {
                     $buttons = '<button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>';
                     if ($row->status == "OPEN") {
-                        $buttons .= '<a href="' . url('helpdesk/tickets/' . $row->id . '/edit') . '" class="btn btn-sm btn-primary" title="Edit"><i class="mdi mdi-pencil"></i></a>';
                         $buttons .= '<button class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="mdi mdi-trash-can"></i></button>';
                     }
                     return '<div class="btn-group">' . $buttons . '</div>';
@@ -329,6 +328,32 @@ class TicketController extends Controller
 
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Tiket Berhasil Disetujui!']);
+        } catch (Exception $err) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $err->getMessage()]);
+        }
+    }
+
+    // Confirm
+    public function confirm(Request $request, $id)
+    {
+        $request->validate([
+            'rating' => 'required',
+        ]);
+        DB::beginTransaction();
+        try {
+            $ticket = Ticket::findOrFail($id);
+            $oldStatus = $ticket->status;
+
+            $ticket->update([
+                'status' => 'CLOSED',
+                'rating' => $request->rating
+            ]);
+
+            $this->historyService->statusChanged($ticket, $oldStatus, 'CLOSED');
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Tiket Berhasil Ditutup!']);
         } catch (Exception $err) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $err->getMessage()]);
