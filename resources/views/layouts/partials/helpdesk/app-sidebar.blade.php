@@ -21,7 +21,7 @@ $roleColor = "primary";
             </a>
         </li>
 
-        {{-- JIKA BUKAN APPROVER, TAMPILKAN MASTER DATA --}}
+        @if (in_array($authUserRoleId, [1]))
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
@@ -32,6 +32,7 @@ $roleColor = "primary";
                 <li><a href="{{ route('helpdesk.ticket-priorities.index') }}"><i class='mdi mdi-alert-box'></i>Prioritas Tiket</a></li>
             </ul>
         </li>
+        @endif
 
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -48,21 +49,14 @@ $roleColor = "primary";
                 @endif
 
                 @if(in_array($authUserRoleId, [3]))
-                <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-ticket'></i>Buat Tiket</a></li>
+                <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-plus'></i>Buat Tiket</a></li>
                 @endif
             </ul>
         </li>
 
-        <li>
-            <a href="javascript: void(0);" class="has-arrow waves-effect">
-                <i class='bx bx-file'></i>
-                <span key="t-master-data">Laporan</span>
-            </a>
-            <ul class="sub-menu" aria-expanded="false">
-                <li><a href="{{ route('employee') }}"><i class='bx bx-user-circle'></i>Semua Tiket</a></li>
-                <li><a href="{{ route('regional') }}"><i class='bx bx-map-alt'></i>Prioritas Tiket</a></li>
-            </ul>
-        </li>
+        @if (in_array($authUserRoleId, [1]))
+        <li><a href="{{ route('helpdesk.reports.index') }}"><i class='bx bx-file'></i>Laporan</a></li>
+        @endif
 
         <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">

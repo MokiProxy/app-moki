@@ -25,6 +25,36 @@ class TicketController extends Controller
         $this->historyService = $historyService;
     }
 
+    public function formatTicketStatus($status)
+    {
+        if (in_array($status, ["OPEN", "ASSIGNED", "PENDING", "RESOLVED", "CLOSED", "REJECTED"])) {
+            return ucfirst(strtolower($status));
+        } else {
+            return "In Progress";
+        }
+    }
+
+    public function setStatusBackground($status)
+    {
+        if ($status == "OPEN") {
+            $color = "primary";
+        } else if ($status == "ASSIGNED") {
+            $color = "warning";
+        } else if ($status == "PENDING") {
+            $color = "warning";
+        } else if ($status == "IN_PROGRESS") {
+            $color = "warning";
+        } else if ($status == "RESOLVED") {
+            $color = "success";
+        } else if ($status == "CLOSED") {
+            $color = "success";
+        } else if ($status == "REJECTED") {
+            $color = "danger";
+        }
+
+        return "bg-" . $color;
+    }
+
     public function index()
     {
         return view("helpdesk.tickets.index");
@@ -68,12 +98,19 @@ class TicketController extends Controller
                 return $row->due_time ?? '-';
             })
             ->addColumn('status', function ($row) {
-                return "<div class='d-flex flex-column gap-2'><p class='m-0 bg-success text-center p-1 rounded fw-bold text-white'>" . ucfirst($row->status) . "</p><p class='text-center'><i class='bx bx-star'></i>" . $row->rating . "/5</p></div>" ?? '-';
+                $bgColor = $this->setStatusBackground($row->status);
+                return $row->rating ? "<div class='d-flex flex-column gap-2 align-items-center'><p class='m-0 $bgColor text-center p-1 ps-3 pe-3 rounded-pill fw-bold text-white w-auto'>" . $this->formatTicketStatus($row->status) . "</p><p class='text-center m-0 $bgColor text-center p-1 rounded fw-bold text-white'><i class='bx bx-star'></i>" . $row->rating . "/5</p></div>" : "<div class='d-flex flex-column align-items-center gap-2'><p class='m-0 $bgColor text-center p-1 ps-3 pe-3 rounded-pill fw-bold text-white w-auto'>" . $this->formatTicketStatus($row->status) . "</p></div>";
             })
             ->addColumn('action', function ($row) {
                 $role = session('user_role');
                 if ($role == 4) {
-                    if ($row->status == "IN_PROGRESS") {
+                    if ($row->status == "ASSIGNED") {
+                        return '
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
+                            <button class="btn btn-sm btn-success btn-approve" data-id="' . $row->id . '" title="Approve"><i class="mdi mdi-check-decagram"></i></button>
+                        </div>';
+                    } elseif ($row->status == "IN_PROGRESS") {
                         return '
                         <div class="btn-group">
                             <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
@@ -86,18 +123,19 @@ class TicketController extends Controller
                         </div>';
                     }
                 } elseif ($role == 3) {
-                    if ($row->status == "RESOLVED") {
-                        return '
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
-                            <button class="btn btn-sm btn-primary btn-confirm" data-id="' . $row->id . '" title="Confirm"><i class="mdi mdi-check-circle"></i></button>
-                        </div>';
-                    } else {
-                        return '
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
-                        </div>';
+                    $reopenable = in_array($row->status, ['RESOLVED', 'CLOSED', 'REJECTED']);
+                    $buttons = '<button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>';
+                    if ($row->status == "OPEN") {
+                        $buttons .= '<a href="' . url('helpdesk/tickets/' . $row->id . '/edit') . '" class="btn btn-sm btn-primary" title="Edit"><i class="mdi mdi-pencil"></i></a>';
+                        $buttons .= '<button class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="mdi mdi-trash-can"></i></button>';
                     }
+                    if ($row->status == "RESOLVED") {
+                        $buttons .= '<button class="btn btn-sm btn-primary btn-confirm" data-id="' . $row->id . '" title="Confirm"><i class="mdi mdi-check-circle"></i></button>';
+                    }
+                    if ($reopenable) {
+                        $buttons .= '<button class="btn btn-sm btn-warning btn-reopen" data-id="' . $row->id . '" title="Reopen"><i class="mdi mdi-refresh"></i></button>';
+                    }
+                    return '<div class="btn-group">' . $buttons . '</div>';
                 } else {
                     return '
                     <div class="btn-group">
@@ -114,6 +152,19 @@ class TicketController extends Controller
         $ticketCategories = TicketCategory::all();
         $ticketPriorities = TicketPriority::all();
         return view("helpdesk.tickets.create", compact("ticketCategories", "ticketPriorities"));
+    }
+
+    public function edit($id)
+    {
+        $ticket = Ticket::with('attachments')->findOrFail($id);
+
+        if ($ticket->requester_id !== auth()->id() || $ticket->status !== 'OPEN') {
+            abort(403, 'Unauthorized.');
+        }
+
+        $ticketCategories = TicketCategory::all();
+        $ticketPriorities = TicketPriority::all();
+        return view("helpdesk.tickets.create", compact("ticketCategories", "ticketPriorities", "ticket"));
     }
 
     public function generateTicketNumber()
@@ -304,8 +355,103 @@ class TicketController extends Controller
         }
     }
 
+    public function reopen($id)
+    {
+        DB::beginTransaction();
+        try {
+            $ticket = Ticket::findOrFail($id);
+            $oldStatus = $ticket->status;
+
+            $ticket->update([
+                'status' => 'OPEN',
+                'assigned_to' => null,
+                'resolved_at' => null,
+                'closed_at' => null,
+            ]);
+
+            $this->historyService->statusChanged($ticket, $oldStatus, 'OPEN');
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Tiket berhasil dibuka kembali!']);
+        } catch (Exception $err) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $err->getMessage()]);
+        }
+    }
+
+    public function updateContent(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required',
+            'description' => '',
+            'ticket_category_id' => 'required',
+            'ticket_priority_id' => 'required',
+            'sla' => 'required',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:5120|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $ticket = Ticket::findOrFail($id);
+
+            if ($ticket->requester_id !== auth()->id() || $ticket->status !== 'OPEN') {
+                abort(403, 'Unauthorized.');
+            }
+
+            $timestamp = strtotime("+$request->sla hours");
+
+            $ticket->update([
+                'title' => $request->title,
+                'description' => $request->description,
+                'ticket_category_id' => $request->ticket_category_id,
+                'ticket_priority_id' => $request->ticket_priority_id,
+                'sla' => $request->sla,
+                'due_time' => date('Y-m-d H:i:s', $timestamp),
+            ]);
+
+            $this->historyService->statusChanged($ticket, 'OPEN', 'OPEN');
+
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $filePath = $file->store('ticket-attachments', 'public');
+                    TicketAttachment::create([
+                        'ticket_id'   => $ticket->id,
+                        'uploaded_by' => auth()->id(),
+                        'file_name'   => $file->getClientOriginalName(),
+                        'file_path'   => $filePath,
+                        'mime_type'   => $file->getMimeType(),
+                        'file_size'   => $file->getSize(),
+                    ]);
+                    $this->historyService->attachmentUploaded($ticket, $file->getClientOriginalName());
+                }
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Tiket berhasil diupdate!']);
+        } catch (Exception $err) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $err->getMessage()]);
+        }
+    }
+
     public function destroy($id)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $ticket = Ticket::findOrFail($id);
+
+            if ($ticket->requester_id !== auth()->id() || $ticket->status !== 'OPEN') {
+                abort(403, 'Unauthorized.');
+            }
+
+            $ticket->delete();
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Tiket berhasil dihapus!']);
+        } catch (Exception $err) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $err->getMessage()]);
+        }
     }
 }

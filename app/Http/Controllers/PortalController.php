@@ -40,6 +40,13 @@ class PortalController extends Controller
                 'link'  => route('helpdesk.index')
             ],
             [
+                'title' => 'DATA PEGAWAI',
+                'sub'   => 'Data Pegawai SBS',
+                'icon'  => 'mdi-account',
+                'color' => '#FF8F00',
+                'link'  => '#'
+            ],
+            [
                 'title' => 'FORM IT',
                 'sub'   => 'Digital Request',
                 'icon'  => 'mdi-file-document-edit',

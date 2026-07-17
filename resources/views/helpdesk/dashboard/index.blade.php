@@ -9,6 +9,7 @@
         --primary-grad: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
         --warning-grad: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
         --success-grad: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        --danger-grad: linear-gradient(135deg, #10b981 0%, #34d399 100%);
     }
 
     body {
@@ -93,63 +94,195 @@
 @endsection
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid py-0">
     <div class="d-flex align-items-center justify-content-between mb-4">
-        <h4 class="fw-bold text-dark mb-0">Help Desk Overview</h4>
+        <h4 class="fw-bold text-dark mb-0">Help Desk Dashboard</h4>
         <span class="text-muted"><i class="fa-regular fa-calendar me-2"></i>{{ date('d F Y') }}</span>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
             <div class="card stat-card bg-indigo-grad p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="mb-0 opacity-75">TOTAL TIKET</p>
-                        <h2 class="fw-bold mb-0">0</h2>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="chartTotal"></canvas>
-                        <div class="chart-label">100%</div>
+                        <p class="mb-0 opacity-75">Total Tiket</p>
+                        <h2 class="fw-bold mb-0 fs-1">{{ $totalTicket }}</h2>
                     </div>
                 </div>
                 <i class="fa-solid fa-boxes-stacked icon-overlay"></i>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card stat-card bg-amber-grad p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="mb-0 opacity-75">TIKET SELESAI</p>
-                        <h2 class="fw-bold mb-0">0</h2>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="chartUser"></canvas>
-                        <div class="chart-label">0%</div>
+                        <p class="mb-0 opacity-75">Tiket Open</p>
+                        <h2 class="fw-bold mb-0 fs-1">{{ $openTicket }}</h2>
                     </div>
                 </div>
-                <i class="fa-solid fa-user-tag icon-overlay"></i>
+                <i class="fa-solid fa-boxes-stacked icon-overlay"></i>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="card stat-card bg-indigo-grad p-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="mb-0 opacity-75">Tiket In Progress</p>
+                        <h2 class="fw-bold mb-0 fs-1">{{ $inProgressTicket }}</h2>
+                    </div>
+                </div>
+                <i class="fa-solid fa-boxes-stacked icon-overlay"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
             <div class="card stat-card bg-emerald-grad p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="mb-0 opacity-75">TIKET BELUM SELESAI</p>
-                        <h2 class="fw-bold mb-0">0</h2>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="chartReady"></canvas>
-                        <div class="chart-label">0%</div>
+                        <p class="mb-0 opacity-75">Tiket Closed</p>
+                        <h2 class="fw-bold mb-0 fs-1">{{ $closedTicket }}</h2>
                     </div>
                 </div>
-                <i class="fa-solid fa-circle-check icon-overlay"></i>
+                <i class="fa-solid fa-boxes-stacked icon-overlay"></i>
             </div>
         </div>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-lg-8">
+            <div class="card p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fa-solid fa-chart-line text-primary me-2"></i>Ticket Trend
+                    </h6>
+                    <div class="btn-group btn-group-sm" id="trendFilter">
+                        <button class="btn btn-outline-primary active" data-filter="7d">7 Hari</button>
+                        <button class="btn btn-outline-primary" data-filter="30d">30 Hari</button>
+                        <button class="btn btn-outline-primary" data-filter="3m">3 Bulan</button>
+                        <button class="btn btn-outline-primary" data-filter="1y">1 Tahun</button>
+                    </div>
+                </div>
+                <div style="height: 320px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <div class="card p-4 h-100">
+                <h6 class="fw-bold mb-3 text-center">Ticket by Status</h6>
+                <div style="height: 250px;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2">
+            <div class="card p-4 h-100">
+                <h6 class="fw-bold mb-3 text-center">Ticket by Category</h6>
+                <div style="height: 250px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
-</div>
-@endsection
 
-@section('js')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let trendChart;
+
+    function loadTrendChart(filter = '7d') {
+        fetch(`{{ route('helpdesk.dashboard.chart-data') }}?filter=${filter}`)
+            .then(res => res.json())
+            .then(json => {
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                if (trendChart) trendChart.destroy();
+                trendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: json.labels,
+                        datasets: [{
+                            label: 'Jumlah Tiket',
+                            data: json.data,
+                            borderColor: '#4f46e5',
+                            backgroundColor: 'rgba(79,70,229,0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#4f46e5'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { borderDash: [2, 2] } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            });
+    }
+
+    document.querySelectorAll('#trendFilter .btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('#trendFilter .btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            loadTrendChart(this.dataset.filter);
+        });
+    });
+
+    loadTrendChart('7d');
+
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {!! json_encode($statusCounts->pluck('status')) !!},
+            datasets: [{
+                data: {!! json_encode($statusCounts->pluck('total')) !!},
+                backgroundColor: [
+                    '#3b82f6',
+                    '#8b5cf6',
+                    '#f59e0b',
+                    '#6b7280',
+                    '#10b981',
+                    '#1e293b',
+                    '#ef4444',
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } } },
+            cutout: '60%'
+        }
+    });
+
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'pie',
+        data: {
+            labels: {!! json_encode($categoryCounts->keys()) !!},
+            datasets: [{
+                data: {!! json_encode($categoryCounts->values()) !!},
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } } }
+        }
+    });
+</script>
 @endsection

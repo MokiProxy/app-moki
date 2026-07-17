@@ -28,6 +28,7 @@ use App\Http\Controllers\HelpDesk\TicketPriorityController as HelpDeskTicketPrio
 use App\Http\Controllers\HelpDesk\TicketController as HelpDeskTicketController;
 use App\Http\Controllers\HelpDesk\TicketAttachmentController as HelpDeskTicketAttachmentController;
 use App\Http\Controllers\HelpDesk\TicketCommentController as HelpDeskTicketCommentController;
+use App\Http\Controllers\HelpDesk\ReportController as HelpDeskReportController;
 
 
 /*
@@ -53,6 +54,7 @@ Route::group(['middleware' => ['auth']], function () {
     // FITUR HELPDESK
     Route::prefix('helpdesk')->name('helpdesk.')->group(function () {
         Route::get("/", [HelpDeskDashboardController::class, 'index'])->name('index');
+        Route::get('dashboard/chart-data', [HelpDeskDashboardController::class, 'chartData'])->name('dashboard.chart-data');
 
         // Ticket Category
         Route::resource('ticket-categories', HelpDeskTicketCategoryController::class);
@@ -68,6 +70,8 @@ Route::group(['middleware' => ['auth']], function () {
         Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
         Route::put('tickets/resolve/{id}', [HelpDeskTicketController::class, 'resolved'])->name('tickets.resolve');
         Route::put('tickets/confirm/{id}', [HelpDeskTicketController::class, 'confirm'])->name('tickets.confirm');
+        Route::put('tickets/reopen/{id}', [HelpDeskTicketController::class, 'reopen'])->name('tickets.reopen');
+        Route::put('tickets/{id}/update-content', [HelpDeskTicketController::class, 'updateContent'])->name('tickets.update-content');
         Route::post('tickets/datatable', [HelpDeskTicketController::class, 'datatable'])->name('tickets.datatable');
         Route::get('tickets/attachments/{id}/download', [HelpDeskTicketAttachmentController::class, 'download'])->name('tickets.attachments.download');
         Route::get('technicians', [HelpDeskTicketController::class, 'getTeknisi'])->name('tickets.teknisi');
@@ -76,7 +80,11 @@ Route::group(['middleware' => ['auth']], function () {
         // Ticket Comments (Chat)
         Route::get('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'index'])->name('tickets.comments.index');
         Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
-    });
+
+        // Report
+        Route::resource("reports", HelpDeskReportController::class);
+        Route::post('reports/datatable', [HelpDeskReportController::class, 'datatable'])->name('reports.datatable');
+        });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
