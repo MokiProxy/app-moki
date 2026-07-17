@@ -222,14 +222,21 @@
         $('#division-table').on('click', '.btn-edit, .btn-view', function() {
             const id = $(this).data('id');
             const isView = $(this).hasClass('btn-view');
-            const url = `{{ url('division/show') }}/${id}`;
+            
+            // Generate URL dengan aman menggunakan named route Laravel
+            let url = "{{ route('division.show', ':id') }}";
+            url = url.replace(':id', id);
             
             $('.is-invalid').removeClass('is-invalid');
             $('.invalid-feedback').remove();
 
             $.get(url, function(res) {
                 if (res.success) {
-                    $('#form-update-division').attr('action', `{{ url('division/update') }}/${id}`);
+                    // Update Action Form URL secara dinamis dengan named route Laravel
+                    let updateUrl = "{{ route('division.update', ':id') }}";
+                    updateUrl = updateUrl.replace(':id', id);
+                    $('#form-update-division').attr('action', updateUrl);
+                    
                     $('#update-name').val(res.data.name).prop('readonly', isView);
                     $('#update-code').val(res.data.code).prop('readonly', isView);
                     $('#update-abbreviation').val(res.data.abbreviation).prop('readonly', isView);
