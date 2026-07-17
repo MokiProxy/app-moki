@@ -4,7 +4,10 @@ namespace App\Http\Controllers\HelpDesk;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use App\Exports\TicketExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\DataTables;
 
 class ReportController extends Controller
@@ -100,6 +103,26 @@ class ReportController extends Controller
             })
             ->rawColumns(['ticket_number', 'assigned_to_name', 'ticket_priority_name', 'status'])
             ->make(true);
+    }
+
+    public function generatePdf()
+    {
+        $tickets = Ticket::with(['requester.employee.division', 'assignedTo', 'ticketCategory', 'ticketPriority'])
+            ->latest()
+            ->get();
+
+        $pdf = Pdf::loadView('helpdesk.reports.pdf', compact('tickets'));
+        $pdf->setOption('isRemoteEnabled', true);
+        return $pdf->download('laporan-tiket-' . date('Y-m-d') . '.pdf');
+    }
+
+    public function generateExcel()
+    {
+        $tickets = Ticket::with(['requester.employee.division', 'assignedTo', 'ticketCategory', 'ticketPriority'])
+            ->latest()
+            ->get();
+
+        return Excel::download(new TicketExport($tickets), 'laporan-tiket-' . date('Y-m-d') . '.xlsx');
     }
 
     public function create()

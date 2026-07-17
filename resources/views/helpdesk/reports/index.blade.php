@@ -13,6 +13,12 @@ $authUserRoleId = auth()->user()->role_id;
                 <div class="d-flex align-items-center">
                     <h5 class="mb-0 card-title flex-grow-1">Laporan</h5>
                     <div class="flex-shrink-0 d-flex gap-1">
+                        <a href="{{ route('helpdesk.reports.generate-pdf') }}" class="btn btn-danger">
+                            <i class="mdi mdi-file-pdf-box me-1"></i> Generate PDF
+                        </a>
+                        <a href="{{ route('helpdesk.reports.generate-excel') }}" class="btn btn-success">
+                            <i class="mdi mdi-file-excel me-1"></i> Generate Excel
+                        </a>
                         <a href="#!" class="btn btn-light" id="btn-refresh"><i class="mdi mdi-refresh"></i></a>
                     </div>
                 </div>

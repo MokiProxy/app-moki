@@ -1,4 +1,4 @@
-@include('layouts.partials.app-head')
+@include('layouts.partials.helpdesk.app-head')
 
 <body data-sidebar="dark">
 
@@ -8,7 +8,7 @@
     <!-- Begin page -->
     <div id="layout-wrapper">
 
-        @include('layouts.partials.helpdesk.app-header')
+        <!-- @include('layouts.partials.helpdesk.app-header') -->
 
         <!-- ========== Left Sidebar Start ========== -->
         <div class="vertical-menu">

@@ -10,22 +10,10 @@ $roleColor = "success";
 $roleColor = "primary";
 }
 @endphp
-
 <header id="page-topbar">
     <div class="navbar-header">
         <div class="d-flex">
-            <div class="navbar-brand-box bg-dark-primary text-start">
-                <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
-                    <span class="logo-sm">
-                        <h5 class="text-white mt-3 fw-bold"><span class="text-{{ $roleColor }}">Help</span> Desk</h5>
-                    </span>
-                    <span class="logo-lg mt-4">
-                        <div class="flex">
-                            <h3 class="text-white mt-4 fw-bold"><span class="text-{{ $roleColor }}">Help</span> Desk</h3>
-                        </div>
-                    </span>
-                </a>
-            </div>
+
 
             <button type="button" class="btn btn-sm px-3 font-size-16 header-item waves-effect" id="vertical-menu-btn">
                 <i class="fa fa-fw fa-bars"></i>

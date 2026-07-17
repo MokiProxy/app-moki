@@ -1,3 +1,8 @@
+@php
+$role = session('user_role');
+$authUserName = auth()->user()->name;
+@endphp
+
 @extends('layouts.Helpdesk')
 
 @section('title', 'Dashboard Helpdesk')
@@ -95,8 +100,11 @@
 
 @section('content')
 <div class="container-fluid py-0">
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <h4 class="fw-bold text-dark mb-0">Help Desk Dashboard</h4>
+    <div class="d-flex align-items-start justify-content-between mb-4">
+        <div>
+            <h1 class="fw-bold text-dark mb-0">Halo, {{ explode(" ", $authUserName)[0] }}!</h1>
+            <p>Selamat Datang di Help Desk!</p>
+        </div>
         <span class="text-muted"><i class="fa-regular fa-calendar me-2"></i>{{ date('d F Y') }}</span>
     </div>
 
@@ -170,7 +178,7 @@
             </div>
         </div>
 
-        <div class="col-lg-2">
+        <div class="col-lg-4">
             <div class="card p-4 h-100">
                 <h6 class="fw-bold mb-3 text-center">Ticket by Status</h6>
                 <div style="height: 250px;">
@@ -178,13 +186,101 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-2">
+    @if(auth()->user()->role_id === App\Models\User::ROLE_SUPERADMIN)
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card p-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="fa-solid fa-chart-bar text-primary me-2"></i>Ticket by Division
+                </h6>
+                <div style="height: 300px;">
+                    <canvas id="divisionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
             <div class="card p-4 h-100">
                 <h6 class="fw-bold mb-3 text-center">Ticket by Category</h6>
                 <div style="height: 250px;">
                     <canvas id="categoryChart"></canvas>
                 </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h6 class="fw-bold mb-3">
+                    <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Recent Tickets
+                </h6>
+                @forelse($recentTickets as $ticket)
+                <div class="d-flex align-items-start gap-3 pb-3 {{ !$loop->last ? 'border-bottom mb-3' : '' }}">
+                    <div class="avatar-circle flex-shrink-0">
+                        {{ strtoupper(substr($ticket->requester->employee->name ?? 'U', 0, 1)) }}
+                    </div>
+                    <div class="flex-grow-1 min-width-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="min-width-0">
+                                <p class="fw-bold mb-0 text-truncate">{{ $ticket->title }}</p>
+                                <small class="text-muted">
+                                    {{ $ticket->ticket_number }} &middot;
+                                    {{ $ticket->requester->employee->name ?? '-' }}
+                                </small>
+                            </div>
+                            @php
+                                $statusColor = match($ticket->status) {
+                                    'OPEN' => 'primary',
+                                    'ASSIGNED', 'PENDING', 'IN_PROGRESS' => 'warning',
+                                    'RESOLVED', 'CLOSED' => 'success',
+                                    'REJECTED' => 'danger',
+                                    default => 'secondary'
+                                };
+                            @endphp
+                            <span class="badge bg-{{ $statusColor }} rounded-pill flex-shrink-0 ms-2" style="font-size:0.65rem;">
+                                {{ $ticket->status }}
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ $ticket->created_at->diffForHumans() }}</small>
+                    </div>
+                </div>
+                @empty
+                <p class="text-muted text-center py-3 mb-0">Belum ada tiket</p>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h6 class="fw-bold mb-3">
+                    <i class="fa-solid fa-history text-primary me-2"></i>Recent Activities
+                </h6>
+                @forelse($recentActivities as $activity)
+                <div class="d-flex align-items-start gap-3 pb-3 {{ !$loop->last ? 'border-bottom mb-3' : '' }}">
+                    <div class="avatar-circle flex-shrink-0" style="background:#e0e7ff; color:#4f46e5;">
+                        <i class="fa-solid fa-clock-rotate-left" style="font-size:0.8rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 min-width-0">
+                        <p class="fw-bold mb-0 text-truncate" style="font-size:0.85rem;">
+                            {{ $activity->formatted_action }}
+                        </p>
+                        <small class="text-muted">
+                            {{ $activity->ticket->ticket_number ?? '-' }} &middot;
+                            {{ $activity->user->name ?? '-' }}
+                        </small>
+                        @if($activity->description)
+                        <br><small class="text-muted fst-italic">{{ Str::limit($activity->description, 60) }}</small>
+                        @endif
+                        <br><small class="text-muted">{{ $activity->created_at->diffForHumans() }}</small>
+                    </div>
+                </div>
+                @empty
+                <p class="text-muted text-center py-3 mb-0">Belum ada aktivitas</p>
+                @endforelse
             </div>
         </div>
 
@@ -284,5 +380,30 @@
             plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } } }
         }
     });
+
+    @if(auth()->user()->role_id === App\Models\User::ROLE_SUPERADMIN)
+    new Chart(document.getElementById('divisionChart'), {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($divisionCounts->keys()) !!},
+            datasets: [{
+                label: 'Jumlah Tiket',
+                data: {!! json_encode($divisionCounts->values()) !!},
+                backgroundColor: '#4f46e5',
+                borderRadius: 6,
+                barThickness: 40,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { borderDash: [2, 2] } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    @endif
 </script>
 @endsection

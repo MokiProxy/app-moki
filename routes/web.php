@@ -82,8 +82,10 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
 
         // Report
-        Route::resource("reports", HelpDeskReportController::class);
         Route::post('reports/datatable', [HelpDeskReportController::class, 'datatable'])->name('reports.datatable');
+        Route::get('reports/generate-pdf', [HelpDeskReportController::class, 'generatePdf'])->name('reports.generate-pdf');
+        Route::get('reports/generate-excel', [HelpDeskReportController::class, 'generateExcel'])->name('reports.generate-excel');
+        Route::resource("reports", HelpDeskReportController::class);
         });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HelpDesk;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use App\Models\TicketHistory;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,13 +49,45 @@ class DashboardController extends Controller
             ->groupBy('ticket_category_id', 'ticket_categories.name')
             ->pluck('total', 'name');
 
+        $user = auth()->user();
+
+        $divisionCounts = collect();
+        if ($user->role_id === User::ROLE_SUPERADMIN) {
+            $divisionCounts = Ticket::select('divisions.name', DB::raw('count(*) as total'))
+                ->join('users', 'tickets.requester_id', '=', 'users.id')
+                ->join('employees', 'users.employee_id', '=', 'employees.id')
+                ->join('divisions', 'employees.division_id', '=', 'divisions.id')
+                ->groupBy('divisions.name')
+                ->pluck('total', 'name');
+        }
+
+        $recentTickets = $this->getTicketQuery()
+            ->with(['requester.employee.division', 'ticketCategory', 'ticketPriority'])
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        $recentActivitiesQuery = TicketHistory::with(['ticket', 'user'])
+            ->latest()
+            ->limit(5);
+        if ($user->role_id === User::ROLE_ATASAN) {
+            $divisionId = $user->employee->division_id;
+            $recentActivitiesQuery->whereHas('ticket.requester.employee', function ($q) use ($divisionId) {
+                $q->where('employees.division_id', $divisionId);
+            });
+        }
+        $recentActivities = $recentActivitiesQuery->get();
+
         return view('helpdesk.dashboard.index', compact(
             'totalTicket',
             'openTicket',
             'inProgressTicket',
             'closedTicket',
             'statusCounts',
-            'categoryCounts'
+            'categoryCounts',
+            'divisionCounts',
+            'recentTickets',
+            'recentActivities'
         ));
     }
 
