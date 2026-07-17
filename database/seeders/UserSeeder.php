@@ -14,10 +14,18 @@ class UserSeeder extends Seeder
             [
                 'name'        => 'MOKODEV',
                 'nopeg'       => '12345678',
-                'email'       => 'admin@admin.com',
+                'email'       => 'superadmin@sistem.com',
                 'password'    => Hash::make('password'),
                 'role_id'     => User::ROLE_SUPERADMIN,
                 'employee_id' => 'EMP0001',
+            ],
+            [
+                'name'        => 'WAHID',
+                'nopeg'       => '12345679',
+                'email'       => 'admin@sistem.com',
+                'password'    => Hash::make('password'),
+                'role_id'     => User::ROLE_ADMIN,
+                'employee_id' => 'EMP0002',
             ],
         ];
 

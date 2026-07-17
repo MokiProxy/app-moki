@@ -2,7 +2,7 @@
 $role = session('user_role');
 $authUserRoleId = auth()->user()->role_id;
 
-if($authUserRoleId == 1) {
+if($authUserRoleId == 1 || $authUserRoleId == 5) {
 $roleColor = "danger";
 } else if ($authUserRoleId == 3) {
 $roleColor = "success";
@@ -22,7 +22,7 @@ $roleColor = "primary";
             </a>
         </li>
 
-        @if (in_array($authUserRoleId, [1]))
+        @if (in_array($authUserRoleId, [1, 5]))
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
@@ -41,7 +41,7 @@ $roleColor = "primary";
                 <span key="t-master-data">Manajemen Tiket</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                @if ($authUserRoleId == 1)
+                @if (in_array($authUserRoleId, [1, 5]))
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Semua Tiket</a></li>
                 @endif
 
@@ -49,7 +49,7 @@ $roleColor = "primary";
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Tiket Saya</a></li>
                 @endif
 
-                @if(in_array($authUserRoleId, [3]))
+                @if(in_array($authUserRoleId, [1, 3]))
                 <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-plus'></i>Buat Tiket</a></li>
                 @endif
             </ul>

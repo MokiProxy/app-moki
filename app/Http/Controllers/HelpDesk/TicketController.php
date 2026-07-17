@@ -25,6 +25,14 @@ class TicketController extends Controller
         $this->historyService = $historyService;
     }
 
+    public function checkIfNotRole($roles)
+    {
+        $roleId = auth()->user()->role_id;
+        if (!in_array($roleId, $roles)) {
+            return redirect()->route("helpdesk.tickets.index");
+        }
+    }
+
     public function formatTicketStatus($status)
     {
         if (in_array($status, ["OPEN", "ASSIGNED", "PENDING", "RESOLVED", "CLOSED", "REJECTED"])) {
@@ -150,6 +158,7 @@ class TicketController extends Controller
 
     public function create()
     {
+        $this->checkIfNotRole([1, 3]);
         $ticketCategories = TicketCategory::all();
         $ticketPriorities = TicketPriority::all();
         return view("helpdesk.tickets.create", compact("ticketCategories", "ticketPriorities"));
@@ -157,6 +166,8 @@ class TicketController extends Controller
 
     public function edit($id)
     {
+        $this->checkIfNotRole([1, 3]);
+
         $ticket = Ticket::with('attachments')->findOrFail($id);
 
         if ($ticket->requester_id !== auth()->id() || $ticket->status !== 'OPEN') {
@@ -184,6 +195,8 @@ class TicketController extends Controller
 
     public function store(Request $request)
     {
+        $this->checkIfNotRole([1, 3]);
+
         $request->validate([
             'title' => 'required',
             'description' => '',
@@ -238,6 +251,7 @@ class TicketController extends Controller
 
     public function show($id)
     {
+
         $ticket = Ticket::with(["requester.employee.division", "assignedTo", "ticketCategory", "ticketPriority", "attachments"])->find($id);
         return response()->json(['success' => true, 'data' => $ticket]);
     }
@@ -263,6 +277,8 @@ class TicketController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->checkIfNotRole([1, 3]);
+
         $request->validate([
             'assigned_to' => 'required|exists:users,id',
         ]);
@@ -289,6 +305,8 @@ class TicketController extends Controller
 
     public function assignTeknisi(Request $request, $id)
     {
+        $this->checkIfNotRole([1, 5]);
+
         $request->validate([
             'assigned_to' => 'required|exists:users,id',
         ]);
@@ -315,6 +333,8 @@ class TicketController extends Controller
 
     public function approve($id)
     {
+        $this->checkIfNotRole([1, 4]);
+
         DB::beginTransaction();
         try {
             $ticket = Ticket::findOrFail($id);
@@ -337,6 +357,8 @@ class TicketController extends Controller
     // Confirm
     public function confirm(Request $request, $id)
     {
+        $this->checkIfNotRole([1, 3]);
+
         $request->validate([
             'rating' => 'required',
         ]);
@@ -384,6 +406,8 @@ class TicketController extends Controller
 
     public function reopen($id)
     {
+        $this->checkIfNotRole([1, 3]);
+
         DB::beginTransaction();
         try {
             $ticket = Ticket::findOrFail($id);
@@ -408,6 +432,8 @@ class TicketController extends Controller
 
     public function updateContent(Request $request, $id)
     {
+        $this->checkIfNotRole([1, 3]);
+
         $request->validate([
             'title' => 'required',
             'description' => '',
@@ -464,6 +490,8 @@ class TicketController extends Controller
 
     public function destroy($id)
     {
+        $this->checkIfNotRole([1, 3]);
+
         DB::beginTransaction();
         try {
             $ticket = Ticket::findOrFail($id);

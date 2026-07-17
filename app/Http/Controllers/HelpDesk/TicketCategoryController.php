@@ -14,8 +14,18 @@ class TicketCategoryController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+    public function checkIfNotRole($roles)
+    {
+        $roleId = auth()->user()->role_id;
+        if (!in_array($roleId, $roles)) {
+            return redirect()->route("helpdesk.tickets.index");
+        }
+    }
+
     public function index()
     {
+        $this->checkIfNotRole([1, 5]);
         $ticketCategories = TicketCategory::all();
         return view('helpdesk.ticket-categories.index', compact('ticketCategories'));
     }
@@ -23,6 +33,7 @@ class TicketCategoryController extends Controller
     // Main Data Table
     public function datatable(Request $request)
     {
+        $this->checkIfNotRole([1, 5]);
         $data = TicketCategory::all();
         return DataTables::of($data)
             ->addIndexColumn()
@@ -64,6 +75,7 @@ class TicketCategoryController extends Controller
      */
     public function store(Request $request)
     {
+        $this->checkIfNotRole([1, 5]);
         $request->validate([
             'name' => 'required',
             'description' => 'required'
@@ -81,6 +93,7 @@ class TicketCategoryController extends Controller
      */
     public function show($id)
     {
+        $this->checkIfNotRole([1, 5]);
         $ticketCategory = TicketCategory::find($id);
         return response()->json(['success' => true, 'data' => $ticketCategory]);
     }
@@ -105,6 +118,8 @@ class TicketCategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $this->checkIfNotRole([1, 5]);
+
         $ticketCategory = TicketCategory::findOrFail($id);
         $ticketCategory->update($request->all());
         return response()->json(['success' => true, 'message' => 'Data Kategori Tiket berhasil diperbarui!']);
@@ -118,6 +133,8 @@ class TicketCategoryController extends Controller
      */
     public function destroy($id)
     {
+        $this->checkIfNotRole([1, 5]);
+
         TicketCategory::destroy($id);
         return response()->json(['success' => true, 'message' => 'Kategori Tiket dihapus!']);
     }

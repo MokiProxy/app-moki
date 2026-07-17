@@ -38,6 +38,7 @@
                                     <option value="2">Approver</option>
                                     <option value="3">User/Staff</option>
                                     <option value="4">Teknisi Help Desk</option>
+                                    <option value="5">Admin Help Desk</option>
                                 </select>
                             </div>
                         </div>
@@ -77,6 +78,7 @@
                                     @elseif($row->role_id == 2) <span class="badge bg-warning text-dark">Approver</span>
                                     @elseif($row->role_id == 3) <span class="badge bg-info text-dark">Staff</span>
                                     @elseif($row->role_id == 4) <span class="badge bg-success text-dark">Teknisi Help Desk</span>
+                                    @elseif($row->role_id == 5) <span class="badge bg-success text-dark">Admin</span>
                                     @else <span class="badge bg-info">Staff</span> @endif
                                 </td>
                                 <td class="p-0 text-center">

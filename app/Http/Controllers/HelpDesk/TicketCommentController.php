@@ -11,8 +11,16 @@ use Illuminate\Http\Request;
 
 class TicketCommentController extends Controller
 {
+    public function checkIfNotRole($roles)
+    {
+        $roleId = auth()->user()->role_id;
+        if (!in_array($roleId, $roles)) {
+            return redirect()->route("helpdesk.tickets.index");
+        }
+    }
     public function index($ticketId, Request $request)
     {
+        $this->checkIfNotRole([1, 5]);
         $query = TicketComment::where('ticket_id', $ticketId)
             ->with('user', 'attachment')
             ->orderBy('created_at', 'ASC');
@@ -26,6 +34,8 @@ class TicketCommentController extends Controller
 
     public function store(Request $request, $ticketId)
     {
+        $this->checkIfNotRole([1, 5]);
+
         $request->validate([
             'comment' => 'required_without:attachment|string|max:5000',
             'attachment' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar',

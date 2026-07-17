@@ -2,7 +2,7 @@
 $role = session('user_role');
 $authUserRoleId = auth()->user()->role_id;
 
-if($authUserRoleId == 1) {
+if($authUserRoleId == 1 || $authUserRoleId == 5) {
 $roleColor = "danger";
 } else if ($authUserRoleId == 3) {
 $roleColor = "success";

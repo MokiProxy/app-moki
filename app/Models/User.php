@@ -18,7 +18,7 @@ class User extends Authenticatable
 
     // Konstanta untuk mempermudah pengecekan role di Controller/Blade
     const ROLE_SUPERADMIN = 1;
-    const ROLE_ADMIN = 2;
+    const ROLE_ADMIN = 5;
     const ROLE_ATASAN = 3;
     const ROLE_TEKNISI = 4;
 
