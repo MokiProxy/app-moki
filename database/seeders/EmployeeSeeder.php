@@ -44,41 +44,74 @@ class EmployeeSeeder extends Seeder
             ["name" => "Tia Setiani Tasim", "email" => "tia.setiani@tpm-facility.com", "hp" => null, "address" => null],
             ["name" => "Nofrizal", "email" => "novrizal@tpm-security.com", "hp" => null, "address" => null],
             ["name" => "Fahmi Husaini", "email" => "fahmi.husaini@tpm-facility.com", "hp" => null, "address" => null],
-            ["name" => "Astri Hutasoit", "email" => null],
-            ["name" => "Sentot Santoso", "email" => "sentot@tpm-security.com"],
-            ["name" => "Purwanto", "email" => "purwanto@tpm-facility.com"],
-            ["name" => "Evi", "email" => null],
-            ["name" => "Roni Kabo", "email" => null],
-            ["name" => "Erna Wahyu Winarsih", "email" => "erna.wahyu@tpm-facility.com"],
-            ["name" => "Endro Setyantono", "email" => "endro.setyantono@tpm-facility.com"],
-            ["name" => "Angga Aditya Ramdani", "email" => "angga.aditya@mindotek.com"],
-            ["name" => "Abdul Fatah", "email" => "abdul.fatah@tpm-facility.com"],
-            ["name" => "Gatot Purnawan", "email" => "gatotpurnawan@tpm-facility.com"],
-            ['name' => 'AGUSTINUS'], ['name' => 'WH BATAM'], ['name' => 'SALSADILA'],
-            ['name' => 'APRILIA DHEA'], ['name' => 'YOGI S'], ['name' => 'RA FETTY'],
-            ['name' => 'AHMAD MUZAKI'], ['name' => 'SITE - KOKAS'], ['name' => 'SITE - MEAINA'],
-            ['name' => 'HERI'], ['name' => 'DANIEL'], ['name' => 'WH SUMBAGUT'],
-            ['name' => 'SAEFUL'], ['name' => 'EKO'], ['name' => 'REY ISMU'],
-            ['name' => 'SITE - PAKARTA'], ['name' => 'N/A'], ['name' => 'YOGA'],
-            ['name' => 'PALEMBANG'], ['name' => 'YOGI'], ['name' => 'PEKANBARU'],
-            ['name' => 'SITE - PERTAMINA CIREBON'], ['name' => 'SITE - PLAZA BRI SBY'],
-            ['name' => 'YUDHA P'], ['name' => 'SITE - SEIBU'], ['name' => 'SITE - SOGO CENTRAL PARK'],
-            ['name' => 'SITE - SOGO KOKAS'], ['name' => 'SITE - SOGO PIM'], ['name' => 'SITE - SOGO PS'],
-            ['name' => 'SITE - SOGO TP SBY'], ['name' => 'SANDI R'], ['name' => 'ARIFFUDIN'],
-            ['name' => 'HUSNI'], ['name' => 'Riki'], ['name' => 'Nahdo'],
-            ['name' => 'WH JATIM'], ['name' => 'SITE - TARQ'], ['name' => 'TPM SBY'],
-            ['name' => 'WH JAKARTA'], ['name' => 'EKA M'],
+            ["name" => "Astri Hutasoit", "email" => null, "hp" => null, "address" => null],
+            ["name" => "Sentot Santoso", "email" => "sentot@tpm-security.com", "hp" => null, "address" => null],
+            ["name" => "Purwanto", "email" => "purwanto@tpm-facility.com", "hp" => null, "address" => null],
+            ["name" => "Evi", "email" => null, "hp" => null, "address" => null],
+            ["name" => "Roni Kabo", "email" => null, "hp" => null, "address" => null],
+            ["name" => "Erna Wahyu Winarsih", "email" => "erna.wedhyu@tpm-facility.com", "hp" => null, "address" => null],
+            ["name" => "Endro Setyantono", "email" => "endro.setyantono@tpm-facility.com", "hp" => null, "address" => null],
+            ["name" => "Angga Aditya Ramdani", "email" => "angga.aditya@mindotek.com", "hp" => null, "address" => null],
+            ["name" => "Abdul Fatah", "email" => "abdul.fatah@tpm-facility.com", "hp" => null, "address" => null],
+            ["name" => "Gatot Purnawan", "email" => "gatotpurnawan@tpm-facility.com", "hp" => null, "address" => null],
+            ['name' => 'AGUSTINUS', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'WH BATAM', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SALSADILA', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'APRILIA DHEA', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'YOGI S', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'RA FETTY', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'AHMAD MUZAKI', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SITE - KOKAS', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SITE - MEAINA', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'HERI', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'DANIEL', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'WH SUMBAGUT', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'SAEFUL', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'EKO', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'REY ISMU', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'SITE - PAKARTA', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'N/A', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'YOGA', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'PALEMBANG', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'YOGI', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'PEKANBARU', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'SITE - PERTAMINA CIREBON', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SITE - PLAZA BRI SBY', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'YUDHA P', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SITE - SEIBU', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SITE - SOGO CENTRAL PARK', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'SITE - SOGO KOKAS', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SITE - SOGO PIM', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SITE - SOGO PS', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'SITE - SOGO TP SBY', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SANDI R', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'ARIFFUDIN', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'HUSNI', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'Riki', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'Nahdo', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'WH JATIM', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'SITE - TARQ', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'TPM SBY', "email" => null, "hp" => null, "address" => null],
+            ['name' => 'WH JAKARTA', "email" => null, "hp" => null, "address" => null], 
+            ['name' => 'EKA M', "email" => null, "hp" => null, "address" => null],
         ];
 
         foreach ($employees as $index => $data) {
-            Employee::create([
-                'employee_id'   => 'EMP' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
-                'name'          => $data['name'],
-                'division_code' => 'IT', // Default code
-                'division_id'   => 1,    // Pastikan ID 1 ada di tabel divisions
-                'regional_id'   => 1,    // Pastikan ID 1 ada di tabel regionals
-                'email'         => $data['email'] ?? null,
-            ]);
+            $empId = 'EMP' . str_pad($index + 1, 4, '0', STR_PAD_LEFT);
+
+            // Menggunakan updateOrCreate agar aman dijalankan berkali-kali tanpa duplikasi data
+            Employee::updateOrCreate(
+                ['employee_id' => $empId], // Unique identifier
+                [
+                    'name'          => $data['name'],
+                    'division_code' => 'IT', // Default code
+                    'division_id'   => 1,    // Pastikan ID 1 ada di tabel divisions
+                    'regional_id'   => 1,    // Pastikan ID 1 ada di tabel regionals
+                    'email'         => $data['email'] ?? null,
+                    'hp'            => $data['hp'] ?? null,
+                    'address'       => $data['address'] ?? null,
+                ]
+            );
         }
     }
 }

@@ -13,11 +13,11 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'name'        => 'MOKODEV',
-                "nopeg"       => '12345678',
+                'nopeg'       => '12345678',
                 'email'       => 'admin@admin.com',
                 'password'    => Hash::make('password'),
                 'role_id'     => User::ROLE_SUPERADMIN,
-                'employee_id' => null,
+                'employee_id' => 'EMP0001',
             ],
         ];
 

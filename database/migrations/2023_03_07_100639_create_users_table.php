@@ -15,8 +15,8 @@ class CreateUsersTable extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            // Hapus ->after('id'), cukup letakkan di bawah $table->id()
-            $table->unsignedBigInteger('employee_id')->nullable();
+            // Diubah menjadi string agar bisa menampung format NIP string seperti "EMP0001"
+            $table->string('employee_id')->nullable();
             $table->string("nopeg")->unique()->nullable();
             $table->string('name');
             $table->string('email')->unique();
@@ -26,16 +26,15 @@ class CreateUsersTable extends Migration
             // Letakkan role_id di sini
             $table->integer('role_id')->default(3)->comment('1:Superadmin, 2:Admin, 3:Atasan');
 
-            $table->foreign('employee_id')
-                ->references('id')
-                ->on('employees')
-                ->cascadeOnDelete();
+            // Hapus foreign key constraint karena tipenya string (NIP), 
+            // namun index pencarian tetap dipertahankan untuk mengoptimalkan performa query login
             $table->index('employee_id');
             $table->index('nopeg');
             $table->rememberToken();
             $table->timestamps();
         });
     }
+
     /**
      * Reverse the migrations.
      *

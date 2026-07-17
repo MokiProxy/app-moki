@@ -31,42 +31,43 @@ class UserRoleController extends Controller
         return response()->json(['success' => false], 404);
     }
 
-public function store(Request $request)
-{
-    $request->validate([
-        'employee_id' => $request->id ? 'nullable' : 'required',
-        'role_id'     => 'required',
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'employee_id' => $request->id ? 'nullable' : 'required',
+            'role_id'     => 'required',
+        ]);
 
-    try {
-        if ($request->id) {
-            // Update Data
-            DB::table('user_roles')->where('id', $request->id)->update([
-                'role_id'    => $request->role_id,
-                'updated_at' => now(),
-            ]);
-            $msg = "Role berhasil diupdate!";
-        } else {
-            // Simpan Baru
-            $employee = Employee::findOrFail($request->employee_id);
-            DB::table('user_roles')->updateOrInsert(
-                ['employee_id' => $request->employee_id],
-                [
-                    'jabatan'    => $employee->jabatan ?? '-',
+        try {
+            if ($request->id) {
+                // Update Data
+                DB::table('user_roles')->where('id', $request->id)->update([
                     'role_id'    => $request->role_id,
-                    'created_at' => now(),
                     'updated_at' => now(),
-                ]
-            );
-            $msg = "Role berhasil ditambahkan!";
-        }
+                ]);
+                $msg = "Role berhasil diupdate!";
+            } else {
+                // Simpan Baru
+                $employee = Employee::findOrFail($request->employee_id);
+                DB::table('user_roles')->updateOrInsert(
+                    ['employee_id' => $request->employee_id],
+                    [
+                        'jabatan'    => $employee->jabatan ?? '-',
+                        'role_id'    => $request->role_id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+                $msg = "Role berhasil ditambahkan!";
+            }
 
-        return response()->json(['success' => true, 'message' => $msg]);
-    } catch (Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json(['success' => true, 'message' => $msg]);
+        } catch (Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
-}
-   public function edit($id)
+
+    public function edit($id)
     {
         // Join ke employees agar nama muncul di modal popup
         $role = DB::table('user_roles')
@@ -81,53 +82,68 @@ public function store(Request $request)
         return response()->json(['success' => false], 404);
     }
 
-public function setPassword(Request $request)
-{
-    $request->validate([
-        'user_role_id' => 'required',
-        'password' => 'required|min:6'
-    ]);
+    public function setPassword(Request $request)
+    {
+        $request->validate([
+            'user_role_id' => 'required',
+            'password' => 'required|min:6'
+        ]);
 
-    try {
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        $roleData = DB::table('user_roles')->where('id', $request->user_role_id)->first();
-        if (!$roleData) return response()->json(['success' => false, 'message' => 'Data Role tidak ditemukan']);
+            $roleData = DB::table('user_roles')->where('id', $request->user_role_id)->first();
+            if (!$roleData) return response()->json(['success' => false, 'message' => 'Data Role tidak ditemukan']);
 
-        $emp = DB::table('employees')->where('id', $roleData->employee_id)->first();
+            // $roleData->employee_id di sini adalah PK employees.id (bukan NIP)
+            $emp = DB::table('employees')->where('id', $roleData->employee_id)->first();
+            if (!$emp) return response()->json(['success' => false, 'message' => 'Data Employee tidak ditemukan']);
 
-        // Cek keberadaan user di tabel users berdasarkan employee_id yang baru saja dibuat
-        $user = DB::table('users')->where('employee_id', $roleData->employee_id)->first();
+            // NIP asli dari tabel employees (mis. EMP0001) - INI yang dipakai untuk login
+            $nip = $emp->employee_id;
 
-        if ($user) {
-            DB::table('users')->where('id', $user->id)->update([
-                'password' => Hash::make($request->password),
-                'role_id'  => $roleData->role_id,
-                'updated_at' => now()
-            ]);
-            $msg = "Password user berhasil diperbarui.";
-        } else {
-            DB::table('users')->insert([
-                'name'        => $emp->name,
-                'email'       => $emp->email ?? ($emp->employee_id . '@system.com'), 
-                'password'    => Hash::make($request->password),
-                'employee_id' => $roleData->employee_id,
-                'role_id'     => $roleData->role_id,
-                'created_at'  => now(),
-                'updated_at'  => now()
-            ]);
-            $msg = "User baru berhasil dibuat di sistem login.";
+            // Cari user existing berdasarkan NIP (bukan PK employees.id lagi)
+            $user = DB::table('users')->where('employee_id', $nip)->first();
+
+            // Pastikan NIP unik sebagai login (kecuali milik user yang sedang di-update sendiri)
+            $nipTaken = DB::table('users')
+                ->where('employee_id', $nip)
+                ->when($user, fn ($q) => $q->where('id', '!=', $user->id))
+                ->exists();
+
+            if ($nipTaken && !$user) {
+                DB::rollback();
+                return response()->json(['success' => false, 'message' => "NIP {$nip} sudah dipakai user lain."], 422);
+            }
+
+            if ($user) {
+                DB::table('users')->where('id', $user->id)->update([
+                    'password'   => Hash::make($request->password),
+                    'role_id'    => $roleData->role_id,
+                    'updated_at' => now()
+                ]);
+                $msg = "Password user berhasil diperbarui.";
+            } else {
+                DB::table('users')->insert([
+                    'name'        => $emp->name,
+                    'email'       => $emp->email ?? ($nip . '@system.com'),
+                    'password'    => Hash::make($request->password),
+                    'employee_id' => $nip, // NIP string, dipakai untuk login
+                    'role_id'     => $roleData->role_id,
+                    'created_at'  => now(),
+                    'updated_at'  => now()
+                ]);
+                $msg = "User baru berhasil dibuat di sistem login.";
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => $msg]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
         }
-
-        DB::commit();
-        return response()->json(['success' => true, 'message' => $msg]);
-
-    } catch (\Exception $e) {
-        DB::rollback();
-        return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
     }
-}
-
 
     public function destroy($id)
     {
