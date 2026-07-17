@@ -20,7 +20,6 @@ class DashboardController extends Controller
 
         if ($user->role_id === User::ROLE_ATASAN) {
             $divisionId = $user->employee->division_id;
-
             return Ticket::whereHas('requester.employee', function ($q) use ($divisionId) {
                 $q->where('employees.division_id', $divisionId);
             });
@@ -55,7 +54,7 @@ class DashboardController extends Controller
         if ($user->role_id === User::ROLE_SUPERADMIN) {
             $divisionCounts = Ticket::select('divisions.name', DB::raw('count(*) as total'))
                 ->join('users', 'tickets.requester_id', '=', 'users.id')
-                ->join('employees', 'users.employee_id', '=', 'employees.id')
+                ->join('employees', 'users.employee_id', '=', 'employees.employee_id')
                 ->join('divisions', 'employees.division_id', '=', 'divisions.id')
                 ->groupBy('divisions.name')
                 ->pluck('total', 'name');
@@ -127,7 +126,7 @@ class DashboardController extends Controller
             ->get();
 
         return response()->json([
-            'labels' => $tickets->pluck('date')->map(fn ($d) => Carbon::parse($d)->format($format)),
+            'labels' => $tickets->pluck('date')->map(fn($d) => Carbon::parse($d)->format($format)),
             'data' => $tickets->pluck('total'),
         ]);
     }

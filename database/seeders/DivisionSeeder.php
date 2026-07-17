@@ -58,14 +58,14 @@ class DivisionSeeder extends Seeder
             ["name" => "OFFICE SUPPORT", "company_id" => 1, "regional_id" => 25],
         ];
 
-       foreach ($divisions as $data) {
-        Division::create([
-            'name'         => $data['name'],
-            'abbreviation' => $data['abbreviation'] ?? '-', 
-            'company_id'   => $data['company_id'],
-            'regional_id'  => $data['regional_id'],
-            'code'         => strtoupper(substr($data['name'], 0, 3)) . rand(100, 999), // Menghasilkan kode otomatis seperti LOG123
-        ]);
+        foreach ($divisions as $data) {
+            Division::create([
+                'name'         => $data['name'],
+                'abbreviation' => $data['abbreviation'] ?? '-',
+                'company_id'   => $data['company_id'],
+                'regional_id'  => $data['regional_id'],
+                'code'         => strtoupper(substr($data['name'], 0, 3)) . rand(100, 999), // Menghasilkan kode otomatis seperti LOG123
+            ]);
         }
     }
 }

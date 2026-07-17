@@ -137,10 +137,12 @@ class TicketController extends Controller
                     }
                     return '<div class="btn-group">' . $buttons . '</div>';
                 } else {
-                    return '
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
-                    </div>';
+                    $buttons = '<button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>';
+                    if ($row->status == "OPEN") {
+                        $buttons .= '<a href="' . url('helpdesk/tickets/' . $row->id . '/edit') . '" class="btn btn-sm btn-primary" title="Edit"><i class="mdi mdi-pencil"></i></a>';
+                        $buttons .= '<button class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="mdi mdi-trash-can"></i></button>';
+                    }
+                    return '<div class="btn-group">' . $buttons . '</div>';
                 }
             })
             ->rawColumns(['ticket_number', 'assigned_to_name', 'ticket_priority_name', 'status', 'action'])
