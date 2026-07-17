@@ -12,7 +12,7 @@
         overflow-x: hidden;
     }
 
-    /* ===== Landing / video background ===== */
+
     .auth-video-wrapper {
         position: fixed;
         top: 0;
@@ -177,7 +177,7 @@
         text-decoration: none;
     }
 
-    /* ===== Modal (guest login & forgot password) ===== */
+
     .auth-modal .modal-content {
         border-radius: 18px;
         border: none;
@@ -269,7 +269,7 @@
         margin-bottom: 4px;
     }
 
-    /* ===== Forgot password modal - elemen tambahan ===== */
+
     .auth-modal .modal-title-lg {
         font-weight: 800;
         font-size: 1.4rem;
@@ -337,18 +337,12 @@
 
 <div class="auth-video-wrapper">
 
-    {{-- Background video --}}
-    {{--
-        Sementara pakai video dummy publik dulu biar bisa langsung dilihat hasilnya.
-        Nanti kalau video asli sudah siap, tinggal ganti src di bawah ini jadi:
-        {{ asset('videos/login-bg.mp4') }}
-    --}}
     <video class="bg-video" autoplay muted loop playsinline>
         <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
     </video>
     <div class="auth-video-overlay"></div>
 
-    {{-- Top bar: brand + contact --}}
+  
     <div class="auth-topbar">
         <div class="auth-brand">
             <img src="{{ asset('img/logo-msi.png') }}" alt="Logo">
@@ -360,7 +354,7 @@
         </div>
     </div>
 
-    {{-- Hero: select login type --}}
+
     <div class="auth-hero">
         <img src="{{ asset('img/logo-msi.png') }}" alt="Logo" class="auth-hero-logo">
         <h2>Portal IT MSI</h2>
@@ -389,7 +383,6 @@
     </div>
 </div>
 
-{{-- ===== Guest login modal ===== --}}
 <div class="modal fade auth-modal" id="guestLoginModal" tabindex="-1" aria-labelledby="guestLoginModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -463,7 +456,6 @@
     </div>
 </div>
 
-{{-- ===== Forgot password modal ===== --}}
 <div class="modal fade auth-modal" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

@@ -34,14 +34,11 @@ class MicrosoftAuthController extends Controller
                 ->with('error', 'Login dengan Microsoft gagal, silakan coba lagi.');
         }
 
-        // Cari user berdasarkan email, atau buat baru kalau belum ada.
-        // Sesuaikan logic ini dengan kebutuhan aplikasi kamu
-        // (misal: hanya izinkan email dari domain tertentu, dsb).
+ 
         $user = User::where('email', $microsoftUser->getEmail())->first();
 
         if (! $user) {
-            // Kalau kamu TIDAK mau auto-register user baru,
-            // hapus blok ini dan ganti dengan redirect ke halaman "akun tidak ditemukan".
+            
             $user = User::create([
                 'name'              => $microsoftUser->getName() ?? $microsoftUser->getNickname(),
                 'email'             => $microsoftUser->getEmail(),
