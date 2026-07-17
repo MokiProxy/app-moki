@@ -18,6 +18,7 @@ use App\Http\Controllers\ApprovedController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\WhatsappController;
 use App\Http\Controllers\PortalController;
+use App\Http\Controllers\Auth\MicrosoftAuthController;
 use Illuminate\Support\Facades\Route;
 use PHPUnit\TextUI\Help;
 
@@ -248,3 +249,9 @@ Route::prefix('settings/role')->group(function () {
     // Route::post('settings/role/set-password', [UserRoleController::class, 'setPassword'])->name('settings.role.set-password');
     Route::post('/settings/role/set-password', [UserRoleController::class, 'setPassword'])->name('settings.role.set-password');
 });
+
+Route::get('/login/microsoft', [MicrosoftAuthController::class, 'redirect'])
+    ->name('login.microsoft');
+
+Route::get('/login/microsoft/callback', [MicrosoftAuthController::class, 'callback'])
+    ->name('login.microsoft.callback');
