@@ -10,6 +10,8 @@ class DivisionSeeder extends Seeder
     public function run()
     {
         $divisions = [
+            ["name" => "DIREKSI", "company_id" => 1, "regional_id" => 1],
+            ["name" => "MSI", "company_id" => 1, "regional_id" => 1],
             ["name" => "LOGISTIK", "company_id" => 2, "regional_id" => 26],
             ["name" => "OFFICE SUPPORT", "company_id" => 1, "regional_id" => 1],
             ["name" => "OFFICE SUPPORT", "company_id" => 1, "regional_id" => 2],

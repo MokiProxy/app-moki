@@ -15,8 +15,8 @@ class HierarchySeeder extends Seeder
     {
         // 1. Seed satker
         $satker = PegawaiSatker::firstOrCreate(
-            ['kode_satker' => 'SAT-001'],
-            ['nama_satker' => 'Kantor Pusat']
+            ['kode_satker' => 'HO'],
+            ['nama_satker' => 'Head Office']
         );
 
         // 2. Seed positions (adjacency list)
@@ -37,11 +37,11 @@ class HierarchySeeder extends Seeder
 
         // 3. Seed employees
         $employees = [
-            ['position_id' => 'POS-CEO', 'nik' => 'NIK-001', 'nopeg' => 'NP-001', 'nama' => 'Dedi',  'email' => 'dedi@company.com', 'jabatan0' => 'CEO',                 'kode_satker' => 'SAT-001'],
-            ['position_id' => 'POS-GMIT', 'nik' => 'NIK-002', 'nopeg' => 'NP-002', 'nama' => 'Agus', 'email' => 'agus@company.com', 'jabatan0' => 'GM IT',               'kode_satker' => 'SAT-001'],
-            ['position_id' => 'POS-MGRDEV', 'nik' => 'NIK-003', 'nopeg' => 'NP-003', 'nama' => 'Toni', 'email' => 'toni@company.com', 'jabatan0' => 'Manager Development',  'kode_satker' => 'SAT-001'],
-            ['position_id' => 'POS-SPVBE', 'nik' => 'NIK-004', 'nopeg' => 'NP-004', 'nama' => 'Andi', 'email' => 'andi@company.com', 'jabatan0' => 'Supervisor Backend',   'kode_satker' => 'SAT-001'],
-            ['position_id' => 'POS-PRGBE', 'nik' => 'NIK-005', 'nopeg' => 'NP-005', 'nama' => 'Budi', 'email' => 'budi@company.com', 'jabatan0' => 'Programmer Backend',   'kode_satker' => 'SAT-001'],
+            ['position_id' => 'POS-CEO', 'employee_id' => 'EMP0001', 'nopeg' => '20260001', 'nama' => 'Abimana CEO',  'email' => 'abimana.ceo@tpm-facility.com', 'jabatan0' => 'CEO',                 'kode_satker' => 'HO'],
+            ['position_id' => 'POS-GMIT', 'employee_id' => 'EMP0002', 'nopeg' => '20260002', 'nama' => 'Bayu GMIT', 'email' => 'bayu.gmit@tpm-facility.com', 'jabatan0' => 'GM IT',               'kode_satker' => 'HO'],
+            ['position_id' => 'POS-MGRDEV', 'employee_id' => 'EMP0003', 'nopeg' => '20260003', 'nama' => 'Irsyad MGRDEV', 'email' => 'irsyad.mgrdev@tpm-facility.com', 'jabatan0' => 'Manager Development',  'kode_satker' => 'HO'],
+            ['position_id' => 'POS-SPVBE', 'employee_id' => 'EMP0004', 'nopeg' => '20260004', 'nama' => 'Humam SPVBE', 'email' => 'humam.spvbe@tpm-facility.com', 'jabatan0' => 'Supervisor Backend',   'kode_satker' => 'HO'],
+            ['position_id' => 'POS-PRGBE', 'employee_id' => 'EMP0005', 'nopeg' => '20260005', 'nama' => 'Wahid PGRBE', 'email' => 'wahid.pgrbe@tpm-facility.com', 'jabatan0' => 'Programmer Backend',   'kode_satker' => 'HO'],
         ];
 
         foreach ($employees as $emp) {

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('pegawai_hirarki', function (Blueprint $table) {
             $table->id();
             $table->string('position_id');
-            $table->unsignedBigInteger('employee_id')->nullable();
+            $table->string('employee_id')->nullable();
             $table->string('nopeg')->nullable();
             $table->string('nama')->nullable();
             $table->string('email')->nullable();
@@ -20,7 +20,7 @@ return new class extends Migration
 
             for ($i = 1; $i <= 8; $i++) {
                 $table->string("superior_{$i}")->nullable();
-                $table->string("nik{$i}")->nullable();
+                $table->string("employee_id_hier{$i}")->nullable();
                 $table->string("nopeg_hier{$i}")->nullable();
                 $table->string("nama_hier{$i}")->nullable();
                 $table->string("ilinier{$i}")->nullable();
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('employee_id')
-                ->references('id')
+                ->references('employee_id')
                 ->on('employees')
                 ->cascadeOnDelete();
             $table->foreign('nopeg')

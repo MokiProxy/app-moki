@@ -26,8 +26,10 @@ class CreateUsersTable extends Migration
             // Letakkan role_id di sini
             $table->integer('role_id')->default(3)->comment('1:Superadmin, 2:Admin, 3:Atasan');
 
-            // Hapus foreign key constraint karena tipenya string (NIP), 
+            // Hapus foreign key constraint karena tipenya string (NIP),
             // namun index pencarian tetap dipertahankan untuk mengoptimalkan performa query login
+            $table->foreign('employee_id')->references('employee_id')->on('employees')->onDelete('cascade');
+
             $table->index('employee_id');
             $table->index('nopeg');
             $table->rememberToken();

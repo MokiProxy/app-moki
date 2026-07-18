@@ -14,7 +14,6 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // 1. Master Data Tanpa Relasi (Independent)
-        $this->call(UserSeeder::class);
         $this->call(CompanySeeder::class);
         $this->call(CategorySeeder::class);
         $this->call(SupplierSeeder::class);
@@ -23,6 +22,7 @@ class DatabaseSeeder extends Seeder
 
         // // 2. Data Dengan Relasi (Dependent)
         $this->call(EmployeeSeeder::class); // Butuh DivisionID
+        $this->call(UserSeeder::class);
         $this->call(AssetSeeder::class);    // Biasanya butuh Category/Supplier
 
         // Help Desk
@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TicketPrioritySeeder::class);
 
         // Hierarchy Organisasi
-        // $this->call(HierarchySeeder::class);
+        $this->call(HierarchySeeder::class);
 
         // Master Data Sederhana
         $this->call(GolonganDarahSeeder::class);

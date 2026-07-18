@@ -58,8 +58,8 @@ class HierarchyService
 
             $superiorPegawai = PegawaiHirarki::where('position_id', $superiorId)->first();
             if ($superiorPegawai !== null) {
-                $data["nik{$i}"] = $superiorPegawai->nik;
                 $data["nopeg_hier{$i}"] = $superiorPegawai->nopeg;
+                $data["employee_id_hier{$i}"] = $superiorPegawai->employee_id;
                 $data["nama_hier{$i}"] = $superiorPegawai->nama;
                 $data["ilinier{$i}"] = $superiorPegawai->nama;
                 $data["email{$i}"] = $superiorPegawai->email;
@@ -104,9 +104,9 @@ class HierarchyService
     /**
      * Get employee superiors chain by NIK.
      */
-    public function getEmployeeSuperiors(string $nik): Collection
+    public function getEmployeeSuperiors(string $employeeId): Collection
     {
-        $employee = PegawaiHirarki::where('nik', $nik)->first();
+        $employee = PegawaiHirarki::where('employee_id', $employeeId)->first();
         if ($employee === null) {
             return new Collection();
         }
