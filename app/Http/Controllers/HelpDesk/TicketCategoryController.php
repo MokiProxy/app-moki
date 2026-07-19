@@ -9,23 +9,8 @@ use Yajra\DataTables\DataTables;
 
 class TicketCategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-
-    public function checkIfNotRole($roles)
-    {
-        $roleId = auth()->user()->role_id;
-        if (!in_array($roleId, $roles)) {
-            return redirect()->route("helpdesk.tickets.index");
-        }
-    }
-
     public function index()
     {
-        $this->checkIfNotRole([1, 5]);
         $ticketCategories = TicketCategory::all();
         return view('helpdesk.ticket-categories.index', compact('ticketCategories'));
     }
@@ -33,7 +18,6 @@ class TicketCategoryController extends Controller
     // Main Data Table
     public function datatable(Request $request)
     {
-        $this->checkIfNotRole([1, 5]);
         $data = TicketCategory::all();
         return DataTables::of($data)
             ->addIndexColumn()
@@ -57,25 +41,8 @@ class TicketCategoryController extends Controller
             ->make(true);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        $this->checkIfNotRole([1, 5]);
         $request->validate([
             'name' => 'required',
             'description' => 'required'
@@ -85,56 +52,21 @@ class TicketCategoryController extends Controller
         return response()->json(['success' => true, 'message' => 'Kategori Tiket berhasil ditambahkan!']);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
-        $this->checkIfNotRole([1, 5]);
         $ticketCategory = TicketCategory::find($id);
         return response()->json(['success' => true, 'data' => $ticketCategory]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-        $this->checkIfNotRole([1, 5]);
-
         $ticketCategory = TicketCategory::findOrFail($id);
         $ticketCategory->update($request->all());
         return response()->json(['success' => true, 'message' => 'Data Kategori Tiket berhasil diperbarui!']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
-        $this->checkIfNotRole([1, 5]);
-
         TicketCategory::destroy($id);
         return response()->json(['success' => true, 'message' => 'Kategori Tiket dihapus!']);
     }

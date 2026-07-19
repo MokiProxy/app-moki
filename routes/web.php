@@ -54,38 +54,50 @@ Route::group(['middleware' => ['auth']], function () {
 
     // FITUR HELPDESK
     Route::prefix('helpdesk')->name('helpdesk.')->group(function () {
+
         Route::get("/", [HelpDeskDashboardController::class, 'index'])->name('index');
         Route::get('dashboard/chart-data', [HelpDeskDashboardController::class, 'chartData'])->name('dashboard.chart-data');
-        Route::get('technicians', [HelpDeskTicketController::class, 'getTeknisi'])->name('tickets.teknisi');
+
         Route::get('tickets/{id}/timeline', [HelpDeskTicketController::class, 'timeline'])->name('tickets.timeline');
 
         Route::resource("tickets", HelpDeskTicketController::class);
         Route::post('tickets/datatable', [HelpDeskTicketController::class, 'datatable'])->name('tickets.datatable');
         Route::get('tickets/attachments/{id}/download', [HelpDeskTicketAttachmentController::class, 'download'])->name('tickets.attachments.download');
-        Route::get('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'index'])->name('tickets.comments.index');
-        Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
 
-        Route::resource('ticket-categories', HelpDeskTicketCategoryController::class);
-        Route::post('ticket-categories/datatable', [HelpDeskTicketCategoryController::class, 'datatable'])->name('ticket-categories.datatable');
+        Route::middleware(['auth', 'role:1,5'])->group(function () {
+            Route::resource('ticket-categories', HelpDeskTicketCategoryController::class);
+            Route::post('ticket-categories/datatable', [HelpDeskTicketCategoryController::class, 'datatable'])->name('ticket-categories.datatable');
 
-        Route::resource('ticket-priorities', HelpDeskTicketPriorityController::class);
-        Route::post('ticket-priorities/datatable', [HelpDeskTicketPriorityController::class, 'datatable'])->name('ticket-priorities.datatable');
+            Route::resource('ticket-priorities', HelpDeskTicketPriorityController::class);
+            Route::post('ticket-priorities/datatable', [HelpDeskTicketPriorityController::class, 'datatable'])->name('ticket-priorities.datatable');
+        });
 
-        // Admin Access
-        Route::put('tickets/assign/{id}', [HelpDeskTicketController::class, 'assignTeknisi'])->name('tickets.assign');
+        Route::middleware(['auth', 'role:1,5'])->group(function () {
+            Route::get('technicians', [HelpDeskTicketController::class, 'getTeknisi'])->name('tickets.teknisi');
 
-        Route::post('reports/datatable', [HelpDeskReportController::class, 'datatable'])->name('reports.datatable');
-        Route::get('reports/generate-pdf', [HelpDeskReportController::class, 'generatePdf'])->name('reports.generate-pdf');
-        Route::get('reports/generate-excel', [HelpDeskReportController::class, 'generateExcel'])->name('reports.generate-excel');
-        Route::resource("reports", HelpDeskReportController::class);
+            Route::put('tickets/assign/{id}', [HelpDeskTicketController::class, 'assignTeknisi'])->name('tickets.assign');
 
-        // Staff Access
-        Route::put('tickets/confirm/{id}', [HelpDeskTicketController::class, 'confirm'])->name('tickets.confirm');
-        Route::put('tickets/reopen/{id}', [HelpDeskTicketController::class, 'reopen'])->name('tickets.reopen');
-        Route::put('tickets/{id}/update-content', [HelpDeskTicketController::class, 'updateContent'])->name('tickets.update-content');
+            Route::post('reports/datatable', [HelpDeskReportController::class, 'datatable'])->name('reports.datatable');
+            Route::get('reports/generate-pdf', [HelpDeskReportController::class, 'generatePdf'])->name('reports.generate-pdf');
+            Route::get('reports/generate-excel', [HelpDeskReportController::class, 'generateExcel'])->name('reports.generate-excel');
+            Route::resource("reports", HelpDeskReportController::class);
+        });
 
-        Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
-        Route::put('tickets/resolve/{id}', [HelpDeskTicketController::class, 'resolved'])->name('tickets.resolve');
+        Route::middleware(['auth', 'role:1,3,4,5'])->group(function () {
+            Route::get('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'index'])->name('tickets.comments.index');
+            Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
+        });
+
+        Route::middleware(['auth', 'role:1,3'])->group(function () {
+            Route::put('tickets/confirm/{id}', [HelpDeskTicketController::class, 'confirm'])->name('tickets.confirm');
+            Route::put('tickets/reopen/{id}', [HelpDeskTicketController::class, 'reopen'])->name('tickets.reopen');
+            Route::put('tickets/resolve/{id}', [HelpDeskTicketController::class, 'resolved'])->name('tickets.resolve');
+            Route::put('tickets/{id}/update-content', [HelpDeskTicketController::class, 'updateContent'])->name('tickets.update-content');
+        });
+
+        Route::middleware(['auth', 'role:4'])->group(function () {
+            Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
+        });
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
