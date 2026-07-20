@@ -21,7 +21,7 @@ class CreateUsersTable extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();
 
             // Letakkan role_id di sini
             $table->integer('role_id')->default(3)->comment('1:Superadmin, 2:Admin, 3:Atasan');

@@ -7,17 +7,23 @@ use App\Models\Employee;
 use App\Models\Division;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
-use App\Models\Whatsapp; 
+use App\Services\WhatsAppNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Yajra\DataTables\Facades\DataTables; 
+use Yajra\DataTables\Facades\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
-use GuzzleHttp\Client;
 use Exception;
 
 class TransactionController extends Controller
 {
+    protected $waService;
+
+    public function __construct(WhatsAppNotificationService $waService)
+    {
+        $this->waService = $waService;
+    }
+
     public function index() 
     { 
         return view('components.transaction'); 
@@ -158,56 +164,24 @@ class TransactionController extends Controller
 
     private function sendWhatsappNotification($transaction)
     {
-        try {
-            // Gunakan backslash global agar mencari fungsi di App/Helpers
-            $token = \fonnte_api();
+        $manager = Employee::whereRaw('LOWER(jabatan) = ?', ['manajer msi'])->first();
 
-            if (!$token) {
-                \Log::error("WA Gagal: Token tidak ditemukan (key: fonnte_api)");
-                return;
-            }
-
-            // Cari Manager MSI
-            $manager = Employee::whereRaw('LOWER(jabatan) = ?', ['manajer msi'])->first();
-            
-            if (!$manager || empty($manager->hp)) {
-                \Log::warning("WA Gagal: Manager MSI tidak ditemukan atau nomor HP kosong.");
-                return;
-            }
-
-            // Format Nomor HP (08 -> 62)
-            $target = $manager->hp;
-            if (substr($target, 0, 1) === '0') {
-                $target = '62' . substr($target, 1);
-            }
-
-            $type = ($transaction->type == 'OUT') ? 'Pemberian/Pinjam' : 'Pengembalian';
-            $message = "*PERMINTAAN PERSETUJUAN ASET*\n"
-                     . "--------------------------\n"
-                     . "Yth. Pak " . $manager->name . ",\n\n"
-                     . "Terdapat pengajuan *" . $type . "* baru:\n"
-                     . "No. BAST: *" . $transaction->order_number . "*\n"
-                     . "Karyawan: " . optional($transaction->employee)->name . "\n\n"
-                     . "Mohon segera login ke sistem AMS untuk memproses persetujuan.\n"
-                     . "Terima kasih.";
-
-            $client = new Client(['verify' => false, 'timeout' => 10]);
-            
-            $client->post(env('FONNTE_API_URL', 'https://api.fonnte.com/send'), [
-                'headers' => [
-                    'Authorization' => $token,
-                ],
-                'form_params' => [
-                    'target'  => $target,
-                    'message' => $message,
-                ],
-            ]);
-
-            \Log::info("WA Terkirim ke " . $target . " untuk BAST: " . $transaction->order_number);
-
-        } catch (Exception $e) {
-            \Log::error("Error WA: " . $e->getMessage());
+        if (!$manager || empty($manager->hp)) {
+            \Log::warning('WA Gagal: Manager MSI tidak ditemukan atau nomor HP kosong.');
+            return;
         }
+
+        $type = ($transaction->type == 'OUT') ? 'Pemberian/Pinjam' : 'Pengembalian';
+        $message = "*PERMINTAAN PERSETUJUAN ASET*\n"
+                 . "--------------------------\n"
+                 . "Yth. Pak " . $manager->name . ",\n\n"
+                 . "Terdapat pengajuan *" . $type . "* baru:\n"
+                 . "No. BAST: *" . $transaction->order_number . "*\n"
+                 . "Karyawan: " . optional($transaction->employee)->name . "\n\n"
+                 . "Mohon segera login ke sistem AMS untuk memproses persetujuan.\n"
+                 . "Terima kasih.";
+
+        $this->waService->send($manager->hp, $message);
     }
 
     public function updateStatus(Request $request, $id)

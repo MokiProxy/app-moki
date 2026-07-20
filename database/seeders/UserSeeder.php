@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
                 'email'       => 'superadmin@sistem.com',
                 'password'    => Hash::make('password'),
                 'role_id'     => User::ROLE_SUPERADMIN,
-                'employee_id' => 'EMP0009',
+                'employee_id' => 'EMP0006',
             ],
             [
                 'name'        => 'WAHID',
@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
                 'email'       => 'admin@sistem.com',
                 'password'    => Hash::make('password'),
                 'role_id'     => User::ROLE_ADMIN,
-                'employee_id' => 'EMP0008',
+                'employee_id' => 'EMP0007',
             ],
             [
                 'name'        => 'Abimana CEO',
@@ -64,7 +64,7 @@ class UserSeeder extends Seeder
                 'nopeg'       => '20260005',
                 'email'       => 'wahid.pgrbe@tpm-facility.com',
                 'password'    => Hash::make('password'),
-                'role_id'     => User::ROLE_ATASAN,
+                'role_id'     => User::ROLE_TEKNISI,
                 'employee_id' => 'EMP0005',
             ],
         ];

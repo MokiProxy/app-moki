@@ -10,31 +10,37 @@ use App\Models\TicketHistory;
 use App\Models\TicketPriority;
 use App\Models\User;
 use App\Services\TicketHistoryService;
+use App\Services\WhatsAppNotificationService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\DataTables;
+use App\Services\MessageTemplates;
 
 class TicketController extends Controller
 {
     protected $historyService;
+    protected $waService;
+    protected $adminPhoneNumber;
 
-    public function __construct(TicketHistoryService $historyService)
+    public function __construct(TicketHistoryService $historyService, WhatsAppNotificationService $waService,)
     {
         $this->historyService = $historyService;
+        $this->waService = $waService;
+        $admin = User::with('employee')->where('role_id', "=", 5)->first();
+        $this->adminPhoneNumber = $admin->employee->hp;
 
         $this->middleware('role:1,5')->only([
             'assignTeknisi'
         ]);
 
         $this->middleware('role:4')->only([
-            'approve'
+            'approve',
         ]);
 
         $this->middleware('role:1,3')->only([
             'confirm',
-            'resolved',
             'reopen',
             'updateContent',
             'destroy',
@@ -78,7 +84,7 @@ class TicketController extends Controller
 
     public function datatable(Request $request)
     {
-        $role = session('user_role');
+        $role = auth()->user()->role_id;
         $authUserId = auth()->user()->id;
         if ($role == 4) {
             $data = Ticket::with(["requester.employee.division"])->where('assigned_to', "=", $authUserId)->get();
@@ -118,7 +124,7 @@ class TicketController extends Controller
                 return $row->rating ? "<div class='d-flex flex-column gap-2 align-items-center'><p class='m-0 $bgColor text-center p-1 ps-3 pe-3 rounded-pill fw-bold text-white w-auto'>" . $this->formatTicketStatus($row->status) . "</p><p class='text-center m-0 $bgColor text-center p-1 rounded fw-bold text-white'><i class='bx bx-star'></i>" . $row->rating . "/5</p></div>" : "<div class='d-flex flex-column align-items-center gap-2'><p class='m-0 $bgColor text-center p-1 ps-3 pe-3 rounded-pill fw-bold text-white w-auto'>" . $this->formatTicketStatus($row->status) . "</p></div>";
             })
             ->addColumn('action', function ($row) {
-                $role = session('user_role');
+                $role = auth()->user()->role_id;
                 if ($role == 4) {
                     if ($row->status == "ASSIGNED") {
                         return '
@@ -138,7 +144,7 @@ class TicketController extends Controller
                             <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
                         </div>';
                     }
-                } elseif ($role == 3) {
+                } elseif ($role == 3 || $role == 1) {
                     $reopenable = in_array($row->status, ['RESOLVED', 'CLOSED', 'REJECTED']);
                     $buttons = '<button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>';
                     if ($row->status == "OPEN") {
@@ -245,6 +251,8 @@ class TicketController extends Controller
             }
 
             DB::commit();
+            $message = MessageTemplates::newTicket($ticket);
+            $this->waService->send($this->adminPhoneNumber, $message);
             return response()->json(['success' => true, 'message' => 'Tiket berhasil dibuat!']);
         } catch (Exception $err) {
             DB::rollBack();
@@ -322,6 +330,9 @@ class TicketController extends Controller
             $this->historyService->assigned($ticket, $oldAgent, $request->assigned_to);
 
             DB::commit();
+            $message = MessageTemplates::assignToTeknisi($ticket);
+            $ticket->with(['assignedTo.employee'])->first();
+            $this->waService->send($ticket->assignedTo->employee->hp, $message);
             return response()->json(['success' => true, 'message' => 'Teknisi berhasil ditugaskan!']);
         } catch (Exception $err) {
             DB::rollBack();
@@ -343,6 +354,9 @@ class TicketController extends Controller
             $this->historyService->statusChanged($ticket, $oldStatus, 'IN_PROGRESS');
 
             DB::commit();
+            $message = MessageTemplates::teknisiApproved($ticket);
+            $ticket->with(['requester.employee'])->first();
+            $this->waService->send($ticket->requester->employee->hp, $message);
             return response()->json(['success' => true, 'message' => 'Tiket Berhasil Disetujui!']);
         } catch (Exception $err) {
             DB::rollBack();
@@ -369,6 +383,9 @@ class TicketController extends Controller
             $this->historyService->statusChanged($ticket, $oldStatus, 'CLOSED');
 
             DB::commit();
+            $message = MessageTemplates::requesterConfirmed($ticket);
+            $ticket->with(['assignedTo.employee'])->first();
+            $this->waService->send($ticket->assignedTo->employee->hp, $message);
             return response()->json(['success' => true, 'message' => 'Tiket Berhasil Ditutup!']);
         } catch (Exception $err) {
             DB::rollBack();
@@ -391,6 +408,9 @@ class TicketController extends Controller
             $this->historyService->statusChanged($ticket, $oldStatus, 'RESOLVED');
 
             DB::commit();
+            $message = MessageTemplates::teknisiResolved($ticket);
+            $ticket->with(['requester.employee'])->first();
+            $this->waService->send($ticket->requester->employee->hp, $message);
             return response()->json(['success' => true, 'message' => 'Tiket berhasil diselesaikan!']);
         } catch (Exception $err) {
             DB::rollBack();
@@ -415,6 +435,9 @@ class TicketController extends Controller
             $this->historyService->statusChanged($ticket, $oldStatus, 'OPEN');
 
             DB::commit();
+            $message = MessageTemplates::reopen($ticket);
+            $this->waService->send($this->adminPhoneNumber, $message);
+            return response()->json(['success' => true, 'message' => 'Tiket berhasil dibuat!']);
             return response()->json(['success' => true, 'message' => 'Tiket berhasil dibuka kembali!']);
         } catch (Exception $err) {
             DB::rollBack();

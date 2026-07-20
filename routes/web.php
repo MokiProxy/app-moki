@@ -88,16 +88,17 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
         });
 
+        Route::middleware(['auth', 'role:4'])->group(function () {
+            Route::put('tickets/resolve/{id}', [HelpDeskTicketController::class, 'resolved'])->name('tickets.resolve');
+            Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
+        });
+
         Route::middleware(['auth', 'role:1,3'])->group(function () {
             Route::put('tickets/confirm/{id}', [HelpDeskTicketController::class, 'confirm'])->name('tickets.confirm');
             Route::put('tickets/reopen/{id}', [HelpDeskTicketController::class, 'reopen'])->name('tickets.reopen');
-            Route::put('tickets/resolve/{id}', [HelpDeskTicketController::class, 'resolved'])->name('tickets.resolve');
             Route::put('tickets/{id}/update-content', [HelpDeskTicketController::class, 'updateContent'])->name('tickets.update-content');
         });
 
-        Route::middleware(['auth', 'role:4'])->group(function () {
-            Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
-        });
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

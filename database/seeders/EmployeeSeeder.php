@@ -22,6 +22,9 @@ class EmployeeSeeder extends Seeder
             ["name" => "Humam SPVBE", "email" => "humam.spvbe@tpm-facility.com", "hp" => null, "address" => null],
             ["name" => "Wahid PGRBE", "email" => "wahid.pgrbe@tpm-facility.com", "hp" => null, "address" => null],
 
+            ["name" => "MOKODEV", "email" => "superadmin@sistem.com", "hp" => "087893244578", "address" => null],
+            ["name" => "HIDDEV", "email" => "admin@sistem.com", "hp" => "087893244578", "address" => null],
+
             ["name" => "Prasojo Utomo", "email" => "prasojo.utomo@tpm-facility.com", "hp" => null, "address" => null],
             ["name" => "Arvita Tiarawati", "email" => "arvitatiarawati@tpm-facility.com", "hp" => null, "address" => null],
             ["name" => "Rekha Kisnawaty", "email" => "rekha.kisnawaty@tpm-facility.com", "hp" => null, "address" => null],

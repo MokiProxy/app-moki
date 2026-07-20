@@ -35,5 +35,7 @@ class DatabaseSeeder extends Seeder
         // Master Data Sederhana
         $this->call(GolonganDarahSeeder::class);
         $this->call(JenisKelaminSeeder::class);
+
+        $this->call(WhatsappSeeder::class);
     }
 }

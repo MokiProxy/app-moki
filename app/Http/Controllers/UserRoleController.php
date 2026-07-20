@@ -14,17 +14,17 @@ class UserRoleController extends Controller
     {
         $employees = Employee::orderBy('name', 'asc')->get();
         $userRoles = DB::table('user_roles')
-            ->join('employees', 'user_roles.employee_id', '=', 'employees.id')
-            ->select('user_roles.*', 'employees.name', 'employees.employee_id as nip')
-            ->orderBy('user_roles.created_at', 'desc')
-            ->get();
+        ->join('employees', 'user_roles.employee_id', '=', 'employees.employee_id')
+        ->select('user_roles.*', 'employees.name', 'employees.employee_id as nip')
+        ->orderBy('user_roles.created_at', 'desc')
+        ->get();
 
         return view('components.setting-role', compact('employees', 'userRoles'));
     }
 
     public function getEmployeeDetail($id)
     {
-        $employee = Employee::find($id);
+        $employee = Employee::firstWhere('employee_id', $id);
         if ($employee) {
             return response()->json(['success' => true, 'jabatan' => $employee->jabatan ?? '-']);
         }
@@ -42,13 +42,11 @@ class UserRoleController extends Controller
             if ($request->id) {
                 // Update Data
                 DB::table('user_roles')->where('id', $request->id)->update([
-                    'role_id'    => $request->role_id,
-                    'updated_at' => now(),
                 ]);
                 $msg = "Role berhasil diupdate!";
             } else {
                 // Simpan Baru
-                $employee = Employee::findOrFail($request->employee_id);
+                $employee = Employee::firstWhere("employee_id", $request->employee_id);
                 DB::table('user_roles')->updateOrInsert(
                     ['employee_id' => $request->employee_id],
                     [
@@ -71,7 +69,7 @@ class UserRoleController extends Controller
     {
         // Join ke employees agar nama muncul di modal popup
         $role = DB::table('user_roles')
-            ->join('employees', 'user_roles.employee_id', '=', 'employees.id')
+            ->join('employees', 'user_roles.employee_id', '=', 'employees.employee_id')
             ->select('user_roles.*', 'employees.name')
             ->where('user_roles.id', $id)
             ->first();
@@ -96,7 +94,7 @@ class UserRoleController extends Controller
             if (!$roleData) return response()->json(['success' => false, 'message' => 'Data Role tidak ditemukan']);
 
             // $roleData->employee_id di sini adalah PK employees.id (bukan NIP)
-            $emp = DB::table('employees')->where('id', $roleData->employee_id)->first();
+            $emp = DB::table('employees')->where('employee_id', $roleData->employee_id)->first();
             if (!$emp) return response()->json(['success' => false, 'message' => 'Data Employee tidak ditemukan']);
 
             // NIP asli dari tabel employees (mis. EMP0001) - INI yang dipakai untuk login
@@ -104,7 +102,6 @@ class UserRoleController extends Controller
 
             // Cari user existing berdasarkan NIP (bukan PK employees.id lagi)
             $user = DB::table('users')->where('employee_id', $nip)->first();
-
             // Pastikan NIP unik sebagai login (kecuali milik user yang sedang di-update sendiri)
             $nipTaken = DB::table('users')
                 ->where('employee_id', $nip)
@@ -117,7 +114,7 @@ class UserRoleController extends Controller
             }
 
             if ($user) {
-                DB::table('users')->where('id', $user->id)->update([
+                DB::table('users')->where('employee_id', $user->id)->update([
                     'password'   => Hash::make($request->password),
                     'role_id'    => $roleData->role_id,
                     'updated_at' => now()
