@@ -87,7 +87,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::resource("reports", HelpDeskReportController::class);
         });
 
-        Route::middleware(['auth', 'role:1,3,4,5'])->group(function () {
+        Route::middleware(['auth', 'role:1,3,4,5,6'])->group(function () {
             Route::get('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'index'])->name('tickets.comments.index');
             Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
         });
@@ -195,8 +195,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::delete('/supplier/delete/{id}', [SupplierController::class, 'destroy'])->name('supplier.delete');
     Route::post('/supplier/datatable', [SupplierController::class, 'datatable'])->name('supplier.datatable');
 
-
-
     // ASSET
     Route::get('/asset', [AssetController::class, 'index'])->name('asset');
     Route::post('/asset/datatable', [AssetController::class, 'datatable'])->name('asset.datatable');
@@ -272,8 +270,6 @@ Route::prefix('settings')->name('settings.')->group(function () {
     Route::post('/reset-password', [SettingController::class, 'updatePassword'])->name('update-password');
 });
 
-
-
 // Halaman Utama
 Route::get('/settings/approve', [ApprovedController::class, 'index'])->name('settings.approve');
 
@@ -283,9 +279,7 @@ Route::post('/settings/approve/action/{id}', [ApprovedController::class, 'proces
 // Detail untuk Modal View
 Route::get('/transaction/detail/{id}', [ApprovedController::class, 'detail']);
 
-
 Route::prefix('settings/role')->group(function () {
-    // Nama route diubah menjadi 'settings.role' agar match dengan sidebar Anda
     Route::get('/', [UserRoleController::class, 'index'])->name('settings.role');
     Route::post('/store', [UserRoleController::class, 'store'])->name('settings.role.store');
     Route::get('/employee/{id}', [UserRoleController::class, 'getEmployeeDetail'])->name('settings.role.employee');

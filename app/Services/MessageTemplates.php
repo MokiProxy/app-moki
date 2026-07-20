@@ -10,7 +10,7 @@ class MessageTemplates
     {
         $ticket->with(["requester.employee.division"]);
         return <<<TEXT
-🔔 *TICKET BARU*
+🔔 *NOTIFIKASI SISTEM MSI SBS*
 
 Halo Admin,
 
@@ -35,7 +35,7 @@ TEXT;
     {
         $ticket->with(["requester.employee.division"]);
         return <<<TEXT
-🔔 *TICKET BARU*
+🔔 *NOTIFIKASI SISTEM MSI SBS*
 
 Halo Admin,
 
@@ -61,7 +61,7 @@ TEXT;
     {
         $ticket->with(["requester.employee.division", "assignedTo"])->first();
         return <<<TEXT
-🔔 *TICKET BARU*
+🔔 *NOTIFIKASI SISTEM MSI SBS*
 
 Halo {$ticket->assignedTo->name},
 
@@ -87,7 +87,7 @@ TEXT;
     {
         $ticket->with(["requester.employee.division", "assignedTo"])->first();
         return <<<TEXT
-🔔 *TICKET BARU*
+🔔 *NOTIFIKASI SISTEM MSI SBS*
 
 Halo {$ticket->requester->name},
 
@@ -114,7 +114,7 @@ TEXT;
     {
         $ticket->with(["requester.employee.division", "assignedTo"])->first();
         return <<<TEXT
-🔔 *TICKET BARU*
+🔔 *NOTIFIKASI SISTEM MSI SBS*
 
 Halo {$ticket->requester->name},
 
@@ -143,7 +143,7 @@ TEXT;
     {
         $ticket->with(["requester.employee.division", "assignedTo"])->first();
         return <<<TEXT
-🔔 *TICKET BARU*
+🔔 *NOTIFIKASI SISTEM MSI SBS*
 
 Halo {$ticket->assignedTo->name},
 

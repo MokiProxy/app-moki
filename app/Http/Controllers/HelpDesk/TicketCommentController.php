@@ -35,11 +35,6 @@ class TicketCommentController extends Controller
             $ticket = Ticket::findOrFail($ticketId);
             $authUserId = auth()->id();
             $userRoleId = auth()->user()->role_id;
-            $allowedRoles = [1, 2, 4]; // superadmin, staff/admin, teknisi
-
-            if (!in_array($userRoleId, $allowedRoles) && $ticket->requester_id != $authUserId) {
-                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke tiket ini.'], 403);
-            }
 
             $attachmentId = null;
             if ($request->hasFile('attachment')) {

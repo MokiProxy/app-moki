@@ -24,9 +24,9 @@ class TransactionController extends Controller
         $this->waService = $waService;
     }
 
-    public function index() 
-    { 
-        return view('components.transaction'); 
+    public function index()
+    {
+        return view('components.transaction');
     }
 
     public function datatable(Request $request)
@@ -38,28 +38,28 @@ class TransactionController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('transaction_number', function($row) {
+                ->addColumn('transaction_number', function ($row) {
                     return $row->order_number ?? '-';
                 })
-                ->addColumn('employee_id_display', function($row) {
+                ->addColumn('employee_id_display', function ($row) {
                     return optional($row->employee)->employee_id ?? '-';
                 })
-                ->addColumn('employee_name', function($row) {
+                ->addColumn('employee_name', function ($row) {
                     return optional($row->employee)->name ?? '-';
                 })
-                ->addColumn('jabatan', function($row) {
+                ->addColumn('jabatan', function ($row) {
                     return optional($row->employee)->jabatan ?? '-';
                 })
-                ->addColumn('division_name', function($row) {
+                ->addColumn('division_name', function ($row) {
                     return optional($row->division)->name ?? '-';
                 })
-                ->addColumn('regional_name', function($row) {
+                ->addColumn('regional_name', function ($row) {
                     return optional(optional($row->employee)->regional)->name ?? '-';
                 })
-                ->addColumn('status_type', function($row) {
-                    return $row->type ?? '-'; 
+                ->addColumn('status_type', function ($row) {
+                    return $row->type ?? '-';
                 })
-                ->addColumn('status_approved', function($row) {
+                ->addColumn('status_approved', function ($row) {
                     if ($row->status == 2) {
                         return '<span class="badge bg-success"><i class="mdi mdi-check-circle me-1"></i>Approved</span>';
                     } elseif ($row->status == 3) {
@@ -67,23 +67,23 @@ class TransactionController extends Controller
                     }
                     return '<span class="badge bg-warning text-dark"><i class="mdi mdi-clock me-1"></i>Pending</span>';
                 })
-                ->addColumn('category', function($row) {
-                    $categories = $row->details->map(function($detail) {
+                ->addColumn('category', function ($row) {
+                    $categories = $row->details->map(function ($detail) {
                         return optional(optional($detail->asset)->category)->name;
                     })->filter()->unique();
                     return $categories->isNotEmpty() ? $categories->implode(', ') : '-';
                 })
-                ->addColumn('_asset_count', function($row) {
-                    return $row->details->count() . " Item"; 
+                ->addColumn('_asset_count', function ($row) {
+                    return $row->details->count() . " Item";
                 })
-                ->addColumn('action', function($row) {
-                    $btnView = '<button type="button" class="btn btn-sm btn-info btn-view me-1" data-id="'.$row->id.'" title="Detail"><i class="mdi mdi-eye"></i></button>';
+                ->addColumn('action', function ($row) {
+                    $btnView = '<button type="button" class="btn btn-sm btn-info btn-view me-1" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>';
                     $userRole = auth()->user()->role_id;
 
                     $btnStatus = '';
-                    if($row->status == 1) {
-                        $btnStatus = '<button type="button" class="btn btn-sm btn-outline-dark btn-approval me-1" data-id="'.$row->id.'" title="Proses Approval"><i class="mdi mdi-check-decagram"></i></button>';
-                    } elseif($row->status == 2) {
+                    if ($row->status == 1) {
+                        $btnStatus = '<button type="button" class="btn btn-sm btn-outline-dark btn-approval me-1" data-id="' . $row->id . '" title="Proses Approval"><i class="mdi mdi-check-decagram"></i></button>';
+                    } elseif ($row->status == 2) {
                         $btnStatus = '<button type="button" class="btn btn-sm btn-soft-success me-1" disabled title="Sudah Disetujui"><i class="mdi mdi-check-decagram text-success"></i></button>';
                     } else {
                         $btnStatus = '<button type="button" class="btn btn-sm btn-soft-danger me-1" disabled title="Sudah Ditolak"><i class="mdi mdi-check-decagram text-danger"></i></button>';
@@ -93,25 +93,24 @@ class TransactionController extends Controller
                     $btnDelete = '';
 
                     if ($userRole != 3) {
-                        $btnPdf = '<button type="button" class="btn btn-sm btn-warning btn-pdf me-1" data-id="'.$row->id.'" title="Cetak PDF"><i class="mdi mdi-file-pdf-box"></i></button>';
-                        $btnDelete = '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="'.$row->id.'" title="Hapus"><i class="mdi mdi-trash-can"></i></button>';
+                        $btnPdf = '<button type="button" class="btn btn-sm btn-warning btn-pdf me-1" data-id="' . $row->id . '" title="Cetak PDF"><i class="mdi mdi-file-pdf-box"></i></button>';
+                        $btnDelete = '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="mdi mdi-trash-can"></i></button>';
                     }
 
                     return '<div class="text-center d-flex justify-content-center">' . $btnView . $btnStatus . $btnPdf . $btnDelete . '</div>';
                 })
                 ->rawColumns(['action', 'status_type', 'status_approved'])
                 ->make(true);
-
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
-    public function create() 
-    { 
-        $employees = Employee::with(['division', 'regional'])->get(); 
-        $divisions = Division::all(); 
-        return view('components.create-transaction', compact('divisions', 'employees')); 
+    public function create()
+    {
+        $employees = Employee::with(['division', 'regional'])->get();
+        $divisions = Division::all();
+        return view('components.create-transaction', compact('divisions', 'employees'));
     }
 
     public function store(Request $request)
@@ -124,10 +123,10 @@ class TransactionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 200); 
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 200);
         }
 
-        DB::beginTransaction(); 
+        DB::beginTransaction();
         try {
             $bastNumber = "BAST-" . date('YmdHis');
 
@@ -135,17 +134,17 @@ class TransactionController extends Controller
                 'order_number' => $bastNumber,
                 'employee_id'  => $request->employee_id,
                 'division_id'  => $request->division_id,
-                'note'         => $request->notes, 
-                'status'       => 1, 
-                'type'         => $request->status 
+                'note'         => $request->notes,
+                'status'       => 1,
+                'type'         => $request->status
             ]);
 
             foreach ($request->asset_id as $key => $assetId) {
-                if (empty($assetId)) continue; 
+                if (empty($assetId)) continue;
                 TransactionDetail::create([
-                    'transaction_id' => $transaction->id, 
+                    'transaction_id' => $transaction->id,
                     'asset_id'       => $assetId,
-                    'new_uid'        => $request->generated_uids[$key] ?? $bastNumber 
+                    'new_uid'        => $request->generated_uids[$key] ?? $bastNumber
                 ]);
             }
 
@@ -155,7 +154,6 @@ class TransactionController extends Controller
             $this->sendWhatsappNotification($transaction);
 
             return response()->json(['success' => true, 'message' => 'Transaksi diajukan (Pending): ' . $bastNumber]);
-
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()]);
@@ -173,13 +171,13 @@ class TransactionController extends Controller
 
         $type = ($transaction->type == 'OUT') ? 'Pemberian/Pinjam' : 'Pengembalian';
         $message = "*PERMINTAAN PERSETUJUAN ASET*\n"
-                 . "--------------------------\n"
-                 . "Yth. Pak " . $manager->name . ",\n\n"
-                 . "Terdapat pengajuan *" . $type . "* baru:\n"
-                 . "No. BAST: *" . $transaction->order_number . "*\n"
-                 . "Karyawan: " . optional($transaction->employee)->name . "\n\n"
-                 . "Mohon segera login ke sistem AMS untuk memproses persetujuan.\n"
-                 . "Terima kasih.";
+            . "--------------------------\n"
+            . "Yth. Pak " . $manager->name . ",\n\n"
+            . "Terdapat pengajuan *" . $type . "* baru:\n"
+            . "No. BAST: *" . $transaction->order_number . "*\n"
+            . "Karyawan: " . optional($transaction->employee)->name . "\n\n"
+            . "Mohon segera login ke sistem AMS untuk memproses persetujuan.\n"
+            . "Terima kasih.";
 
         $this->waService->send($manager->hp, $message);
     }
@@ -189,9 +187,9 @@ class TransactionController extends Controller
         DB::beginTransaction();
         try {
             $transaction = Transaction::with('details')->findOrFail($id);
-            $newStatus = $request->status; 
+            $newStatus = $request->status;
 
-            if ($newStatus == 2) { 
+            if ($newStatus == 2) {
                 foreach ($transaction->details as $detail) {
                     $asset = Asset::find($detail->asset_id);
                     if ($asset) {
@@ -203,10 +201,9 @@ class TransactionController extends Controller
 
             $transaction->update(['status' => $newStatus]);
             DB::commit();
-            
+
             $msg = $newStatus == 2 ? 'Transaksi Berhasil Disetujui' : 'Transaksi Berhasil Ditolak';
             return response()->json(['success' => true, 'message' => $msg]);
-
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()]);
@@ -278,9 +275,9 @@ class TransactionController extends Controller
         $query = Asset::query();
         $query->where('status', ($status_type == 'IN' ? 1 : 0));
 
-        $assets = $query->when($search, function($q) use ($search) {
-                return $q->where('uid', 'LIKE', "%$search%")->orWhere('brand', 'LIKE', "%$search%")->orWhere('serial_number', 'LIKE', "%$search%");
-            })->limit(20)->get();
+        $assets = $query->when($search, function ($q) use ($search) {
+            return $q->where('uid', 'LIKE', "%$search%")->orWhere('brand', 'LIKE', "%$search%")->orWhere('serial_number', 'LIKE', "%$search%");
+        })->limit(20)->get();
 
         $response = [];
         foreach ($assets as $asset) {
