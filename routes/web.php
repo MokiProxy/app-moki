@@ -10,6 +10,10 @@ use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\RegionalController;
 use App\Http\Controllers\SelectController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SatuanKerjaController;
+use App\Http\Controllers\PegawaiMasterPosisiController;
+use App\Http\Controllers\PegawaiHirarkiController;
+use App\Http\Controllers\MasterPegawaiHirarkiController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\AssetAssignmentController;
 use App\Http\Controllers\DashboardController;
@@ -146,6 +150,35 @@ Route::group(['middleware' => ['auth']], function () {
     Route::put('/division/edit/{id}', [DivisionController::class, 'update'])->name('division.update');
     Route::delete('/division/delete/{id}', [DivisionController::class, 'destroy'])->name('division.delete');
     Route::post('/division/datatable', [DivisionController::class, 'datatable'])->name('division.datatable');
+
+    Route::get('/satuan-kerja', [SatuanKerjaController::class, 'index'])->name('satuan-kerja');
+    Route::post('/satuan-kerja', [SatuanKerjaController::class, 'store'])->name('satuan-kerja.store');
+    Route::get('/satuan-kerja/edit/{id}', [SatuanKerjaController::class, 'show'])->name('satuan-kerja.show');
+    Route::put('/satuan-kerja/edit/{id}', [SatuanKerjaController::class, 'update'])->name('satuan-kerja.update');
+    Route::delete('/satuan-kerja/delete/{id}', [SatuanKerjaController::class, 'destroy'])->name('satuan-kerja.delete');
+    Route::post('/satuan-kerja/datatable', [SatuanKerjaController::class, 'datatable'])->name('satuan-kerja.datatable');
+
+    Route::get('/master-posisi', [PegawaiMasterPosisiController::class, 'index'])->name('master-posisi');
+    Route::post('/master-posisi', [PegawaiMasterPosisiController::class, 'store'])->name('master-posisi.store');
+    Route::get('/master-posisi/edit/{id}', [PegawaiMasterPosisiController::class, 'show'])->name('master-posisi.show');
+    Route::put('/master-posisi/edit/{id}', [PegawaiMasterPosisiController::class, 'update'])->name('master-posisi.update');
+    Route::delete('/master-posisi/delete/{id}', [PegawaiMasterPosisiController::class, 'destroy'])->name('master-posisi.delete');
+    Route::post('/master-posisi/datatable', [PegawaiMasterPosisiController::class, 'datatable'])->name('master-posisi.datatable');
+
+    Route::get('/pegawai-hirarki', [PegawaiHirarkiController::class, 'index'])->name('pegawai-hirarki');
+    Route::post('/pegawai-hirarki', [PegawaiHirarkiController::class, 'store'])->name('pegawai-hirarki.store');
+    Route::get('/pegawai-hirarki/edit/{id}', [PegawaiHirarkiController::class, 'show'])->name('pegawai-hirarki.show');
+    Route::put('/pegawai-hirarki/edit/{id}', [PegawaiHirarkiController::class, 'update'])->name('pegawai-hirarki.update');
+    Route::delete('/pegawai-hirarki/delete/{id}', [PegawaiHirarkiController::class, 'destroy'])->name('pegawai-hirarki.delete');
+    Route::post('/pegawai-hirarki/datatable', [PegawaiHirarkiController::class, 'datatable'])->name('pegawai-hirarki.datatable');
+    Route::get('/pegawai-hirarki/{id}/hierarchy', [PegawaiHirarkiController::class, 'hierarchy'])->name('pegawai-hirarki.hierarchy');
+
+    Route::get('/master-hirarki', [MasterPegawaiHirarkiController::class, 'index'])->name('master-hirarki');
+    Route::post('/master-hirarki', [MasterPegawaiHirarkiController::class, 'store'])->name('master-hirarki.store');
+    Route::get('/master-hirarki/edit/{id}', [MasterPegawaiHirarkiController::class, 'show'])->name('master-hirarki.show');
+    Route::put('/master-hirarki/edit/{id}', [MasterPegawaiHirarkiController::class, 'update'])->name('master-hirarki.update');
+    Route::delete('/master-hirarki/delete/{id}', [MasterPegawaiHirarkiController::class, 'destroy'])->name('master-hirarki.delete');
+    Route::post('/master-hirarki/datatable', [MasterPegawaiHirarkiController::class, 'datatable'])->name('master-hirarki.datatable');
 
 
     Route::get('/category', [CategoryController::class, 'index'])->name('category');

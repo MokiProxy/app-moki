@@ -34,6 +34,10 @@
                 <li><a href="{{ route('regional') }}"><i class='bx bx-map-alt'></i> Regional</a></li>
                 <li><a href="{{ route('company') }}"><i class='bx bx-buildings'></i> Perusahaan</a></li>
                 <li><a href="{{ route('division') }}"><i class='bx bx-sitemap'></i> Divisi</a></li>
+                <li><a href="{{ route('satuan-kerja') }}"><i class='bx bx-home'></i> Satuan Kerja</a></li>
+                <li><a href="{{ route('master-posisi') }}"><i class='bx bx-briefcase-alt'></i> Master Posisi</a></li>
+                <li><a href="{{ route('master-hirarki') }}"><i class='bx bx-hierarchy'></i> Master Hirarki</a></li>
+                <li><a href="{{ route('pegawai-hirarki') }}"><i class='bx bx-network-chart'></i> Pegawai Hirarki</a></li>
             </ul>
         </li>
         @endif
@@ -45,7 +49,7 @@
             </a>
             <ul class="sub-menu" aria-expanded="false">
                 <li><a href="{{ route('asset') }}"><i class='bx bx-list-check'></i> Daftar Aset</a></li>
-                
+
                 @if($role != 2) {{-- Approver Tidak Bisa Lihat --}}
                 <li><a href="{{ route('assignment.index') }}"><i class='bx bx-user-pin'></i> Penugasan Aset</a></li>
                 <li><a href="{{ route('category') }}"><i class='bx bx-purchase-tag-alt'></i> Kategori</a></li>
