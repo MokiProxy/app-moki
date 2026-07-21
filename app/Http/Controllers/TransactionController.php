@@ -268,7 +268,7 @@ class TransactionController extends Controller
                 'generated_uid' => $generatedUid,
                 'coa_code' => $asset->cost_center ?? '0000',
             ]);
-        }
+        }   
 
         $search = $request->q;
         $status_type = $request->status;
