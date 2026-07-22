@@ -12,6 +12,7 @@ return new class extends Migration
             $table->string('position_id')->primary();
             $table->string('superior_id')->nullable();
             $table->string('pos_title');
+            $table->string("kode_jabatan");
             $table->date('last_mode_date')->nullable();
             $table->time('last_mode_time')->nullable();
             $table->timestamps();
@@ -21,6 +22,11 @@ return new class extends Migration
             $table->foreign('superior_id')
                 ->references('position_id')
                 ->on('pegawai_master_posisi')
+                ->cascadeOnDelete();
+
+                $table->foreign('kode_jabatan')
+                ->references('kode_jabatan')
+                ->on('jabatan')
                 ->cascadeOnDelete();
             $table->index('superior_id');
         });
