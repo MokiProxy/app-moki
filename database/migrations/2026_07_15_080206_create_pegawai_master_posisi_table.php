@@ -12,7 +12,7 @@ return new class extends Migration
             $table->string('position_id')->primary();
             $table->string('superior_id')->nullable();
             $table->string('pos_title');
-            $table->string("kode_jabatan");
+            $table->string("kode_jabatan")->nullable();
             $table->date('last_mode_date')->nullable();
             $table->time('last_mode_time')->nullable();
             $table->timestamps();

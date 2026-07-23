@@ -60,6 +60,7 @@ class HierarchyService
             if ($superiorPegawai !== null) {
                 $data["nopeg_hier{$i}"] = $superiorPegawai->nopeg;
                 $data["employee_id_hier{$i}"] = $superiorPegawai->employee_id;
+                $data["nik{$i}"] = $superiorPegawai->nik;
                 $data["nama_hier{$i}"] = $superiorPegawai->nama;
                 $data["ilinier{$i}"] = $superiorPegawai->nama;
                 $data["email{$i}"] = $superiorPegawai->email;

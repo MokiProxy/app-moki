@@ -16,11 +16,11 @@ class EmployeeSeeder extends Seeder
     {
         $employees = [
             // Employee For Test Hierarchy
-            ["name" => "Abimana CEO", "email" => "abimana.ceo@tpm-facility.com", "hp" => null, "address" => null],
-            ["name" => "Bayu GMIT", "email" => "bayu.gmit@tpm-facility.com", "hp" => null, "address" => null],
-            ["name" => "Irsyad MGRDEV", "email" => "irsyad.mgrdev@tpm-facility.com", "hp" => null, "address" => null],
-            ["name" => "Humam SPVBE", "email" => "humam.spvbe@tpm-facility.com", "hp" => null, "address" => null],
-            ["name" => "Wahid PGRBE", "email" => "wahid.pgrbe@tpm-facility.com", "hp" => null, "address" => null],
+            ["nik" => "0595987493881", "name" => "Abimana CEO", "email" => "abimana.ceo@tpm-facility.com", "hp" => null, "address" => null],
+            ["nik" => "0595987493882", "name" => "Bayu GMIT", "email" => "bayu.gmit@tpm-facility.com", "hp" => null, "address" => null],
+            ["nik" => "0595987493883", "name" => "Irsyad MGRDEV", "email" => "irsyad.mgrdev@tpm-facility.com", "hp" => null, "address" => null],
+            ["nik" => "0595987493884", "name" => "Humam SPVBE", "email" => "humam.spvbe@tpm-facility.com", "hp" => null, "address" => null],
+            ["nik" => "0595987493885", "name" => "Wahid PGRBE", "email" => "wahid.pgrbe@tpm-facility.com", "hp" => null, "address" => null],
 
             ["name" => "MOKODEV", "email" => "superadmin@sistem.com", "hp" => "087893244578", "address" => null],
             ["name" => "HIDDEV", "email" => "admin@sistem.com", "hp" => "087893244578", "address" => null],
