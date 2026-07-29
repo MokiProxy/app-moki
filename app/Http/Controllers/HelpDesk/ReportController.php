@@ -56,11 +56,11 @@ class ReportController extends Controller
 
     public function datatable(Request $request)
     {
-        $role = session('user_role');
-        $authUserId = auth()->user()->id;
-        if ($role == 4) {
+        $user = auth()->user();
+        $authUserId = $user->id;
+        if ($user->hasRole('teknisi')) {
             $data = Ticket::with(["requester.employee.division"])->where('assigned_to', "=", $authUserId)->get();
-        } else if ($role == 3) {
+        } else if ($user->hasRole('staff')) {
             $data = Ticket::with(["requester.employee.division"])->where('requester_id', "=", $authUserId)->get();
         } else {
             $data = Ticket::with(["requester.employee.division"])->latest();

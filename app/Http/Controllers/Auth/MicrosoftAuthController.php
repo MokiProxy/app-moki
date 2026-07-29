@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Spatie\Permission\Models\Role;
 
 class MicrosoftAuthController extends Controller
 {
@@ -53,8 +54,12 @@ class MicrosoftAuthController extends Controller
             }
         }
 
+        if (!$user->hasAnyRole(Role::pluck('name')->all())) {
+            $user->assignRole('staff');
+        }
+
         Auth::login($user, true);
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route('portal.index'));
     }
 }

@@ -1,5 +1,5 @@
 @php
-    $role = session('user_role');
+    $user = auth()->user();
 @endphp
 
 <div id="sidebar-menu">
@@ -22,8 +22,7 @@
             </a>
         </li>
 
-        {{-- JIKA BUKAN APPROVER, TAMPILKAN MASTER DATA --}}
-        @if($role != 2)
+        @if(!$user->hasRole('approver'))
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
@@ -50,7 +49,7 @@
             <ul class="sub-menu" aria-expanded="false">
                 <li><a href="{{ route('asset') }}"><i class='bx bx-list-check'></i> Daftar Aset</a></li>
 
-                @if($role != 2) {{-- Approver Tidak Bisa Lihat --}}
+                @if(!$user->hasRole('approver'))
                 <li><a href="{{ route('assignment.index') }}"><i class='bx bx-user-pin'></i> Penugasan Aset</a></li>
                 <li><a href="{{ route('category') }}"><i class='bx bx-purchase-tag-alt'></i> Kategori</a></li>
                 <li><a href="{{ route('supplier') }}"><i class='bx bx-store'></i> Supplier</a></li>
@@ -64,15 +63,14 @@
                 <span key="t-transaction">Transaksi</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                @if($role != 2)
+                @if(!$user->hasRole('approver'))
                 <li><a href="{{ route('transaction.create') }}">Tambah Baru</a></li>
                 @endif
                 <li><a href="{{ route('transaction.index') }}">Riwayat Transaksi</a></li>
             </ul>
         </li>
 
-        {{-- LAPORAN & SETTING HANYA UNTUK NON-APPROVER --}}
-        @if($role != 2)
+        @if(!$user->hasRole('approver'))
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-printer'></i>

@@ -34,7 +34,6 @@ class TicketCommentController extends Controller
         try {
             $ticket = Ticket::findOrFail($ticketId);
             $authUserId = auth()->id();
-            $userRoleId = auth()->user()->role_id;
 
             $attachmentId = null;
             if ($request->hasFile('attachment')) {

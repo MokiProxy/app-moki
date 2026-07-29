@@ -1,12 +1,12 @@
 @php
 $role = session('user_role');
-$authUserRoleId = auth()->user()->role_id;
+$authUserRole = auth()->user()->roles->pluck('name')->first();
 
-if($authUserRoleId == 1 || $authUserRoleId == 5) {
+if($authUserRole == "superadmin" || $authUserRole == "admin") {
 $roleColor = "danger";
-} else if ($authUserRoleId == 3) {
+} else if ($authUserRole == "staff") {
 $roleColor = "success";
-} else if ($authUserRoleId == 4) {
+} else if ($authUserRole == "teknisi") {
 $roleColor = "primary";
 }
 @endphp

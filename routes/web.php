@@ -17,14 +17,12 @@ use App\Http\Controllers\MasterPegawaiHirarkiController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\AssetAssignmentController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ApprovedController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\WhatsappController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\Auth\MicrosoftAuthController;
 use Illuminate\Support\Facades\Route;
-use PHPUnit\TextUI\Help;
 
 // HelpDesk
 use App\Http\Controllers\HelpDesk\DashboardController as HelpDeskDashboardController;
@@ -68,7 +66,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('tickets/datatable', [HelpDeskTicketController::class, 'datatable'])->name('tickets.datatable');
         Route::get('tickets/attachments/{id}/download', [HelpDeskTicketAttachmentController::class, 'download'])->name('tickets.attachments.download');
 
-        Route::middleware(['auth', 'role:1,5'])->group(function () {
+        Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
             Route::resource('ticket-categories', HelpDeskTicketCategoryController::class);
             Route::post('ticket-categories/datatable', [HelpDeskTicketCategoryController::class, 'datatable'])->name('ticket-categories.datatable');
 
@@ -76,7 +74,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('ticket-priorities/datatable', [HelpDeskTicketPriorityController::class, 'datatable'])->name('ticket-priorities.datatable');
         });
 
-        Route::middleware(['auth', 'role:1,5'])->group(function () {
+        Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
             Route::get('technicians', [HelpDeskTicketController::class, 'getTeknisi'])->name('tickets.teknisi');
 
             Route::put('tickets/assign/{id}', [HelpDeskTicketController::class, 'assignTeknisi'])->name('tickets.assign');
@@ -87,17 +85,17 @@ Route::group(['middleware' => ['auth']], function () {
             Route::resource("reports", HelpDeskReportController::class);
         });
 
-        Route::middleware(['auth', 'role:1,3,4,5,6'])->group(function () {
+        Route::middleware(['auth', 'role:super-admin|staff|teknisi|admin'])->group(function () {
             Route::get('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'index'])->name('tickets.comments.index');
             Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
         });
 
-        Route::middleware(['auth', 'role:4'])->group(function () {
+        Route::middleware(['auth', 'role:teknisi'])->group(function () {
             Route::put('tickets/resolve/{id}', [HelpDeskTicketController::class, 'resolved'])->name('tickets.resolve');
             Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
         });
 
-        Route::middleware(['auth', 'role:1,3'])->group(function () {
+        Route::middleware(['auth', 'role:super-admin|staff'])->group(function () {
             Route::put('tickets/confirm/{id}', [HelpDeskTicketController::class, 'confirm'])->name('tickets.confirm');
             Route::put('tickets/reopen/{id}', [HelpDeskTicketController::class, 'reopen'])->name('tickets.reopen');
             Route::put('tickets/{id}/update-content', [HelpDeskTicketController::class, 'updateContent'])->name('tickets.update-content');
@@ -262,12 +260,9 @@ Route::delete('/assignment/destroy/{id}', [AssetAssignmentController::class, 'de
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// Pastikan SettingController sudah dibuat
 Route::prefix('settings')->name('settings.')->group(function () {
-    Route::get('/approve', [SettingController::class, 'approveIndex'])->name('approve');
-    Route::get('/role', [SettingController::class, 'roleIndex'])->name('role');
-    Route::get('/reset-password', [SettingController::class, 'resetPasswordIndex'])->name('reset-password');
-    Route::post('/reset-password', [SettingController::class, 'updatePassword'])->name('update-password');
+    Route::get('/reset-password', [\App\Http\Controllers\SettingController::class, 'resetPasswordIndex'])->name('reset-password');
+    Route::post('/reset-password', [\App\Http\Controllers\SettingController::class, 'updatePassword'])->name('update-password');
 });
 
 // Halaman Utama

@@ -26,10 +26,19 @@ class PortalController extends Controller
         // 1. Data Menu Aplikasi
         $menus = [
             [
+                'title' => 'IT Admin',
+                'sub'   => 'IT Admin Panel',
+                'icon'  => 'mdi-cog',
+                'color' => '#BE1A1A',
+                'permission' => 'ams.menu',
+                'link'  => route('transaction.index')
+            ],
+            [
                 'title' => 'AMS',
                 'sub'   => 'Asset Management',
                 'icon'  => 'mdi-database-settings',
                 'color' => '#4e73df',
+                'permission' => 'ams.menu',
                 'link'  => route('transaction.index')
             ],
             [
@@ -37,6 +46,7 @@ class PortalController extends Controller
                 'sub'   => 'IT Support Ticket',
                 'icon'  => 'mdi-face-agent',
                 'color' => '#1cc88a',
+                'permission' => 'helpdesk.menu',
                 'link'  => route('helpdesk.index')
             ],
             [
@@ -44,13 +54,15 @@ class PortalController extends Controller
                 'sub'   => 'Data Pegawai SBS',
                 'icon'  => 'mdi-account',
                 'color' => '#FF8F00',
+                'permission' => 'data-pegawai.menu',
                 'link'  => '#'
-            ],
+                ],
             [
                 'title' => 'FORM IT',
                 'sub'   => 'Digital Request',
                 'icon'  => 'mdi-file-document-edit',
                 'color' => '#36b9cc',
+                'permission' => 'form-it.menu',
                 'link'  => '#'
             ],
             [
@@ -58,6 +70,7 @@ class PortalController extends Controller
                 'sub'   => 'Standard Procedure',
                 'icon'  => 'mdi-book-open-variant',
                 'color' => '#f6c23e',
+                'permission' => 'sop-it.menu',
                 'link'  => '#'
             ],
             [

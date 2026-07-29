@@ -2,7 +2,7 @@
 
 @section('content')
     {{-- CSS ANTI-FLASH: Cara paling ampuh secara visual --}}
-    @if(Auth::user()->role_id == 3)
+    @if(Auth::user()->hasRole('staff'))
     <style>
         /* Paksa sembunyikan semua elemen yang mengandung class btn-pdf atau btn-delete di dalam tabel */
         .btn-pdf, .btn-delete, [class*="mdi-file-pdf"], [class*="mdi-delete"] {
@@ -20,7 +20,7 @@
                     <div class="d-flex align-items-center">
                         <h5 class="mb-0 card-title flex-grow-1">Daftar Transaksi (BAST)</h5>
                         <div class="flex-shrink-0">
-                            @if(Auth::user()->role_id != 3)
+                            @if(!Auth::user()->hasRole('staff'))
                                 <a href="{{ route('transaction.create') }}" class="btn btn-primary">
                                     <i class="mdi mdi-plus me-1"></i> Tambah Transaksi
                                 </a>
@@ -102,7 +102,7 @@
 
         $j(document).ready(function() {
             var CSRF_TOKEN = $j('meta[name="csrf-token"]').attr('content');
-            var userRole = parseInt("{{ Auth::user()->role_id }}"); 
+            var isStaff = "{{ Auth::user()->hasRole('staff') ? 'true' : 'false' }}" === 'true';
             
             var table = $j("#transaction-table").DataTable({
                 processing: true,
@@ -140,21 +140,18 @@
                     },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
-                // POINT PENTING: Manipulasi kolom tepat saat cell dibuat
                 "columnDefs": [
                     {
-                        "targets": -1, // Menargetkan kolom terakhir (Action)
+                        "targets": -1,
                         "createdCell": function (td, cellData, rowData, row, col) {
-                            if (userRole === 3) {
-                                // Cari elemen btn-pdf dan btn-delete di dalam cell ini lalu hapus paksa
+                            if (isStaff) {
                                 $j(td).find('.btn-pdf, .btn-delete').remove();
                             }
                         }
                     }
                 ],
                 "drawCallback": function(settings) {
-                    // Double check saat tabel selesai menggambar
-                    if (userRole === 3) {
+                    if (isStaff) {
                         $j('.btn-pdf, .btn-delete').each(function() {
                             $j(this).remove();
                         });
@@ -262,7 +259,7 @@
             
             // PDF & Delete Protection di level JS
             $j(document).on('click', '.btn-pdf', function(e) {
-                if(userRole === 3) {
+                if(isStaff) {
                     Swal.fire('Error', 'Anda tidak memiliki akses.', 'error');
                     return false;
                 }
@@ -273,7 +270,7 @@
             });
 
             $j('#transaction-table').on('click', '.btn-delete', function() {
-                if(userRole === 3) return false;
+                if(isStaff) return false;
                 var id = $j(this).data('id');
                 Swal.fire({
                     title: 'Hapus Data?',

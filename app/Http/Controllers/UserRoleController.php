@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -13,11 +14,19 @@ class UserRoleController extends Controller
     public function index()
     {
         $employees = Employee::orderBy('name', 'asc')->get();
-        $userRoles = DB::table('user_roles')
-        ->join('employees', 'user_roles.employee_id', '=', 'employees.employee_id')
-        ->select('user_roles.*', 'employees.name', 'employees.employee_id as nip')
-        ->orderBy('user_roles.created_at', 'desc')
-        ->get();
+        $userRoles = User::with('employee')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($user) {
+                return (object) [
+                    'id'         => $user->id,
+                    'nip'        => $user->employee_id,
+                    'name'       => $user->employee->name ?? $user->name,
+                    'jabatan'    => $user->employee->jabatan ?? '-',
+                    'role_name'  => $user->getRoleNames()->first() ?? 'none',
+                    'email'      => $user->email,
+                ];
+            });
 
         return view('components.setting-role', compact('employees', 'userRoles'));
     }
@@ -35,30 +44,28 @@ class UserRoleController extends Controller
     {
         $request->validate([
             'employee_id' => $request->id ? 'nullable' : 'required',
-            'role_id'     => 'required',
+            'role_name'   => 'required',
         ]);
 
         try {
-            if ($request->id) {
-                // Update Data
-                DB::table('user_roles')->where('id', $request->id)->update([
-                ]);
-                $msg = "Role berhasil diupdate!";
-            } else {
-                // Simpan Baru
-                $employee = Employee::firstWhere("employee_id", $request->employee_id);
-                DB::table('user_roles')->updateOrInsert(
-                    ['employee_id' => $request->employee_id],
-                    [
-                        'jabatan'    => $employee->jabatan ?? '-',
-                        'role_id'    => $request->role_id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]
-                );
-                $msg = "Role berhasil ditambahkan!";
+            $employee = Employee::firstWhere('employee_id', $request->employee_id);
+            if (!$employee) {
+                return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);
             }
 
+            $nip = $employee->employee_id;
+            $user = User::firstOrCreate(
+                ['employee_id' => $nip],
+                [
+                    'name'     => $employee->name,
+                    'email'    => $employee->email ?? ($nip . '@system.com'),
+                    'password' => Hash::make('password'),
+                ]
+            );
+
+            $user->syncRoles([$request->role_name]);
+
+            $msg = "Role berhasil ditambahkan!";
             return response()->json(['success' => true, 'message' => $msg]);
         } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -67,15 +74,18 @@ class UserRoleController extends Controller
 
     public function edit($id)
     {
-        // Join ke employees agar nama muncul di modal popup
-        $role = DB::table('user_roles')
-            ->join('employees', 'user_roles.employee_id', '=', 'employees.employee_id')
-            ->select('user_roles.*', 'employees.name')
-            ->where('user_roles.id', $id)
-            ->first();
-
-        if ($role) {
-            return response()->json(['success' => true, 'data' => $role]);
+        $user = User::with('employee')->find($id);
+        if ($user) {
+            return response()->json([
+                'success' => true,
+                'data' => (object) [
+                    'id'         => $user->id,
+                    'employee_id' => $user->employee_id,
+                    'name'       => $user->employee->name ?? $user->name,
+                    'jabatan'    => $user->employee->jabatan ?? '-',
+                    'role_name'  => $user->getRoleNames()->first() ?? 'none',
+                ]
+            ]);
         }
         return response()->json(['success' => false], 404);
     }
@@ -83,58 +93,21 @@ class UserRoleController extends Controller
     public function setPassword(Request $request)
     {
         $request->validate([
-            'user_role_id' => 'required',
+            'user_id' => 'required',
             'password' => 'required|min:6'
         ]);
 
         try {
             DB::beginTransaction();
 
-            $roleData = DB::table('user_roles')->where('id', $request->user_role_id)->first();
-            if (!$roleData) return response()->json(['success' => false, 'message' => 'Data Role tidak ditemukan']);
+            $user = User::find($request->user_id);
+            if (!$user) return response()->json(['success' => false, 'message' => 'Data Role tidak ditemukan']);
 
-            // $roleData->employee_id di sini adalah PK employees.id (bukan NIP)
-            $emp = DB::table('employees')->where('employee_id', $roleData->employee_id)->first();
-            if (!$emp) return response()->json(['success' => false, 'message' => 'Data Employee tidak ditemukan']);
-
-            // NIP asli dari tabel employees (mis. EMP0001) - INI yang dipakai untuk login
-            $nip = $emp->employee_id;
-
-            // Cari user existing berdasarkan NIP (bukan PK employees.id lagi)
-            $user = DB::table('users')->where('employee_id', $nip)->first();
-            // Pastikan NIP unik sebagai login (kecuali milik user yang sedang di-update sendiri)
-            $nipTaken = DB::table('users')
-                ->where('employee_id', $nip)
-                ->when($user, fn ($q) => $q->where('id', '!=', $user->id))
-                ->exists();
-
-            if ($nipTaken && !$user) {
-                DB::rollback();
-                return response()->json(['success' => false, 'message' => "NIP {$nip} sudah dipakai user lain."], 422);
-            }
-
-            if ($user) {
-                DB::table('users')->where('employee_id', $user->id)->update([
-                    'password'   => Hash::make($request->password),
-                    'role_id'    => $roleData->role_id,
-                    'updated_at' => now()
-                ]);
-                $msg = "Password user berhasil diperbarui.";
-            } else {
-                DB::table('users')->insert([
-                    'name'        => $emp->name,
-                    'email'       => $emp->email ?? ($nip . '@system.com'),
-                    'password'    => Hash::make($request->password),
-                    'employee_id' => $nip, // NIP string, dipakai untuk login
-                    'role_id'     => $roleData->role_id,
-                    'created_at'  => now(),
-                    'updated_at'  => now()
-                ]);
-                $msg = "User baru berhasil dibuat di sistem login.";
-            }
+            $user->password = Hash::make($request->password);
+            $user->save();
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => $msg]);
+            return response()->json(['success' => true, 'message' => 'Password user berhasil diperbarui.']);
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -145,7 +118,10 @@ class UserRoleController extends Controller
     public function destroy($id)
     {
         try {
-            DB::table('user_roles')->where('id', $id)->delete();
+            $user = User::find($id);
+            if ($user) {
+                $user->delete();
+            }
             return response()->json(['success' => true, 'message' => 'Role berhasil dihapus!']);
         } catch (Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

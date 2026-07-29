@@ -1,6 +1,5 @@
 @php
-$role = session('user_role');
-$authUserRoleId = auth()->user()->role_id;
+$authUserRoleId = auth()->user()->getRoleNames()->first();
 @endphp
 
 @extends('layouts.Helpdesk')

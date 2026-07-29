@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
         $this->call(RegionalSeeder::class);
         $this->call(DivisionSeeder::class); // Pindahkan ke atas sebelum Employee
 
+        $this->call(RolePermissionSeeder::class);
+
         // // 2. Data Dengan Relasi (Dependent)
         $this->call(EmployeeSeeder::class); // Butuh DivisionID
         $this->call(UserSeeder::class);

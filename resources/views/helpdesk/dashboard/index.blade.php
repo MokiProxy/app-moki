@@ -1,5 +1,4 @@
 @php
-$role = session('user_role');
 $authUserName = auth()->user()->name;
 @endphp
 
@@ -188,7 +187,7 @@ $authUserName = auth()->user()->name;
         </div>
     </div>
 
-    @if(auth()->user()->role_id === App\Models\User::ROLE_SUPERADMIN)
+    @role('super-admin')
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
             <div class="card p-4">
@@ -209,7 +208,7 @@ $authUserName = auth()->user()->name;
             </div>
         </div>
     </div>
-    @endif
+    @endrole
 
     <div class="row g-4 mb-4">
 
@@ -381,7 +380,7 @@ $authUserName = auth()->user()->name;
         }
     });
 
-    @if(auth()->user()->role_id === App\Models\User::ROLE_SUPERADMIN)
+    @role('super-admin')
     new Chart(document.getElementById('divisionChart'), {
         type: 'bar',
         data: {
@@ -404,6 +403,6 @@ $authUserName = auth()->user()->name;
             }
         }
     });
-    @endif
+    @endrole
 </script>
 @endsection

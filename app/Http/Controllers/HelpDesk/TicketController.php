@@ -28,18 +28,18 @@ class TicketController extends Controller
     {
         $this->historyService = $historyService;
         $this->waService = $waService;
-        $admin = User::with('employee')->where('role_id', "=", 5)->first();
-        $this->adminPhoneNumber = $admin->employee->hp;
+        $admin = User::role('admin')->with('employee')->first();
+        $this->adminPhoneNumber = $admin ? $admin->employee->hp : null;
 
-        $this->middleware('role:1,5')->only([
+        $this->middleware('role:super-admin|admin')->only([
             'assignTeknisi'
         ]);
 
-        $this->middleware('role:4')->only([
+        $this->middleware('role:teknisi')->only([
             'approve',
         ]);
 
-        $this->middleware('role:1,3')->only([
+        $this->middleware('role:super-admin|staff')->only([
             'confirm',
             'reopen',
             'updateContent',
@@ -84,11 +84,11 @@ class TicketController extends Controller
 
     public function datatable(Request $request)
     {
-        $role = auth()->user()->role_id;
-        $authUserId = auth()->user()->id;
-        if ($role == 4) {
+        $user = auth()->user();
+        $authUserId = $user->id;
+        if ($user->hasRole('teknisi')) {
             $data = Ticket::with(["requester.employee.division"])->where('assigned_to', "=", $authUserId)->get();
-        } else if ($role == 3) {
+        } else if ($user->hasRole('staff')) {
             $data = Ticket::with(["requester.employee.division"])->where('requester_id', "=", $authUserId)->get();
         } else {
             $data = Ticket::with(["requester.employee.division"])->latest();
@@ -124,8 +124,8 @@ class TicketController extends Controller
                 return $row->rating ? "<div class='d-flex flex-column gap-2 align-items-center'><p class='m-0 $bgColor text-center p-1 ps-3 pe-3 rounded-pill fw-bold text-white w-auto'>" . $this->formatTicketStatus($row->status) . "</p><p class='text-center m-0 $bgColor text-center p-1 rounded fw-bold text-white'><i class='bx bx-star'></i>" . $row->rating . "/5</p></div>" : "<div class='d-flex flex-column align-items-center gap-2'><p class='m-0 $bgColor text-center p-1 ps-3 pe-3 rounded-pill fw-bold text-white w-auto'>" . $this->formatTicketStatus($row->status) . "</p></div>";
             })
             ->addColumn('action', function ($row) {
-                $role = auth()->user()->role_id;
-                if ($role == 4) {
+                $user = auth()->user();
+                if ($user->hasRole('teknisi')) {
                     if ($row->status == "ASSIGNED") {
                         return '
                         <div class="btn-group">
@@ -144,7 +144,7 @@ class TicketController extends Controller
                             <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
                         </div>';
                     }
-                } elseif ($role == 3 || $role == 1) {
+                } elseif ($user->hasAnyRole(['staff', 'super-admin'])) {
                     $reopenable = in_array($row->status, ['RESOLVED', 'CLOSED', 'REJECTED']);
                     $buttons = '<button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>';
                     if ($row->status == "OPEN") {
@@ -278,7 +278,7 @@ class TicketController extends Controller
 
     public function getTeknisi()
     {
-        $teknisi = User::where('role_id', User::ROLE_TEKNISI)
+        $teknisi = User::role('teknisi')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 

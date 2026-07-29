@@ -32,13 +32,13 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label fw-bold text-dark">Role Akses</label>
-                                <select class="form-select text-dark" name="role_id" required>
+                                <select class="form-select text-dark" name="role_name" required>
                                     <option value="">-- Pilih Role --</option>
-                                    <option value="1">Super Admin</option>
-                                    <option value="2">Approver</option>
-                                    <option value="3">User/Staff</option>
-                                    <option value="4">Teknisi Help Desk</option>
-                                    <option value="5">Admin Help Desk</option>
+                                    <option value="super-admin">Super Admin</option>
+                                    <option value="approver">Approver</option>
+                                    <option value="staff">User/Staff</option>
+                                    <option value="teknisi">Teknisi Help Desk</option>
+                                    <option value="admin">Admin Help Desk</option>
                                 </select>
                             </div>
                         </div>
@@ -74,11 +74,11 @@
                                 <td class="text-dark">{{ $row->name }}</td>
                                 <td class="text-dark">{{ $row->jabatan }}</td>
                                 <td class="text-center">
-                                    @if($row->role_id == 1) <span class="badge bg-danger">Super Admin</span>
-                                    @elseif($row->role_id == 2) <span class="badge bg-warning text-dark">Approver</span>
-                                    @elseif($row->role_id == 3) <span class="badge bg-info text-dark">Staff</span>
-                                    @elseif($row->role_id == 4) <span class="badge bg-success text-dark">Teknisi Help Desk</span>
-                                    @elseif($row->role_id == 5) <span class="badge bg-success text-dark">Admin</span>
+                                    @if($row->role_name == 'super-admin') <span class="badge bg-danger">Super Admin</span>
+                                    @elseif($row->role_name == 'approver') <span class="badge bg-warning text-dark">Approver</span>
+                                    @elseif($row->role_name == 'staff') <span class="badge bg-info text-dark">Staff</span>
+                                    @elseif($row->role_name == 'teknisi') <span class="badge bg-success text-dark">Teknisi Help Desk</span>
+                                    @elseif($row->role_name == 'admin') <span class="badge bg-success text-dark">Admin</span>
                                     @else <span class="badge bg-info">Staff</span> @endif
                                 </td>
                                 <td class="p-0 text-center">
@@ -130,12 +130,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Role Akses</label>
-                        <select class="form-select text-dark" name="role_id" id="edit_role_id" required>
-                            <option value="1">Super Admin</option>
-                            <option value="2">Approver</option>
-                            <option value="3">User/Staff</option>
-                            <option value="4">Teknisi Help Desk</option>
-                            <option value="5">Admin Help Desk</option>
+                        <select class="form-select text-dark" name="role_name" id="edit_role_name" required>
+                            <option value="super-admin">Super Admin</option>
+                            <option value="approver">Approver</option>
+                            <option value="staff">User/Staff</option>
+                            <option value="teknisi">Teknisi Help Desk</option>
+                            <option value="admin">Admin Help Desk</option>
                         </select>
                     </div>
                 </div>
@@ -157,7 +157,7 @@
             </div>
             <form id="formSetPassword">
                 @csrf
-                <input type="hidden" name="user_role_id" id="pass_user_role_id">
+                <input type="hidden" name="user_id" id="pass_user_id">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold text-dark">Password Baru</label>
@@ -276,7 +276,7 @@
         // 4. Modal Password
         $j(document).on('click', '.btn-password', function() {
             var id = $j(this).data('id');
-            $j('#pass_user_role_id').val(id);
+            $j('#pass_user_id').val(id);
             $j('#formSetPassword')[0].reset();
             passwordModal.show();
         });
@@ -288,7 +288,6 @@
             btn.prop('disabled', true).text('Menyinkronkan...');
 
             $j.ajax({
-                // Gunakan route name yang benar agar tidak 404
                 url: "{{ route('settings.role.set-password') }}",
                 type: "POST",
                 data: $j(this).serialize(),
@@ -318,7 +317,7 @@
                     $j('#edit_employee_id').val(res.data.employee_id);
                     $j('#edit_nama').val(res.data.name);
                     $j('#edit_jabatan').val(res.data.jabatan);
-                    $j('#edit_role_id').val(res.data.role_id);
+                    $j('#edit_role_name').val(res.data.role_name);
                     editModal.show();
                 }
             });

@@ -78,7 +78,7 @@ class TransactionController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $btnView = '<button type="button" class="btn btn-sm btn-info btn-view me-1" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>';
-                    $userRole = auth()->user()->role_id;
+                    $user = auth()->user();
 
                     $btnStatus = '';
                     if ($row->status == 1) {
@@ -92,7 +92,7 @@ class TransactionController extends Controller
                     $btnPdf = '';
                     $btnDelete = '';
 
-                    if ($userRole != 3) {
+                    if (!$user->hasRole('staff')) {
                         $btnPdf = '<button type="button" class="btn btn-sm btn-warning btn-pdf me-1" data-id="' . $row->id . '" title="Cetak PDF"><i class="mdi mdi-file-pdf-box"></i></button>';
                         $btnDelete = '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="mdi mdi-trash-can"></i></button>';
                     }
