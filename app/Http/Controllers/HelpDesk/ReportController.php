@@ -58,10 +58,12 @@ class ReportController extends Controller
     {
         $user = auth()->user();
         $authUserId = $user->id;
-        if ($user->hasRole('teknisi')) {
-            $data = Ticket::with(["requester.employee.division"])->where('assigned_to', "=", $authUserId)->get();
-        } else if ($user->hasRole('staff')) {
-            $data = Ticket::with(["requester.employee.division"])->where('requester_id', "=", $authUserId)->get();
+        if (!$user->hasPermissionTo('tickets.view-all')) {
+            if ($user->hasPermissionTo('tickets.resolve')) {
+                $data = Ticket::with(["requester.employee.division"])->where('assigned_to', "=", $authUserId)->get();
+            } else {
+                $data = Ticket::with(["requester.employee.division"])->where('requester_id', "=", $authUserId)->get();
+            }
         } else {
             $data = Ticket::with(["requester.employee.division"])->latest();
         }

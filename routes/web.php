@@ -53,6 +53,7 @@ Route::group(['middleware' => ['guest']], function () {
 
 // --- AUTH AREA (Harus login) ---
 Route::group(['middleware' => ['auth']], function () {
+    require __DIR__.'/routers/it-admin.php';
 
     // FITUR HELPDESK
     Route::prefix('helpdesk')->name('helpdesk.')->group(function () {
@@ -66,7 +67,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('tickets/datatable', [HelpDeskTicketController::class, 'datatable'])->name('tickets.datatable');
         Route::get('tickets/attachments/{id}/download', [HelpDeskTicketAttachmentController::class, 'download'])->name('tickets.attachments.download');
 
-        Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
+        Route::middleware(['auth', 'permission:ticket-categories.manage|ticket-priorities.manage'])->group(function () {
             Route::resource('ticket-categories', HelpDeskTicketCategoryController::class);
             Route::post('ticket-categories/datatable', [HelpDeskTicketCategoryController::class, 'datatable'])->name('ticket-categories.datatable');
 
@@ -74,7 +75,7 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('ticket-priorities/datatable', [HelpDeskTicketPriorityController::class, 'datatable'])->name('ticket-priorities.datatable');
         });
 
-        Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
+        Route::middleware(['auth', 'permission:tickets.assign|reports.view'])->group(function () {
             Route::get('technicians', [HelpDeskTicketController::class, 'getTeknisi'])->name('tickets.teknisi');
 
             Route::put('tickets/assign/{id}', [HelpDeskTicketController::class, 'assignTeknisi'])->name('tickets.assign');
@@ -85,17 +86,17 @@ Route::group(['middleware' => ['auth']], function () {
             Route::resource("reports", HelpDeskReportController::class);
         });
 
-        Route::middleware(['auth', 'role:super-admin|staff|teknisi|admin'])->group(function () {
+        Route::middleware(['auth', 'permission:tickets.comment'])->group(function () {
             Route::get('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'index'])->name('tickets.comments.index');
             Route::post('tickets/{id}/comments', [HelpDeskTicketCommentController::class, 'store'])->name('tickets.comments.store');
         });
 
-        Route::middleware(['auth', 'role:teknisi'])->group(function () {
+        Route::middleware(['auth', 'permission:tickets.resolve|tickets.approve'])->group(function () {
             Route::put('tickets/resolve/{id}', [HelpDeskTicketController::class, 'resolved'])->name('tickets.resolve');
             Route::put('tickets/approve/{id}', [HelpDeskTicketController::class, 'approve'])->name('tickets.approve');
         });
 
-        Route::middleware(['auth', 'role:super-admin|staff'])->group(function () {
+        Route::middleware(['auth', 'permission:tickets.confirm|tickets.reopen|tickets.edit|tickets.delete'])->group(function () {
             Route::put('tickets/confirm/{id}', [HelpDeskTicketController::class, 'confirm'])->name('tickets.confirm');
             Route::put('tickets/reopen/{id}', [HelpDeskTicketController::class, 'reopen'])->name('tickets.reopen');
             Route::put('tickets/{id}/update-content', [HelpDeskTicketController::class, 'updateContent'])->name('tickets.update-content');
@@ -289,3 +290,4 @@ Route::get('/login/microsoft', [MicrosoftAuthController::class, 'redirect'])
 
 Route::get('/login/microsoft/callback', [MicrosoftAuthController::class, 'callback'])
     ->name('login.microsoft.callback');
+

@@ -18,7 +18,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->hasRole('staff')) {
+        if (!$user->hasPermissionTo('tickets.view-all')) {
             $divisionId = $user->employee->division_id;
             return Ticket::whereHas('requester.employee', function ($q) use ($divisionId) {
                 $q->where('employees.division_id', $divisionId);
@@ -50,7 +50,7 @@ class DashboardController extends Controller
 
         $user = auth()->user();
         $divisionCounts = collect();
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasPermissionTo('tickets.view-all')) {
             $divisionCounts = Ticket::select('divisions.name', DB::raw('count(*) as total'))
                 ->join('users', 'tickets.requester_id', '=', 'users.id')
                 ->join('employees', 'users.employee_id', '=', 'employees.employee_id')
@@ -68,7 +68,7 @@ class DashboardController extends Controller
         $recentActivitiesQuery = TicketHistory::with(['ticket', 'user'])
             ->latest()
             ->limit(5);
-        if ($user->hasRole('staff')) {
+        if (!$user->hasPermissionTo('tickets.view-all')) {
             $divisionId = $user->employee->division_id;
             $recentActivitiesQuery->whereHas('ticket.requester.employee', function ($q) use ($divisionId) {
                 $q->where('employees.division_id', $divisionId);

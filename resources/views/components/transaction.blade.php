@@ -2,16 +2,15 @@
 
 @section('content')
     {{-- CSS ANTI-FLASH: Cara paling ampuh secara visual --}}
-    @if(Auth::user()->hasRole('staff'))
+    @cannot('transactions.export-pdf')
     <style>
-        /* Paksa sembunyikan semua elemen yang mengandung class btn-pdf atau btn-delete di dalam tabel */
         .btn-pdf, .btn-delete, [class*="mdi-file-pdf"], [class*="mdi-delete"] {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
         }
     </style>
-    @endif
+    @endcannot
 
     <div class="row">
         <div class="col-lg-12">
@@ -20,11 +19,11 @@
                     <div class="d-flex align-items-center">
                         <h5 class="mb-0 card-title flex-grow-1">Daftar Transaksi (BAST)</h5>
                         <div class="flex-shrink-0">
-                            @if(!Auth::user()->hasRole('staff'))
+                            @can('transactions.create')
                                 <a href="{{ route('transaction.create') }}" class="btn btn-primary">
                                     <i class="mdi mdi-plus me-1"></i> Tambah Transaksi
                                 </a>
-                            @endif
+                            @endcan
                         </div>
                     </div>
                 </div>
@@ -102,7 +101,7 @@
 
         $j(document).ready(function() {
             var CSRF_TOKEN = $j('meta[name="csrf-token"]').attr('content');
-            var isStaff = "{{ Auth::user()->hasRole('staff') ? 'true' : 'false' }}" === 'true';
+            var isStaff = "{{ Auth::user()->hasPermissionTo('transactions.create') && !Auth::user()->hasPermissionTo('transactions.export-pdf') ? 'true' : 'false' }}" === 'true';
             
             var table = $j("#transaction-table").DataTable({
                 processing: true,

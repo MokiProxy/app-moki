@@ -187,7 +187,7 @@ $authUserName = auth()->user()->name;
         </div>
     </div>
 
-    @role('super-admin')
+    @can('tickets.view-all')
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
             <div class="card p-4">
@@ -208,7 +208,7 @@ $authUserName = auth()->user()->name;
             </div>
         </div>
     </div>
-    @endrole
+    @endcan
 
     <div class="row g-4 mb-4">
 
@@ -380,7 +380,7 @@ $authUserName = auth()->user()->name;
         }
     });
 
-    @role('super-admin')
+    @can('tickets.view-all')
     new Chart(document.getElementById('divisionChart'), {
         type: 'bar',
         data: {
@@ -403,6 +403,6 @@ $authUserName = auth()->user()->name;
             }
         }
     });
-    @endrole
+    @endcan
 </script>
 @endsection

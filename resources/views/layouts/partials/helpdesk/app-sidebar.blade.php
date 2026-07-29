@@ -21,7 +21,7 @@ $roleColor = "primary";
             </a>
         </li>
 
-        @role('super-admin|admin')
+        @can('ticket-categories.manage')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
@@ -32,7 +32,7 @@ $roleColor = "primary";
                 <li><a href="{{ route('helpdesk.ticket-priorities.index') }}"><i class='mdi mdi-alert-box'></i>Prioritas Tiket</a></li>
             </ul>
         </li>
-        @endrole
+        @endcan
 
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -40,23 +40,21 @@ $roleColor = "primary";
                 <span key="t-master-data">Manajemen Tiket</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                @role('super-admin|admin')
+                @can('tickets.view-all')
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Semua Tiket</a></li>
-                @endrole
-
-                @role('teknisi|staff')
+                @else
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Tiket Saya</a></li>
-                @endrole
+                @endcan
 
-                @role('super-admin|staff')
+                @can('tickets.create')
                 <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-plus'></i>Buat Tiket</a></li>
-                @endrole
+                @endcan
             </ul>
         </li>
 
-        @role('super-admin')
+        @can('reports.view')
         <li><a href="{{ route('helpdesk.reports.index') }}"><i class='bx bx-file'></i>Laporan</a></li>
-        @endrole
+        @endcan
 
         <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">

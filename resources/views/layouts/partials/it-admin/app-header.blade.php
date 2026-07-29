@@ -1,14 +1,6 @@
 @php
 $role = session('user_role');
-$authUserRole = auth()->user()->roles->pluck('name')->first();
-
-if($authUserRole == "super-admin" || $authUserRole == "admin") {
-$roleColor = "danger";
-} else if ($authUserRole == "staff") {
-$roleColor = "success";
-} else if ($authUserRole == "teknisi") {
-$roleColor = "primary";
-}
+$roleColor = "primary-it-admin";
 @endphp
 
 <header id="page-topbar">
@@ -17,11 +9,21 @@ $roleColor = "primary";
             <div class="navbar-brand-box bg-dark-primary text-start">
                 <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
                     <span class="logo-sm">
-                        <h5 class="text-white mt-3 fw-bold"><span class="text-{{ $roleColor }}">Help</span> Desk</h5>
+                        <i class="mdi mdi-cog fs-1 m-0 p-0"></i>
                     </span>
                     <span class="logo-lg mt-4">
                         <div class="flex">
-                            <h3 class="text-white mt-4 fw-bold"><span class="text-{{ $roleColor }}">Help</span> Desk</h3>
+                            <h3 class="text-white mt-4 fw-bold d-flex gap-2 align-items-center">
+                                <div class="bg-primary-it-admin p-1 rounded d-flex justify-content-center align-items-center">
+                                    <i class="mdi mdi-cog"></i>
+                                </div>
+                                <div class="d-flex justify-center flex-column">
+                                    <div>
+                                        <span class="text-{{ $roleColor }} m-0 p-0">IT</span> Admin
+                                    </div>
+                                    <p class="fs-6 m-0 p-0 fw-normal">Manajemen Aplikasi IT</p>
+                                </div>
+                            </h3>
                         </div>
                     </span>
                 </a>

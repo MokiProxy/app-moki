@@ -29,9 +29,9 @@ class PortalController extends Controller
                 'title' => 'IT Admin',
                 'sub'   => 'IT Admin Panel',
                 'icon'  => 'mdi-cog',
-                'color' => '#BE1A1A',
-                'permission' => 'ams.menu',
-                'link'  => route('transaction.index')
+                'color' => '#556EE6',
+                'permission' => 'it-admin.access',
+                'link'  => route('it-admin.index')
             ],
             [
                 'title' => 'AMS',
@@ -74,10 +74,19 @@ class PortalController extends Controller
                 'link'  => '#'
             ],
             [
-                'title' => 'MORE',
-                'sub'   => 'Other Apps',
-                'icon'  => 'mdi-apps',
-                'color' => '#858796',
+                'title' => 'DOKTER',
+                'sub'   => 'Dokumen Kontroler',
+                'icon'  => 'mdi-file',
+                'color' => '#f6c23e',
+                'permission' => 'sop-it.menu',
+                'link'  => '#'
+                ],
+                [
+                    'title' => 'MORE',
+                    'sub'   => 'Other Apps',
+                    'icon'  => 'mdi-apps',
+                    'color' => '#858796',
+                    'permission' => 'sop-it.menu',
                 'link'  => '#'
             ],
         ];

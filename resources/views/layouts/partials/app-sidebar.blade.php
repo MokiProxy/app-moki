@@ -22,7 +22,7 @@
             </a>
         </li>
 
-        @if(!$user->hasRole('approver'))
+        @can('master-data.manage')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
@@ -39,7 +39,7 @@
                 <li><a href="{{ route('pegawai-hirarki') }}"><i class='bx bx-network-chart'></i> Pegawai Hirarki</a></li>
             </ul>
         </li>
-        @endif
+        @endcan
 
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -49,11 +49,11 @@
             <ul class="sub-menu" aria-expanded="false">
                 <li><a href="{{ route('asset') }}"><i class='bx bx-list-check'></i> Daftar Aset</a></li>
 
-                @if(!$user->hasRole('approver'))
+                @can('assignment.manage')
                 <li><a href="{{ route('assignment.index') }}"><i class='bx bx-user-pin'></i> Penugasan Aset</a></li>
                 <li><a href="{{ route('category') }}"><i class='bx bx-purchase-tag-alt'></i> Kategori</a></li>
                 <li><a href="{{ route('supplier') }}"><i class='bx bx-store'></i> Supplier</a></li>
-                @endif
+                @endcan
             </ul>
         </li>
 
@@ -63,14 +63,14 @@
                 <span key="t-transaction">Transaksi</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                @if(!$user->hasRole('approver'))
+                @can('transactions.create')
                 <li><a href="{{ route('transaction.create') }}">Tambah Baru</a></li>
-                @endif
+                @endcan
                 <li><a href="{{ route('transaction.index') }}">Riwayat Transaksi</a></li>
             </ul>
         </li>
 
-        @if(!$user->hasRole('approver'))
+        @can('monitoring.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-printer'></i>
@@ -81,7 +81,9 @@
                 <li><a href="{{ route('monitor.employee') }}">Laporan Pengguna</a></li>
             </ul>
         </li>
+        @endcan
 
+        @can('whatsapp-settings.manage')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-cog'></i>
@@ -92,7 +94,7 @@
                 <li><a href="{{ route('setting-fonnte.index') }}">API Whatsapp</a></li>
             </ul>
         </li>
-        @endif
+        @endcan
 
     </ul>
 </div>
