@@ -84,7 +84,18 @@ class FileManagementController extends Controller
 
         $disk = Storage::disk('ftp_final');
 
-        if (! $disk->exists($path) || $disk->directoryExists($path)) {
+        if (! $disk->exists($path)) {
+            abort(404);
+        }
+
+        $parentDir = dirname($path);
+        if ($parentDir === '.' || $parentDir === '\\') {
+            $parentDir = '';
+        }
+
+        $files = $disk->files($parentDir);
+
+        if (! in_array($path, $files)) {
             abort(404);
         }
 
@@ -95,17 +106,14 @@ class FileManagementController extends Controller
     {
         $disk = Storage::disk('ftp_final');
         $filename = str_replace('"', '', basename($path));
-        $stream = $disk->readStream($path);
+        $contents = $disk->get($path);
 
-        if ($stream === false) {
+        if ($contents === false || $contents === null) {
             abort(404);
         }
 
-        return response()->stream(function () use ($stream) {
-            fpassthru($stream);
-            fclose($stream);
-        }, 200, array_merge([
-            'Content-Type' => $disk->mimeType($path) ?: 'application/octet-stream',
+        return response($contents, 200, array_merge([
+            'Content-Type' => $disk->mimeType($path) ?: 'application/pdf',
             'Content-Disposition' => $disposition.'; filename="'.$filename.'"',
         ], $headers));
     }

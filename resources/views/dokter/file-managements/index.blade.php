@@ -38,6 +38,22 @@ function formatBytes($bytes, $precision = 2)
         content: "\F0142";
         font-family: "Material Design Icons";
     }
+    #pdfViewerModal .modal-dialog {
+        max-width: 95%;
+        height: 95vh;
+    }
+    #pdfViewerModal .modal-content {
+        height: 100%;
+    }
+    #pdfViewerModal .modal-body {
+        padding: 0;
+        overflow: hidden;
+    }
+    #pdfViewerModal iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
 </style>
 @endsection
 
@@ -173,9 +189,12 @@ function formatBytes($bytes, $precision = 2)
                                 <td><span class="badge bg-secondary">{{ strtoupper($file['extension']) }}</span></td>
                                 <td class="text-center">
                                     @if($file['extension'] === 'pdf')
-                                    <a href="{{ route('dokter.file-managements.view', ['path' => $file['path']]) }}" class="btn btn-info btn-sm" title="Lihat PDF">
+                                    <button type="button" class="btn btn-info btn-sm btn-view-pdf"
+                                            data-path="{{ $file['path'] }}"
+                                            data-filename="{{ $file['name'] }}"
+                                            title="Lihat PDF">
                                         <i class="mdi mdi-eye"></i> Lihat
-                                    </a>
+                                    </button>
                                     @endif
                                     <a href="{{ route('dokter.file-managements.download', ['path' => $file['path']]) }}" class="btn btn-success btn-sm" title="Download">
                                         <i class="mdi mdi-download"></i>
@@ -205,6 +224,28 @@ function formatBytes($bytes, $precision = 2)
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="pdfViewerModal" tabindex="-1" aria-labelledby="pdfViewerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title text-dark fw-bold" id="pdfViewerModalLabel">
+                    <i class="mdi mdi-file-pdf-box text-danger me-1"></i>
+                    <span id="pdfModalFileName"></span>
+                </h5>
+                <div class="d-flex gap-1">
+                    <a href="#" class="btn btn-success btn-sm" id="btnDownloadFromModal">
+                        <i class="mdi mdi-download"></i> Download
+                    </a>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <iframe id="pdfViewerFrame" src="about:blank"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('plugin')
@@ -213,6 +254,22 @@ function formatBytes($bytes, $precision = 2)
         $('#btn-refresh').click(function(e) {
             e.preventDefault();
             location.reload();
+        });
+
+        $(document).on('click', '.btn-view-pdf', function() {
+            var path = $(this).data('path');
+            var filename = $(this).data('filename');
+            var rawUrl = '{{ route("dokter.file-managements.view", ["path" => "__PATH__", "raw" => true]) }}'.replace('__PATH__', encodeURIComponent(path));
+            var downloadUrl = '{{ route("dokter.file-managements.download", ["path" => "__PATH__"]) }}'.replace('__PATH__', encodeURIComponent(path));
+
+            $('#pdfModalFileName').text(filename);
+            $('#pdfViewerFrame').attr('src', rawUrl);
+            $('#btnDownloadFromModal').attr('href', downloadUrl);
+            $('#pdfViewerModal').modal('show');
+        });
+
+        $('#pdfViewerModal').on('hidden.bs.modal', function() {
+            $('#pdfViewerFrame').attr('src', 'about:blank');
         });
     });
 </script>

@@ -15,6 +15,6 @@ Route::prefix("dokter")->name("dokter.")->middleware(['permission:it-admin.acces
     Route::prefix('file-managements')->name('file-managements.')->group(function () {
         Route::get('/', [FileManagementController::class, 'index'])->name('index');
         Route::get('/view', [FileManagementController::class, 'view'])->name('view');
-        Route::get('/download', [FileManagementController::class, 'download'])->name('download');
+        Route::get('/download', [FileManagementController::class, 'download'])->name('download')->middleware('permission:file-management.download');
     });
 });

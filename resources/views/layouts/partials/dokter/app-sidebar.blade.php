@@ -9,7 +9,7 @@ $roleColor = "primary-dokter";
     <ul class="metismenu list-unstyled" id="side-menu">
 
         <li>
-            <a href="{{ route('it-admin.index') }}" class="waves-effect">
+            <a href="{{ route('dokter.index') }}" class="waves-effect">
                 <i class="bx bx-home-circle"></i>
                 <span key="t-dashboard">Dashboard</span>
             </a>
