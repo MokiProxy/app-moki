@@ -10,7 +10,7 @@ $roleColor = "primary";
 }
 @endphp
 
-<div id="sidebar-menu">
+<div id="sidebar-menu" class="mt-2">
 
     <ul class="metismenu list-unstyled" id="side-menu">
 

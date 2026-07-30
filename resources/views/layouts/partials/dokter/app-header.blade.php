@@ -1,35 +1,27 @@
 @php
 $role = session('user_role');
-$authUserRole = auth()->user()->roles->pluck('name')->first();
-
-if($authUserRole == "super-admin" || $authUserRole == "admin") {
-$roleColor = "danger";
-} else if ($authUserRole == "staff") {
-$roleColor = "success";
-} else if ($authUserRole == "teknisi") {
-$roleColor = "primary";
-}
+$roleColor = "primary-dokter";
 @endphp
 
 <header id="page-topbar">
     <div class="navbar-header">
         <div class="d-flex">
             <div class="navbar-brand-box bg-dark-primary text-start">
-                <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
+                <a href="{{ url('/') }}" class="logo text-decoration-none">
                     <span class="logo-sm">
-                        <i class="mdi mdi-face-agent fs-1 m-0 p-0"></i>
+                        <i class="mdi mdi-file fs-1 m-0 p-0"></i>
                     </span>
                     <span class="logo-lg mt-4">
                         <div class="flex">
                             <h3 class="text-white mt-4 fw-bold d-flex gap-2 align-items-center">
-                                <div class="bg-{{ $roleColor }} p-1 rounded d-flex justify-content-center align-items-center">
-                                    <i class="mdi mdi-face-agent"></i>
+                                <div class="bg-{{$roleColor}} p-1 rounded d-flex justify-content-center align-items-center">
+                                    <i class="mdi mdi-file text-dark"></i>
                                 </div>
                                 <div class="d-flex justify-center flex-column">
                                     <div>
-                                        <span class="text-{{ $roleColor }} m-0 p-0">Help</span> Desk
+                                        <span class="text-{{ $roleColor }} m-0 p-0">Dokter</span>
                                     </div>
-                                    <p class="fs-6 m-0 p-0 fw-normal">IT Support Ticket</p>
+                                    <p class="fs-6 m-0 p-0 fw-normal">Dokumen Kontroler</p>
                                 </div>
                             </h3>
                         </div>

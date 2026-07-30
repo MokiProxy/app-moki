@@ -1,0 +1,236 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Models\DocumentType;
+use App\Services\DocumentTypeProcessor;
+use App\Services\FileConversionService;
+use App\Services\OcrSearchService;
+use App\Services\OcrService;
+use Exception;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
+
+class ProcessScanFile implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public int $tries = 3;
+
+    public int $timeout = 120;
+
+    public int $backoff = 30;
+
+    public function __construct(
+        public string $filename,
+        public ?int $documentTypeId = null,
+    ) {}
+
+    public function handle(
+        DocumentTypeProcessor $processor,
+        OcrService $ocr,
+        OcrSearchService $search,
+        FileConversionService $converter,
+    ): void {
+        $incomingPath = "scanner/incoming/{$this->filename}";
+        $fullPath = storage_path("app/private/{$incomingPath}");
+
+        if (! file_exists($fullPath)) {
+            Log::warning('File not found for OCR processing', ['file' => $this->filename]);
+
+            return;
+        }
+
+        $uploadedFile = new UploadedFile($fullPath, $this->filename, mime_content_type($fullPath), null, true);
+
+        $documentType = $this->resolveDocumentType($uploadedFile, $ocr, $search);
+
+        if ($documentType === null) {
+            throw new Exception("Could not detect document type for: {$this->filename}");
+        }
+
+        $result = $ocr->extractText($uploadedFile);
+
+        if (empty($result['success'])) {
+            throw new Exception('OCR failed: '.json_encode($result));
+        }
+
+        $ocrText = $result['text'] ?? '';
+        $documentNumber = $processor->extractDocumentNumber($documentType, $ocrText);
+        $vendorName = $processor->matchVendor($documentType, $ocrText);
+
+        $originalExtension = pathinfo($this->filename, PATHINFO_EXTENSION);
+        $s3Filename = $processor->generateS3Filename($documentType, $vendorName, $documentNumber, $originalExtension);
+        $uploadFilename = $s3Filename ?: $this->filename;
+
+        $numberLabel = $documentType->number_label ?? 'document_number';
+        $ocrData = [
+            'filename' => $this->filename,
+            'document_type' => strtoupper($documentType->name),
+            $numberLabel => $documentNumber,
+            'vendor_name' => $vendorName,
+            's3_filename' => $uploadFilename,
+            'text' => $ocrText,
+            'processing_time_ms' => $result['processing_time_ms'] ?? null,
+            'processed_at' => now()->toIso8601String(),
+        ];
+
+        Storage::disk('local')->put(
+            "scanner/ocr-results/{$this->filename}.json",
+            json_encode($ocrData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+
+        $content = file_get_contents($fullPath);
+
+        if ($content === false) {
+            throw new Exception("Failed to read file: {$fullPath}");
+        }
+
+        Storage::disk('s3')->put("scanner/originals/{$uploadFilename}", $content);
+
+        if ($converter->isPdf($fullPath)) {
+            $ftpContent = $content;
+            $pdfFilename = $uploadFilename;
+        } else {
+            $pdfFilename = str_replace(
+                pathinfo($uploadFilename, PATHINFO_EXTENSION),
+                'pdf',
+                $uploadFilename
+            );
+
+            try {
+                $pdfPath = $converter->imageToPdf(
+                    $fullPath,
+                    storage_path("app/private/scanner/converted/{$pdfFilename}")
+                );
+                $ftpContent = file_get_contents($pdfPath);
+                Storage::disk('local')->delete("scanner/converted/{$pdfFilename}");
+            } catch (Exception $e) {
+                Log::warning('Image to PDF conversion failed, uploading original image', [
+                    'file' => $uploadFilename,
+                    'error' => $e->getMessage(),
+                ]);
+                $ftpContent = $content;
+                $pdfFilename = $uploadFilename;
+            }
+        }
+
+        if (! $vendorName) {
+            $vendorExpected = $documentType->vendor_search_enabled && $documentType->vendors()->exists();
+            $ftpPath = $vendorExpected
+                ? $processor->resolveFailedPath($documentType, $pdfFilename)
+                : $processor->resolveFtpPath($documentType, $vendorName, $documentNumber, $pdfFilename);
+        } else {
+            $ftpPath = $processor->resolveFtpPath($documentType, $vendorName, $documentNumber, $pdfFilename);
+        }
+
+        $ftpDisk = Storage::disk('ftp_final');
+        $ftpAdapter = $ftpDisk->getAdapter();
+
+        $lastException = null;
+
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            try {
+                $ftpAdapter->disconnect();
+                $ftpDisk->put($ftpPath, $ftpContent);
+
+                $lastException = null;
+
+                break;
+            } catch (Exception $e) {
+                $lastException = $e;
+                Log::warning("FTP upload attempt {$attempt} failed", [
+                    'file' => $pdfFilename,
+                    'ftp_path' => $ftpPath,
+                    'error' => $e->getMessage(),
+                ]);
+
+                if ($attempt < 3) {
+                    sleep(5);
+                }
+            }
+        }
+
+        if ($lastException !== null) {
+            throw new Exception("FTP upload failed after 3 attempts: {$lastException->getMessage()}", 0, $lastException);
+        }
+
+        Storage::disk('local')->delete($incomingPath);
+
+        Log::info('OCR processed successfully', [
+            'filename' => $this->filename,
+            'document_type' => strtoupper($documentType->name),
+            $numberLabel => $documentNumber,
+            'vendor_name' => $vendorName,
+            's3_filename' => $uploadFilename,
+            'ftp_path' => $ftpPath,
+            'processing_time_ms' => $ocrData['processing_time_ms'],
+        ]);
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        Log::error('OCR job failed permanently', [
+            'file' => $this->filename,
+            'error' => $exception?->getMessage(),
+        ]);
+    }
+
+    protected function resolveDocumentType(UploadedFile $uploadedFile, OcrService $ocr, OcrSearchService $search): ?DocumentType
+    {
+        if ($this->documentTypeId !== null) {
+            return DocumentType::find($this->documentTypeId);
+        }
+
+        $documentTypes = DocumentType::all();
+
+        if ($documentTypes->isEmpty()) {
+            return null;
+        }
+
+        try {
+            $result = $ocr->extractText($uploadedFile);
+        } catch (Exception $e) {
+            Log::warning('Detection OCR failed', ['error' => $e->getMessage()]);
+
+            return null;
+        }
+
+        if (empty($result['success'])) {
+            return null;
+        }
+
+        $ocrText = strtolower($result['text'] ?? '');
+
+        $typeNames = $documentTypes->pluck('name')->toArray();
+
+        $match = $search->searchData(
+            [['text' => $ocrText]],
+            $typeNames,
+        )->first();
+
+        if ($match) {
+            $matchedName = strtoupper($match['matches']->first()['keyword'] ?? '');
+
+            $matched = $documentTypes->firstWhere('name', $matchedName);
+
+            if ($matched) {
+                Log::info('Document type detected from OCR text', [
+                    'file' => $this->filename,
+                    'detected_type' => $matched->name,
+                ]);
+
+                return $matched;
+            }
+        }
+
+        return null;
+    }
+}

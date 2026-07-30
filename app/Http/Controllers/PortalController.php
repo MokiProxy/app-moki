@@ -79,7 +79,7 @@ class PortalController extends Controller
                 'icon'  => 'mdi-file',
                 'color' => '#f6c23e',
                 'permission' => 'sop-it.menu',
-                'link'  => '#'
+                'link'  => route('dokter.index')
                 ],
                 [
                     'title' => 'MORE',

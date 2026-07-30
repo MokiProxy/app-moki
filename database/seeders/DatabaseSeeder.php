@@ -39,5 +39,8 @@ class DatabaseSeeder extends Seeder
         $this->call(JenisKelaminSeeder::class);
 
         $this->call(WhatsappSeeder::class);
+
+        $this->call(DocumentTypeSeeder::class);
+        $this->call(VendorSeeder::class);
     }
 }

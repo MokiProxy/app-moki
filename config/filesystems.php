@@ -32,13 +32,16 @@ return [
 
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app'),
+            'root' => storage_path('app/private'),
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
         ],
 
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
         ],
 
@@ -51,8 +54,33 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
         ],
 
+        'ftp_scanner' => [
+            'driver' => 'ftp',
+            'host' => env('SCANNER_FTP_HOST'),
+            'password' => env('SCANNER_FTP_PASSWORD'),
+            'username' => env('SCANNER_FTP_USERNAME'),
+            'root' => '/incoming',
+            'port' => 21,
+            'passive' => true,
+            'ssl' => false,
+            'timeout' => 60,
+        ],
+
+        'ftp_final' => [
+            'driver' => 'ftp',
+            'host' => env('FINAL_FTP_HOST'),
+            'username' => env('FINAL_FTP_USERNAME'),
+            'password' => env('FINAL_FTP_PASSWORD'),
+            'root' => '/root',
+            'port' => 21,
+            'passive' => true,
+            'ssl' => false,
+            'timeout' => 60,
+        ],
     ],
 
     /*

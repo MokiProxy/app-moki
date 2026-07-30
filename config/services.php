@@ -29,5 +29,16 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'ocr' => [
+        'api_endpoint' => env('OCR_SPACE_API_ENDPOINT'),
+        'api_key' => env('OCR_SPACE_API_KEY'),
+        'engine' => env('OCR_SPACE_ENGINE'),
+    ],
+    'file_conversion' => [
+        'pdf_dpi' => env('FILE_CONVERSION_PDF_DPI', 150),
+        'pdf_quality' => env('FILE_CONVERSION_PDF_QUALITY', 90),
+        'image_format' => env('FILE_CONVERSION_IMAGE_FORMAT', 'jpg'),
+        'max_pages' => env('FILE_CONVERSION_MAX_PAGES', 20),
+    ],
 
 ];
