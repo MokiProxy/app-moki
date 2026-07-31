@@ -21,7 +21,7 @@ $roleColor = "primary";
             </a>
         </li>
 
-        @can('ticket-categories.manage')
+        @can('helpdesk.ticket-categories.manage')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
@@ -40,20 +40,24 @@ $roleColor = "primary";
                 <span key="t-master-data">Manajemen Tiket</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                @can('tickets.view-all')
+                @can('helpdesk.tickets.view-all')
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Semua Tiket</a></li>
                 @else
                 <li><a href="{{ route('helpdesk.tickets.index') }}"><i class='mdi mdi-ticket'></i>Tiket Saya</a></li>
                 @endcan
 
-                @can('tickets.create')
+                @can('helpdesk.tickets.create')
                 <li><a href="{{ route('helpdesk.tickets.create') }}"><i class='mdi mdi-plus'></i>Buat Tiket</a></li>
                 @endcan
             </ul>
         </li>
 
-        @can('reports.view')
+        @can('helpdesk.reports.view')
         <li><a href="{{ route('helpdesk.reports.index') }}"><i class='bx bx-file'></i>Laporan</a></li>
+        @endcan
+
+        @can('helpdesk.technicians.view')
+        <li><a href="{{ route('helpdesk.tickets.teknisi') }}"><i class='bx bx-user-check'></i>Teknisi</a></li>
         @endcan
 
         <li>

@@ -11,7 +11,7 @@ $authUserRoleId = $user->getRoleNames()->first();
         <div class="card shadow-sm">
             <div class="card-body border-bottom bg-light">
                 <div class="d-flex align-items-center">
-                    <h5 class="mb-0 card-title flex-grow-1">{{ !$user->hasPermissionTo('tickets.view-all') ? "Daftar Tiket Saya" : "Daftar Semua Tiket" }}</h5>
+                    <h5 class="mb-0 card-title flex-grow-1">{{ !$user->hasPermissionTo('helpdesk.tickets.view-all') ? "Daftar Tiket Saya" : "Daftar Semua Tiket" }}</h5>
                     <div class="flex-shrink-0 d-flex gap-1">
                         <a href="#!" class="btn btn-light" id="btn-refresh"><i class="mdi mdi-refresh"></i></a>
                     </div>

@@ -187,7 +187,7 @@ $authUserName = auth()->user()->name;
         </div>
     </div>
 
-    @can('tickets.view-all')
+    @can('helpdesk.tickets.view-all')
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
             <div class="card p-4">
@@ -380,7 +380,7 @@ $authUserName = auth()->user()->name;
         }
     });
 
-    @can('tickets.view-all')
+    @can('helpdesk.tickets.view-all')
     new Chart(document.getElementById('divisionChart'), {
         type: 'bar',
         data: {

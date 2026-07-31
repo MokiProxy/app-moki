@@ -2,7 +2,7 @@
 
 @section('content')
     {{-- CSS ANTI-FLASH: Cara paling ampuh secara visual --}}
-    @cannot('transactions.export-pdf')
+    @cannot('ams.transactions.export-pdf')
     <style>
         .btn-pdf, .btn-delete, [class*="mdi-file-pdf"], [class*="mdi-delete"] {
             display: none !important;
@@ -19,7 +19,7 @@
                     <div class="d-flex align-items-center">
                         <h5 class="mb-0 card-title flex-grow-1">Daftar Transaksi (BAST)</h5>
                         <div class="flex-shrink-0">
-                            @can('transactions.create')
+                            @can('ams.transactions.create')
                                 <a href="{{ route('transaction.create') }}" class="btn btn-primary">
                                     <i class="mdi mdi-plus me-1"></i> Tambah Transaksi
                                 </a>
@@ -101,7 +101,7 @@
 
         $j(document).ready(function() {
             var CSRF_TOKEN = $j('meta[name="csrf-token"]').attr('content');
-            var isStaff = "{{ Auth::user()->hasPermissionTo('transactions.create') && !Auth::user()->hasPermissionTo('transactions.export-pdf') ? 'true' : 'false' }}" === 'true';
+            var isStaff = "{{ Auth::user()->hasPermissionTo('ams.transactions.create') && !Auth::user()->hasPermissionTo('ams.transactions.export-pdf') ? 'true' : 'false' }}" === 'true';
             
             var table = $j("#transaction-table").DataTable({
                 processing: true,

@@ -92,10 +92,10 @@ class TransactionController extends Controller
                     $btnPdf = '';
                     $btnDelete = '';
 
-                    if ($user->hasPermissionTo('transactions.export-pdf')) {
+                    if ($user->hasPermissionTo('ams.transactions.export-pdf')) {
                         $btnPdf = '<button type="button" class="btn btn-sm btn-warning btn-pdf me-1" data-id="' . $row->id . '" title="Cetak PDF"><i class="mdi mdi-file-pdf-box"></i></button>';
                     }
-                    if ($user->hasPermissionTo('transactions.delete')) {
+                    if ($user->hasPermissionTo('ams.transactions.delete')) {
                         $btnDelete = '<button type="button" class="btn btn-sm btn-danger btn-delete" data-id="' . $row->id . '" title="Hapus"><i class="mdi mdi-trash-can"></i></button>';
                     }
 

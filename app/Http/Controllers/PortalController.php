@@ -78,7 +78,7 @@ class PortalController extends Controller
                 'sub'   => 'Dokumen Kontroler',
                 'icon'  => 'mdi-file',
                 'color' => '#f6c23e',
-                'permission' => 'sop-it.menu',
+                'permission' => 'dokter.menu',
                 'link'  => route('dokter.index')
                 ],
                 [

@@ -8,28 +8,40 @@ $roleColor = "primary-dokter";
 
     <ul class="metismenu list-unstyled" id="side-menu">
 
+        @can('dokter.dashboard')
         <li>
             <a href="{{ route('dokter.index') }}" class="waves-effect">
                 <i class="bx bx-home-circle"></i>
                 <span key="t-dashboard">Dashboard</span>
             </a>
         </li>
+        @endcan
+
+        @can('dokter.file-managements.view')
         <li>
             <a href="{{ route('dokter.file-managements.index') }}" class="waves-effect">
                 <i class='bx bx-folder'></i>
                 <span key="t-file-management">File Management</span>
             </a>
         </li>
+        @endcan
+
+        @can('dokter.document-types.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
                 <span key="t-master-data">Master Data</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
+                @can('dokter.document-types.view')
                 <li><a href="{{ route('dokter.document-types.index') }}"><i class='mdi mdi-file'></i>Jenis Dokumen</a></li>
+                @endcan
+                @can('dokter.vendors.view')
                 <li><a href="{{ route('dokter.vendors.index') }}"><i class='mdi mdi-alert-box'></i>Vendor</a></li>
+                @endcan
             </ul>
         </li>
+        @endcan
         <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">
                 <i class="bx bx-grid-alt text-{{ $roleColor }}"></i>

@@ -31,15 +31,19 @@ class TicketController extends Controller
         $admin = User::role('admin')->with('employee')->first();
         $this->adminPhoneNumber = $admin ? $admin->employee->hp : null;
 
-        $this->middleware('permission:tickets.assign')->only([
+        $this->middleware('permission:helpdesk.tickets.create')->only([
+            'create', 'store'
+        ]);
+
+        $this->middleware('permission:helpdesk.tickets.assign')->only([
             'assignTeknisi'
         ]);
 
-        $this->middleware('permission:tickets.approve')->only([
+        $this->middleware('permission:helpdesk.tickets.approve')->only([
             'approve',
         ]);
 
-        $this->middleware('permission:tickets.confirm|tickets.reopen|tickets.edit|tickets.delete')->only([
+        $this->middleware('permission:helpdesk.helpdesk.tickets.confirm|helpdesk.tickets.reopen|helpdesk.tickets.edit|helpdesk.tickets.delete')->only([
             'confirm',
             'reopen',
             'updateContent',
@@ -86,8 +90,8 @@ class TicketController extends Controller
     {
         $user = auth()->user();
         $authUserId = $user->id;
-        if (!$user->hasPermissionTo('tickets.view-all')) {
-            if ($user->hasPermissionTo('tickets.resolve')) {
+        if (!$user->hasPermissionTo('helpdesk.tickets.view-all')) {
+            if ($user->hasPermissionTo('helpdesk.tickets.resolve')) {
                 $data = Ticket::with(["requester.employee.division"])->where('assigned_to', "=", $authUserId)->get();
             } else {
                 $data = Ticket::with(["requester.employee.division"])->where('requester_id', "=", $authUserId)->get();
@@ -127,7 +131,7 @@ class TicketController extends Controller
             })
             ->addColumn('action', function ($row) {
                 $user = auth()->user();
-                if ($user->hasPermissionTo('tickets.resolve')) {
+                if ($user->hasPermissionTo('helpdesk.tickets.resolve')) {
                     if ($row->status == "ASSIGNED") {
                         return '
                         <div class="btn-group">
@@ -146,7 +150,7 @@ class TicketController extends Controller
                             <button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>
                         </div>';
                     }
-                } elseif ($user->hasPermissionTo('tickets.confirm')) {
+                } elseif ($user->hasPermissionTo('helpdesk.tickets.confirm')) {
                     $reopenable = in_array($row->status, ['RESOLVED', 'CLOSED', 'REJECTED']);
                     $buttons = '<button class="btn btn-sm btn-info btn-view" data-id="' . $row->id . '" title="Detail"><i class="mdi mdi-eye"></i></button>';
                     if ($row->status == "OPEN") {
