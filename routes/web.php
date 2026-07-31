@@ -40,11 +40,16 @@ Route::group(['middleware' => ['guest']], function () {
     Route::post('/login', [AuthController::class, 'authenticated'])->name('login.process');
 });
 
+Route::get("/laporan", function() {
+    return view("laporan");
+});
+
 // --- AUTH AREA (Harus login) ---
 Route::group(['middleware' => ['auth']], function () {
     require __DIR__.'/routers/it-admin.php';
     require __DIR__.'/routers/helpdesk.php';
     require __DIR__.'/routers/dokter.php';
+    require __DIR__.'/routers/form-it.php';
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

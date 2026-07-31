@@ -95,6 +95,8 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'dokter.document-types.delete', 'guard_name' => 'web'],
             ['name' => 'dokter.file-managements.view', 'guard_name' => 'web'],
             ['name' => 'dokter.file-managements.download', 'guard_name' => 'web'],
+            ['name' => 'dokter.log-file.view', 'guard_name' => 'web'],
+            ['name' => 'dokter.log-file.export', 'guard_name' => 'web'],
         ];
 
         foreach ($permissions as $permission) {
@@ -130,6 +132,7 @@ class RolePermissionSeeder extends Seeder
             'dokter.vendors.view', 'dokter.vendors.create', 'dokter.vendors.edit', 'dokter.vendors.delete',
             'dokter.document-types.view', 'dokter.document-types.create', 'dokter.document-types.edit', 'dokter.document-types.delete',
             'dokter.file-managements.view', 'dokter.file-managements.download',
+            'dokter.log-file.view', 'dokter.log-file.export',
         ]);
 
         $approver->givePermissionTo([

@@ -26,6 +26,15 @@ $roleColor = "primary-dokter";
         </li>
         @endcan
 
+        @can('dokter.log-file.view')
+        <li>
+            <a href="{{ route('dokter.log-file.index') }}" class="waves-effect">
+                <i class='bx bx-history'></i>
+                <span key="t-log-file">Log File</span>
+            </a>
+        </li>
+        @endcan
+
         @can('dokter.document-types.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">

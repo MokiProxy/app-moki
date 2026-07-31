@@ -62,8 +62,8 @@ class PortalController extends Controller
                 'sub'   => 'Digital Request',
                 'icon'  => 'mdi-file-document-edit',
                 'color' => '#36b9cc',
-                'permission' => 'form-it.menu',
-                'link'  => '#'
+                'permission' => 'helpdesk.menu',
+                'link'  => route('form-it.index')
             ],
             [
                 'title' => 'SOP IT',

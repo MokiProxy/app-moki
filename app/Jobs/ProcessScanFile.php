@@ -7,6 +7,7 @@ use App\Services\DocumentTypeProcessor;
 use App\Services\FileConversionService;
 use App\Services\OcrSearchService;
 use App\Services\OcrService;
+use App\Services\ScanLogger;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -38,12 +39,17 @@ class ProcessScanFile implements ShouldQueue
         OcrService $ocr,
         OcrSearchService $search,
         FileConversionService $converter,
+        ScanLogger $logger,
     ): void {
         $incomingPath = "scanner/incoming/{$this->filename}";
         $fullPath = storage_path("app/private/{$incomingPath}");
 
         if (! file_exists($fullPath)) {
             Log::warning('File not found for OCR processing', ['file' => $this->filename]);
+            $logger->log('job_failed', 'failed', [
+                'filename' => $this->filename,
+                'message' => 'File tidak ditemukan di storage lokal',
+            ]);
 
             return;
         }
@@ -164,6 +170,18 @@ class ProcessScanFile implements ShouldQueue
 
         Storage::disk('local')->delete($incomingPath);
 
+        $logger->log('job_completed', 'success', [
+            'filename' => $this->filename,
+            'document_type_id' => $documentType->id,
+            'document_type_name' => $documentType->name,
+            'document_number' => $documentNumber,
+            'vendor_name' => $vendorName,
+            's3_filename' => $uploadFilename,
+            'ftp_path' => $ftpPath,
+            'processing_time_ms' => $ocrData['processing_time_ms'],
+            'message' => 'File berhasil diproses dan masuk ke sistem',
+        ]);
+
         Log::info('OCR processed successfully', [
             'filename' => $this->filename,
             'document_type' => strtoupper($documentType->name),
@@ -177,6 +195,11 @@ class ProcessScanFile implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
+        app(ScanLogger::class)->log('job_failed', 'failed', [
+            'filename' => $this->filename,
+            'message' => $exception?->getMessage() ?? 'Job gagal permanen',
+        ]);
+
         Log::error('OCR job failed permanently', [
             'file' => $this->filename,
             'error' => $exception?->getMessage(),

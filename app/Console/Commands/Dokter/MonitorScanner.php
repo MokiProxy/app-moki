@@ -7,6 +7,7 @@ use App\Models\DocumentType;
 use App\Services\FileConversionService;
 use App\Services\OcrSearchService;
 use App\Services\OcrService;
+use App\Services\ScanLogger;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Http\UploadedFile;
@@ -45,7 +46,7 @@ class MonitorScanner extends Command
      *
      * @return int
      */
-    public function handle(OcrService $ocr, OcrSearchService $search, FileConversionService $converter): int
+    public function handle(OcrService $ocr, OcrSearchService $search, FileConversionService $converter, ScanLogger $logger): int
     {
         $documentTypes = DocumentType::all();
 
@@ -55,15 +56,15 @@ class MonitorScanner extends Command
             return self::FAILURE;
         }
 
-        $this->processRootFiles($documentTypes, $ocr, $search, $converter);
-        $this->processSubfolderFiles($documentTypes, $converter);
+        $this->processRootFiles($documentTypes, $ocr, $search, $converter, $logger);
+        $this->processSubfolderFiles($documentTypes, $converter, $logger);
 
         Log::debug('Scanner monitor cycle completed');
 
         return self::SUCCESS;
     }
 
-    protected function processRootFiles($documentTypes, OcrService $ocr, OcrSearchService $search, FileConversionService $converter): void
+    protected function processRootFiles($documentTypes, OcrService $ocr, OcrSearchService $search, FileConversionService $converter, ScanLogger $logger): void
     {
         $files = Storage::disk('ftp_scanner')->files();
 
@@ -78,6 +79,11 @@ class MonitorScanner extends Command
             if (! in_array($extension, $this->allowedExtensions)) {
                 $this->warn("Skipping non-image file: {$file}");
                 Storage::disk('ftp_scanner')->delete($file);
+                $logger->log('file_skipped', 'skipped', [
+                    'filename' => $filename,
+                    'extension' => $extension,
+                    'message' => 'Ekstensi file tidak didukung: '.$extension,
+                ]);
 
                 continue;
             }
@@ -93,7 +99,11 @@ class MonitorScanner extends Command
             if ($docType === null) {
                 $this->warn("Could not detect document type for: {$filename}. Skipping.");
                 Storage::disk('local')->delete($localPath);
-                Log::warning('Auto-detect failed for root file', ['file' => $filename]);
+                $logger->log('detection_failed', 'failed', [
+                    'filename' => $filename,
+                    'extension' => $extension,
+                    'message' => 'Auto-detect tipe dokumen gagal',
+                ]);
 
                 continue;
             }
@@ -107,7 +117,13 @@ class MonitorScanner extends Command
 
                     if (empty($images)) {
                         $this->warn("Failed to convert PDF: {$filename}");
-                        Log::warning('PDF conversion failed', ['file' => $filename]);
+                        $logger->log('job_failed', 'failed', [
+                            'filename' => $filename,
+                            'extension' => $extension,
+                            'document_type_id' => $docType->id,
+                            'document_type_name' => $docType->name,
+                            'message' => 'Konversi PDF ke gambar gagal',
+                        ]);
                         continue;
                     }
 
@@ -119,10 +135,6 @@ class MonitorScanner extends Command
                     }
                 } catch (Exception $e) {
                     $this->warn("PDF local conversion unavailable, processing PDF directly: {$filename}");
-                    Log::warning('PDF to images conversion not available, processing PDF directly', [
-                        'file' => $filename,
-                        'error' => $e->getMessage(),
-                    ]);
                     ProcessScanFile::dispatch($filename, $docType->id);
                     $this->info("OCR job dispatched for PDF: {$filename} (document type: {$docType->name})");
                 }
@@ -133,7 +145,7 @@ class MonitorScanner extends Command
         }
     }
 
-    protected function processSubfolderFiles($documentTypes, FileConversionService $converter): void
+    protected function processSubfolderFiles($documentTypes, FileConversionService $converter, ScanLogger $logger): void
     {
         $directories = Storage::disk('ftp_scanner')->directories();
 
@@ -150,18 +162,26 @@ class MonitorScanner extends Command
             $files = Storage::disk('ftp_scanner')->files($directory);
 
             foreach ($files as $file) {
-                $this->processFile($file, $docType, $converter);
+                $this->processFile($file, $docType, $converter, $logger);
             }
         }
     }
 
-    protected function processFile(string $file, DocumentType $documentType, FileConversionService $converter): void
+    protected function processFile(string $file, DocumentType $documentType, FileConversionService $converter, ScanLogger $logger): void
     {
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        $filename = basename($file);
 
         if (! in_array($extension, $this->allowedExtensions)) {
             $this->warn("Skipping unsupported file: {$file}");
             Storage::disk('ftp_scanner')->delete($file);
+            $logger->log('file_skipped', 'skipped', [
+                'filename' => $filename,
+                'extension' => $extension,
+                'document_type_id' => $documentType->id,
+                'document_type_name' => $documentType->name,
+                'message' => 'Ekstensi file tidak didukung: '.$extension,
+            ]);
 
             return;
         }
@@ -169,7 +189,6 @@ class MonitorScanner extends Command
         $this->info("Downloading: {$file}");
 
         $content = Storage::disk('ftp_scanner')->get($file);
-        $filename = basename($file);
         $localPath = "scanner/incoming/{$filename}";
         Storage::disk('local')->put($localPath, $content);
         Storage::disk('ftp_scanner')->delete($file);
@@ -183,7 +202,13 @@ class MonitorScanner extends Command
 
                 if (empty($images)) {
                     $this->warn("Failed to convert PDF: {$filename}");
-                    Log::warning('PDF conversion failed', ['file' => $filename]);
+                    $logger->log('job_failed', 'failed', [
+                        'filename' => $filename,
+                        'extension' => $extension,
+                        'document_type_id' => $documentType->id,
+                        'document_type_name' => $documentType->name,
+                        'message' => 'Konversi PDF ke gambar gagal',
+                    ]);
 
                     return;
                 }
@@ -195,10 +220,6 @@ class MonitorScanner extends Command
                 }
             } catch (Exception $e) {
                 $this->warn("PDF local conversion unavailable, processing PDF directly: {$filename}");
-                Log::warning('PDF to images conversion not available, processing PDF directly', [
-                    'file' => $filename,
-                    'error' => $e->getMessage(),
-                ]);
                 ProcessScanFile::dispatch($filename, $documentType->id);
                 $this->info("OCR job dispatched for PDF: {$filename} (document type: {$documentType->name})");
             }
