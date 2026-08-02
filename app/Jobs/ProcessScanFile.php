@@ -70,19 +70,21 @@ class ProcessScanFile implements ShouldQueue
 
         $ocrText = $result['text'] ?? '';
         $documentNumber = $processor->extractDocumentNumber($documentType, $ocrText);
+        $keterangan = $processor->extractKeterangan($documentType, $ocrText);
         $vendorName = $processor->matchVendor($documentType, $ocrText);
 
         $originalExtension = pathinfo($this->filename, PATHINFO_EXTENSION);
-        $s3Filename = $processor->generateS3Filename($documentType, $vendorName, $documentNumber, $originalExtension);
-        $uploadFilename = $s3Filename ?: $this->filename;
+        $targetFilename = $processor->generateFilename($documentType, $vendorName, $documentNumber, $originalExtension);
+        $targetFilename = $targetFilename ?: $this->filename;
 
         $numberLabel = $documentType->number_label ?? 'document_number';
+        $keteranganLabel = $documentType->keterangan_label ?? 'keterangan';
         $ocrData = [
             'filename' => $this->filename,
             'document_type' => strtoupper($documentType->name),
             $numberLabel => $documentNumber,
             'vendor_name' => $vendorName,
-            's3_filename' => $uploadFilename,
+            $keteranganLabel => $keterangan,
             'text' => $ocrText,
             'processing_time_ms' => $result['processing_time_ms'] ?? null,
             'processed_at' => now()->toIso8601String(),
@@ -99,16 +101,14 @@ class ProcessScanFile implements ShouldQueue
             throw new Exception("Failed to read file: {$fullPath}");
         }
 
-        Storage::disk('s3')->put("scanner/originals/{$uploadFilename}", $content);
-
         if ($converter->isPdf($fullPath)) {
             $ftpContent = $content;
-            $pdfFilename = $uploadFilename;
+            $pdfFilename = $targetFilename;
         } else {
             $pdfFilename = str_replace(
-                pathinfo($uploadFilename, PATHINFO_EXTENSION),
+                pathinfo($targetFilename, PATHINFO_EXTENSION),
                 'pdf',
-                $uploadFilename
+                $targetFilename
             );
 
             try {
@@ -120,11 +120,11 @@ class ProcessScanFile implements ShouldQueue
                 Storage::disk('local')->delete("scanner/converted/{$pdfFilename}");
             } catch (Exception $e) {
                 Log::warning('Image to PDF conversion failed, uploading original image', [
-                    'file' => $uploadFilename,
+                    'file' => $targetFilename,
                     'error' => $e->getMessage(),
                 ]);
                 $ftpContent = $content;
-                $pdfFilename = $uploadFilename;
+                $pdfFilename = $targetFilename;
             }
         }
 
@@ -176,7 +176,7 @@ class ProcessScanFile implements ShouldQueue
             'document_type_name' => $documentType->name,
             'document_number' => $documentNumber,
             'vendor_name' => $vendorName,
-            's3_filename' => $uploadFilename,
+            'keterangan' => $keterangan,
             'ftp_path' => $ftpPath,
             'processing_time_ms' => $ocrData['processing_time_ms'],
             'message' => 'File berhasil diproses dan masuk ke sistem',
@@ -187,7 +187,7 @@ class ProcessScanFile implements ShouldQueue
             'document_type' => strtoupper($documentType->name),
             $numberLabel => $documentNumber,
             'vendor_name' => $vendorName,
-            's3_filename' => $uploadFilename,
+            'keterangan' => $keterangan,
             'ftp_path' => $ftpPath,
             'processing_time_ms' => $ocrData['processing_time_ms'],
         ]);

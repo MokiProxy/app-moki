@@ -47,6 +47,8 @@
                                 <th>Deskripsi</th>
                                 <th>Number Regex</th>
                                 <th>Number Label</th>
+                                <th>Keterangan Regex</th>
+                                <th class="text-center">Keterangan Enabled</th>
                                 <th class="text-center">Vendor Search</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
@@ -59,6 +61,14 @@
                                 <td>{{ $dt->description ?? '-' }}</td>
                                 <td><code>{{ $dt->number_regex ?? '-' }}</code></td>
                                 <td>{{ $dt->number_label ?? '-' }}</td>
+                                <td><code>{{ $dt->keterangan_regex ?? '-' }}</code></td>
+                                <td class="text-center">
+                                    @if($dt->keterangan_enabled)
+                                        <span class="badge bg-success">Yes</span>
+                                    @else
+                                        <span class="badge bg-secondary">No</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     @if($dt->vendor_search_enabled)
                                         <span class="badge bg-success">Yes</span>
@@ -77,7 +87,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted">Belum ada data jenis dokumen.</td>
+                                <td colspan="9" class="text-center text-muted">Belum ada data jenis dokumen.</td>
                             </tr>
                             @endforelse
                         </tbody>

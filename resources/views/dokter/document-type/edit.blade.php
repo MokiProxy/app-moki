@@ -45,9 +45,22 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">S3 Filename Template</label>
-                            <input type="text" name="s3_filename_template" class="form-control @error('s3_filename_template') is-invalid @enderror" value="{{ old('s3_filename_template', $documentType->s3_filename_template) }}" maxlength="255">
-                            @error('s3_filename_template') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <label class="form-label fw-bold">Keterangan Regex</label>
+                            <input type="text" name="keterangan_regex" class="form-control @error('keterangan_regex') is-invalid @enderror" value="{{ old('keterangan_regex', $documentType->keterangan_regex) }}" maxlength="255" placeholder="Contoh: /Keterangan\s*:\s*(.+)/i">
+                            @error('keterangan_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Regex untuk menangkap data Keterangan dari hasil OCR.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Keterangan Label</label>
+                            <input type="text" name="keterangan_label" class="form-control @error('keterangan_label') is-invalid @enderror" value="{{ old('keterangan_label', $documentType->keterangan_label) }}" maxlength="255" placeholder="Contoh: keterangan">
+                            @error('keterangan_label') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Filename Template</label>
+                            <input type="text" name="filename_template" class="form-control @error('filename_template') is-invalid @enderror" value="{{ old('filename_template', $documentType->filename_template) }}" maxlength="255">
+                            @error('filename_template') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <small class="text-muted">Variabel: <code>{vendor}</code>, <code>{number}</code>, <code>{ext}</code>, <code>{filename}</code></small>
                         </div>
 
@@ -70,6 +83,16 @@
                                     <input type="hidden" name="vendor_search_enabled" value="0">
                                     <input type="checkbox" name="vendor_search_enabled" class="form-check-input" id="vendor_search_enabled" value="1" {{ old('vendor_search_enabled', $documentType->vendor_search_enabled) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-bold" for="vendor_search_enabled">Vendor Search Enabled</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mt-4">
+                                <div class="form-check form-switch">
+                                    <input type="hidden" name="keterangan_enabled" value="0">
+                                    <input type="checkbox" name="keterangan_enabled" class="form-check-input" id="keterangan_enabled" value="1" {{ old('keterangan_enabled', $documentType->keterangan_enabled) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="keterangan_enabled">Keterangan Regex Enabled</label>
                                 </div>
                             </div>
                         </div>

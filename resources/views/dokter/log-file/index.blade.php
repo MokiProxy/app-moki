@@ -55,7 +55,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small mb-1">Pencarian</label>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama file / vendor / nomor dokumen / FTP path"
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama file / vendor / nomor dokumen / keterangan / FTP path"
                                class="form-control form-control-sm">
                     </div>
                     <div class="col-md-2">
@@ -76,6 +76,7 @@
                                 <th>Jenis Dokumen</th>
                                 <th>Nomor Dokumen</th>
                                 <th>Vendor</th>
+                                <th>Keterangan</th>
                                 <th class="text-center" style="width: 110px">Status</th>
                                 <th>FTP Path</th>
                                 <th style="width: 130px">Waktu Proses</th>
@@ -99,6 +100,9 @@
                                 <td>{{ $log->document_type_name ?? '-' }}</td>
                                 <td>{{ $log->document_number ?? '-' }}</td>
                                 <td>{{ $log->vendor_name ?? '-' }}</td>
+                                <td class="text-truncate" style="max-width: 200px" title="{{ $log->keterangan }}">
+                                    {{ $log->keterangan ?? '-' }}
+                                </td>
                                 <td class="text-center">
                                     <span class="badge {{ $log->status_badge_class }}">{{ $log->status_label }}</span>
                                 </td>
@@ -118,7 +122,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="11" class="text-center text-muted py-4">
+                                <td colspan="12" class="text-center text-muted py-4">
                                     <i class="mdi mdi-file-remove text-secondary" style="font-size: 2.5rem;"></i>
                                     <p class="mt-2 fw-semibold mb-0">Belum ada data log.</p>
                                 </td>

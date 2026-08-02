@@ -14,7 +14,10 @@ class DocumentType extends Model
         'description',
         'number_regex',
         'number_label',
-        's3_filename_template',
+        'keterangan_regex',
+        'keterangan_label',
+        'keterangan_enabled',
+        'filename_template',
         'ftp_folder_template',
         'ftp_failed_folder',
         'vendor_search_enabled',
@@ -46,9 +49,9 @@ class DocumentType extends Model
         return str_replace(array_keys($replacements), array_values($replacements), $template);
     }
 
-    public function resolveS3Filename(?string $vendorName, ?string $number, string $ext): string
+    public function resolveFilename(?string $vendorName, ?string $number, string $ext): string
     {
-        $template = $this->attributes['s3_filename_template'] ?? '{vendor}_{number}.{ext}';
+        $template = $this->attributes['filename_template'] ?? '{vendor}_{number}.{ext}';
         $safeExt = match (strtolower($ext)) {
             'png', 'webp' => 'jpg',
             'pdf' => 'pdf',

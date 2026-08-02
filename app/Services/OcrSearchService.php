@@ -96,13 +96,14 @@ class OcrSearchService
             if ($data !== null) {
                 $documentType = $data['document_type'] ?? null;
                 $numberLabel = $this->resolveNumberLabel($data);
+                $keteranganLabel = $this->resolveKeteranganLabel($data);
 
                 $results->push([
                     'filename' => $data['filename'] ?? basename($file, '.json'),
                     'document_type' => $documentType,
                     $numberLabel => $data[$numberLabel] ?? null,
-                    's3_filename' => $data['s3_filename'] ?? null,
                     'vendor_name' => $data['vendor_name'] ?? null,
+                    $keteranganLabel => $data[$keteranganLabel] ?? null,
                     'processed_at' => $data['processed_at'] ?? null,
                     'text_length' => strlen($data['text'] ?? ''),
                 ]);
@@ -240,5 +241,18 @@ class OcrSearchService
         $docType = DocumentType::where('name', $documentType)->first();
 
         return $docType?->attributes['number_label'] ?? 'document_number';
+    }
+
+    protected function resolveKeteranganLabel(array $data): string
+    {
+        $documentType = $data['document_type'] ?? null;
+
+        if ($documentType === null) {
+            return 'keterangan';
+        }
+
+        $docType = DocumentType::where('name', $documentType)->first();
+
+        return $docType?->attributes['keterangan_label'] ?? 'keterangan';
     }
 }

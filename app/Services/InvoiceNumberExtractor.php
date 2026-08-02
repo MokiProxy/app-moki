@@ -23,20 +23,6 @@ class InvoiceNumberExtractor
         return null;
     }
 
-    public function generateS3Filename(?string $vendorName, ?string $invoiceNumber, string $originalExtension): string
-    {
-        if ($invoiceNumber === null) {
-            return '';
-        }
-
-        $safeExtension = match (strtolower($originalExtension)) {
-            'png', 'webp' => 'jpg',
-            default => $originalExtension,
-        };
-
-        return "INV_{$vendorName}_{$invoiceNumber}.{$safeExtension}";
-    }
-
     protected function cleanOcrNoise(string $value): string
     {
         $cleaned = Str::of($value)

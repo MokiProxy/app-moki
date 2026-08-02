@@ -31,6 +31,27 @@ class DocumentTypeProcessor
         return null;
     }
 
+    public function extractKeterangan(DocumentType $docType, string $ocrText): ?string
+    {
+        if (! ($docType->keterangan_enabled ?? true)) {
+            return null;
+        }
+
+        $pattern = $docType->keterangan_regex
+            ?? '/Keterangan\s*:\s*(.+)/i';
+
+        if (preg_match($pattern, $ocrText, $matches)) {
+            $raw = trim($matches[1]);
+            $cleaned = $this->cleanKeterangan($raw);
+
+            if ($cleaned !== '') {
+                return $cleaned;
+            }
+        }
+
+        return null;
+    }
+
     public function matchVendor(DocumentType $docType, string $ocrText): ?string
     {
         if (! ($docType->vendor_search_enabled ?? true)) {
@@ -57,9 +78,9 @@ class DocumentTypeProcessor
         return null;
     }
 
-    public function generateS3Filename(DocumentType $docType, ?string $vendorName, ?string $number, string $originalExtension): string
+    public function generateFilename(DocumentType $docType, ?string $vendorName, ?string $number, string $originalExtension): string
     {
-        return $docType->resolveS3Filename($vendorName, $number, $originalExtension);
+        return $docType->resolveFilename($vendorName, $number, $originalExtension);
     }
 
     public function resolveFtpPath(DocumentType $docType, ?string $vendorName, ?string $number, ?string $filename): string
@@ -81,6 +102,14 @@ class DocumentTypeProcessor
         return Str::of($value)
             ->replace(['\\', '/'], '')
             ->replace(',', '')
+            ->replaceMatches('/\s{2,}/', ' ')
+            ->trim()
+            ->__toString();
+    }
+
+    protected function cleanKeterangan(string $value): string
+    {
+        return Str::of($value)
             ->replaceMatches('/\s{2,}/', ' ')
             ->trim()
             ->__toString();
