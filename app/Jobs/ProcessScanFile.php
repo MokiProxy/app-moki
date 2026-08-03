@@ -71,6 +71,7 @@ class ProcessScanFile implements ShouldQueue
         $ocrText = $result['text'] ?? '';
         $documentNumber = $processor->extractDocumentNumber($documentType, $ocrText);
         $vendorName = $processor->matchVendor($documentType, $ocrText);
+        $tanggal = $processor->extractTanggal($documentType, $ocrText);
         $keterangan = $processor->extractKeterangan($documentType, $ocrText, $vendorName);
         $uraian = $processor->extractUraian($documentType, $ocrText);
 
@@ -79,12 +80,14 @@ class ProcessScanFile implements ShouldQueue
         $targetFilename = $targetFilename ?: $this->filename;
 
         $numberLabel = $documentType->number_label ?? 'document_number';
+        $tanggalLabel = $documentType->tanggal_label ?? 'tanggal';
         $keteranganLabel = $documentType->keterangan_label ?? 'keterangan';
         $uraianLabel = $documentType->uraian_label ?? 'uraian';
         $ocrData = [
             'filename' => $this->filename,
             'document_type' => strtoupper($documentType->name),
             $numberLabel => $documentNumber,
+            $tanggalLabel => $tanggal,
             'vendor_name' => $vendorName,
             $keteranganLabel => $keterangan,
             $uraianLabel => $uraian,
@@ -179,6 +182,7 @@ class ProcessScanFile implements ShouldQueue
             'document_type_name' => $documentType->name,
             'document_number' => $documentNumber,
             'vendor_name' => $vendorName,
+            'tanggal' => $tanggal,
             'keterangan' => $keterangan,
             'uraian' => $uraian,
             'ftp_path' => $ftpPath,
@@ -191,6 +195,7 @@ class ProcessScanFile implements ShouldQueue
             'document_type' => strtoupper($documentType->name),
             $numberLabel => $documentNumber,
             'vendor_name' => $vendorName,
+            'tanggal' => $tanggal,
             'keterangan' => $keterangan,
             'uraian' => $uraian,
             'ftp_path' => $ftpPath,

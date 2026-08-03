@@ -89,6 +89,7 @@ class LogFileController extends Controller
                 $q->where('filename', 'like', "%{$search}%")
                     ->orWhere('vendor_name', 'like', "%{$search}%")
                     ->orWhere('document_number', 'like', "%{$search}%")
+                    ->orWhere('tanggal', 'like', "%{$search}%")
                     ->orWhere('keterangan', 'like', "%{$search}%")
                     ->orWhere('uraian', 'like', "%{$search}%")
                     ->orWhere('ftp_path', 'like', "%{$search}%");

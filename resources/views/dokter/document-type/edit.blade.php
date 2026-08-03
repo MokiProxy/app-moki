@@ -71,6 +71,19 @@
                         </div>
 
                         <div class="col-md-6">
+                            <label class="form-label fw-bold">Tanggal Regex</label>
+                            <input type="text" name="tanggal_regex" class="form-control @error('tanggal_regex') is-invalid @enderror" value="{{ old('tanggal_regex', $documentType->tanggal_regex) }}" maxlength="255" placeholder="Contoh: /Tgl\s*\n?\s*:\s*(.+)/i">
+                            @error('tanggal_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Regex untuk menangkap data Tgl (tanggal) dari hasil OCR.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tanggal Label</label>
+                            <input type="text" name="tanggal_label" class="form-control @error('tanggal_label') is-invalid @enderror" value="{{ old('tanggal_label', $documentType->tanggal_label) }}" maxlength="255" placeholder="Contoh: tanggal">
+                            @error('tanggal_label') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Filename Template</label>
                             <input type="text" name="filename_template" class="form-control @error('filename_template') is-invalid @enderror" value="{{ old('filename_template', $documentType->filename_template) }}" maxlength="255">
                             @error('filename_template') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -116,6 +129,16 @@
                                     <input type="hidden" name="uraian_enabled" value="0">
                                     <input type="checkbox" name="uraian_enabled" class="form-check-input" id="uraian_enabled" value="1" {{ old('uraian_enabled', $documentType->uraian_enabled) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-bold" for="uraian_enabled">Uraian Regex Enabled</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mt-4">
+                                <div class="form-check form-switch">
+                                    <input type="hidden" name="tanggal_enabled" value="0">
+                                    <input type="checkbox" name="tanggal_enabled" class="form-check-input" id="tanggal_enabled" value="1" {{ old('tanggal_enabled', $documentType->tanggal_enabled) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="tanggal_enabled">Tanggal Regex Enabled</label>
                                 </div>
                             </div>
                         </div>

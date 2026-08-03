@@ -46,6 +46,44 @@ class DocumentTypeProcessor
         return null;
     }
 
+    public function extractTanggal(DocumentType $docType, string $ocrText): ?string
+    {
+        if (! ($docType->tanggal_enabled ?? true)) {
+            return null;
+        }
+
+        // Algoritma 1: tanggal_regex (default, sesuai konfigurasi jenis dokumen).
+        $pattern = $docType->tanggal_regex
+            ?? '/Tgl\s*\n?\s*:\s*(.+)/i';
+
+        if (preg_match($pattern, $ocrText, $matches)) {
+            $raw = trim($matches[1]);
+            $cleaned = $this->cleanTanggal($raw);
+
+            if ($cleaned !== '') {
+                return $cleaned;
+            }
+        }
+
+        // Algoritma 2 (fallback): ambil nilai pada baris ke-3 setelah "TAX CODR".
+        return $this->extractTanggalFromTaxCode($ocrText);
+    }
+
+    protected function extractTanggalFromTaxCode(string $ocrText): ?string
+    {
+        $pattern = '/TAX\s*CODR\s*\R\s*:?\s*[^\r\n]+\s*\R\s*:?\s*[^\r\n]+\s*\R\s*:?\s*([^\r\n]+)/i';
+
+        if (preg_match($pattern, $ocrText, $matches)) {
+            $cleaned = $this->cleanTanggal($matches[1]);
+
+            if ($cleaned !== '' && strtolower($cleaned) !== 'null') {
+                return $cleaned;
+            }
+        }
+
+        return null;
+    }
+
     public function extractKeterangan(DocumentType $docType, string $ocrText, ?string $vendorName = null): ?string
     {
         if (! ($docType->keterangan_enabled ?? true)) {
@@ -180,6 +218,15 @@ class DocumentTypeProcessor
     protected function cleanKeterangan(string $value): string
     {
         return Str::of($value)
+            ->replaceMatches('/\s{2,}/', ' ')
+            ->trim()
+            ->__toString();
+    }
+
+    protected function cleanTanggal(string $value): string
+    {
+        return Str::of($value)
+            ->replace('|', '')
             ->replaceMatches('/\s{2,}/', ' ')
             ->trim()
             ->__toString();

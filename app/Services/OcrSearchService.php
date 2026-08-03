@@ -96,6 +96,7 @@ class OcrSearchService
             if ($data !== null) {
                 $documentType = $data['document_type'] ?? null;
                 $numberLabel = $this->resolveNumberLabel($data);
+                $tanggalLabel = $this->resolveTanggalLabel($data);
                 $keteranganLabel = $this->resolveKeteranganLabel($data);
                 $uraianLabel = $this->resolveUraianLabel($data);
 
@@ -103,6 +104,7 @@ class OcrSearchService
                     'filename' => $data['filename'] ?? basename($file, '.json'),
                     'document_type' => $documentType,
                     $numberLabel => $data[$numberLabel] ?? null,
+                    $tanggalLabel => $data[$tanggalLabel] ?? null,
                     'vendor_name' => $data['vendor_name'] ?? null,
                     $keteranganLabel => $data[$keteranganLabel] ?? null,
                     $uraianLabel => $data[$uraianLabel] ?? null,
@@ -243,6 +245,19 @@ class OcrSearchService
         $docType = DocumentType::where('name', $documentType)->first();
 
         return $docType?->attributes['number_label'] ?? 'document_number';
+    }
+
+    protected function resolveTanggalLabel(array $data): string
+    {
+        $documentType = $data['document_type'] ?? null;
+
+        if ($documentType === null) {
+            return 'tanggal';
+        }
+
+        $docType = DocumentType::where('name', $documentType)->first();
+
+        return $docType?->attributes['tanggal_label'] ?? 'tanggal';
     }
 
     protected function resolveKeteranganLabel(array $data): string

@@ -51,6 +51,8 @@
                                 <th class="text-center">Keterangan Enabled</th>
                                 <th>Uraian Regex</th>
                                 <th class="text-center">Uraian Enabled</th>
+                                <th>Tanggal Regex</th>
+                                <th class="text-center">Tanggal Enabled</th>
                                 <th class="text-center">Vendor Search</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
@@ -79,6 +81,14 @@
                                         <span class="badge bg-secondary">No</span>
                                     @endif
                                 </td>
+                                <td><code>{{ $dt->tanggal_regex ?? '-' }}</code></td>
+                                <td class="text-center">
+                                    @if($dt->tanggal_enabled)
+                                        <span class="badge bg-success">Yes</span>
+                                    @else
+                                        <span class="badge bg-secondary">No</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     @if($dt->vendor_search_enabled)
                                         <span class="badge bg-success">Yes</span>
@@ -97,7 +107,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="11" class="text-center text-muted">Belum ada data jenis dokumen.</td>
+                                <td colspan="13" class="text-center text-muted">Belum ada data jenis dokumen.</td>
                             </tr>
                             @endforelse
                         </tbody>

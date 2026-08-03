@@ -18,6 +18,7 @@ class ScanLog extends Model
         'document_type_id',
         'document_type_name',
         'document_number',
+        'tanggal',
         'vendor_name',
         'keterangan',
         'uraian',
