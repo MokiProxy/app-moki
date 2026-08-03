@@ -20,6 +20,7 @@ class ScanLog extends Model
         'document_number',
         'vendor_name',
         'keterangan',
+        'uraian',
         'ftp_path',
         'file_size',
         'processing_time_ms',

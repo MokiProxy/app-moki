@@ -97,6 +97,7 @@ class OcrSearchService
                 $documentType = $data['document_type'] ?? null;
                 $numberLabel = $this->resolveNumberLabel($data);
                 $keteranganLabel = $this->resolveKeteranganLabel($data);
+                $uraianLabel = $this->resolveUraianLabel($data);
 
                 $results->push([
                     'filename' => $data['filename'] ?? basename($file, '.json'),
@@ -104,6 +105,7 @@ class OcrSearchService
                     $numberLabel => $data[$numberLabel] ?? null,
                     'vendor_name' => $data['vendor_name'] ?? null,
                     $keteranganLabel => $data[$keteranganLabel] ?? null,
+                    $uraianLabel => $data[$uraianLabel] ?? null,
                     'processed_at' => $data['processed_at'] ?? null,
                     'text_length' => strlen($data['text'] ?? ''),
                 ]);
@@ -254,5 +256,18 @@ class OcrSearchService
         $docType = DocumentType::where('name', $documentType)->first();
 
         return $docType?->attributes['keterangan_label'] ?? 'keterangan';
+    }
+
+    protected function resolveUraianLabel(array $data): string
+    {
+        $documentType = $data['document_type'] ?? null;
+
+        if ($documentType === null) {
+            return 'uraian';
+        }
+
+        $docType = DocumentType::where('name', $documentType)->first();
+
+        return $docType?->attributes['uraian_label'] ?? 'uraian';
     }
 }

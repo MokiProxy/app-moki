@@ -32,7 +32,37 @@ class LogFileController extends Controller
             ->latest()
             ->get();
 
-        return Excel::download(new ScanLogsExport($logs), 'log-file-'.date('Y-m-d-Hi').'.xlsx');
+        $filters = $this->filterSummary($request);
+
+        return Excel::download(new ScanLogsExport($logs, $filters), 'log-file-'.date('Y-m-d-Hi').'.xlsx');
+    }
+
+    protected function filterSummary(Request $request): string
+    {
+        $parts = [];
+
+        if ($request->filled('date_from')) {
+            $parts[] = 'Dari '.$request->date_from;
+        }
+
+        if ($request->filled('date_to')) {
+            $parts[] = 'Sampai '.$request->date_to;
+        }
+
+        if ($request->filled('status')) {
+            $parts[] = 'Status '.strtoupper($request->status);
+        }
+
+        if ($request->filled('document_type_id')) {
+            $documentType = DocumentType::find($request->document_type_id);
+            $parts[] = 'Jenis Dokumen '.($documentType->name ?? $request->document_type_id);
+        }
+
+        if ($request->filled('search')) {
+            $parts[] = 'Cari "'.$request->search.'"';
+        }
+
+        return implode('; ', $parts);
     }
 
     protected function applyFilters($query, Request $request)
@@ -60,6 +90,7 @@ class LogFileController extends Controller
                     ->orWhere('vendor_name', 'like', "%{$search}%")
                     ->orWhere('document_number', 'like', "%{$search}%")
                     ->orWhere('keterangan', 'like', "%{$search}%")
+                    ->orWhere('uraian', 'like', "%{$search}%")
                     ->orWhere('ftp_path', 'like', "%{$search}%");
             });
         }

@@ -26,8 +26,8 @@ class InvoiceNumberExtractor
     protected function cleanOcrNoise(string $value): string
     {
         $cleaned = Str::of($value)
-            ->replace(['\\', '/'], '')
-            ->replace(',', '')
+            ->replaceMatches('/[\x00-\x1F\x7F]/', ' ')
+            ->replace(['\\', '/', ':', '*', '?', '"', '<', '>', '|', ','], '')
             ->replaceMatches('/\s{2,}/', ' ')
             ->trim();
 

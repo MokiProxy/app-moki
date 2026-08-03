@@ -70,8 +70,9 @@ class ProcessScanFile implements ShouldQueue
 
         $ocrText = $result['text'] ?? '';
         $documentNumber = $processor->extractDocumentNumber($documentType, $ocrText);
-        $keterangan = $processor->extractKeterangan($documentType, $ocrText);
         $vendorName = $processor->matchVendor($documentType, $ocrText);
+        $keterangan = $processor->extractKeterangan($documentType, $ocrText, $vendorName);
+        $uraian = $processor->extractUraian($documentType, $ocrText);
 
         $originalExtension = pathinfo($this->filename, PATHINFO_EXTENSION);
         $targetFilename = $processor->generateFilename($documentType, $vendorName, $documentNumber, $originalExtension);
@@ -79,12 +80,14 @@ class ProcessScanFile implements ShouldQueue
 
         $numberLabel = $documentType->number_label ?? 'document_number';
         $keteranganLabel = $documentType->keterangan_label ?? 'keterangan';
+        $uraianLabel = $documentType->uraian_label ?? 'uraian';
         $ocrData = [
             'filename' => $this->filename,
             'document_type' => strtoupper($documentType->name),
             $numberLabel => $documentNumber,
             'vendor_name' => $vendorName,
             $keteranganLabel => $keterangan,
+            $uraianLabel => $uraian,
             'text' => $ocrText,
             'processing_time_ms' => $result['processing_time_ms'] ?? null,
             'processed_at' => now()->toIso8601String(),
@@ -177,6 +180,7 @@ class ProcessScanFile implements ShouldQueue
             'document_number' => $documentNumber,
             'vendor_name' => $vendorName,
             'keterangan' => $keterangan,
+            'uraian' => $uraian,
             'ftp_path' => $ftpPath,
             'processing_time_ms' => $ocrData['processing_time_ms'],
             'message' => 'File berhasil diproses dan masuk ke sistem',
@@ -188,6 +192,7 @@ class ProcessScanFile implements ShouldQueue
             $numberLabel => $documentNumber,
             'vendor_name' => $vendorName,
             'keterangan' => $keterangan,
+            'uraian' => $uraian,
             'ftp_path' => $ftpPath,
             'processing_time_ms' => $ocrData['processing_time_ms'],
         ]);

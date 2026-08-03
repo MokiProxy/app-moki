@@ -49,6 +49,8 @@
                                 <th>Number Label</th>
                                 <th>Keterangan Regex</th>
                                 <th class="text-center">Keterangan Enabled</th>
+                                <th>Uraian Regex</th>
+                                <th class="text-center">Uraian Enabled</th>
                                 <th class="text-center">Vendor Search</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
@@ -64,6 +66,14 @@
                                 <td><code>{{ $dt->keterangan_regex ?? '-' }}</code></td>
                                 <td class="text-center">
                                     @if($dt->keterangan_enabled)
+                                        <span class="badge bg-success">Yes</span>
+                                    @else
+                                        <span class="badge bg-secondary">No</span>
+                                    @endif
+                                </td>
+                                <td><code>{{ $dt->uraian_regex ?? '-' }}</code></td>
+                                <td class="text-center">
+                                    @if($dt->uraian_enabled)
                                         <span class="badge bg-success">Yes</span>
                                     @else
                                         <span class="badge bg-secondary">No</span>
@@ -87,7 +97,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="9" class="text-center text-muted">Belum ada data jenis dokumen.</td>
+                                <td colspan="11" class="text-center text-muted">Belum ada data jenis dokumen.</td>
                             </tr>
                             @endforelse
                         </tbody>

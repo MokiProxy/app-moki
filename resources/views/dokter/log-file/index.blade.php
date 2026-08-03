@@ -70,15 +70,15 @@
                         <thead class="table-dark">
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
-                                <th style="width: 160px">Waktu</th>
-                                <th>Event</th>
+                                <th style="width: 160px">Waktu Scan</th>
+                                <th class="text-center" style="width: 110px">Status</th>
                                 <th>Nama File</th>
                                 <th>Jenis Dokumen</th>
                                 <th>Nomor Dokumen</th>
                                 <th>Vendor</th>
                                 <th>Keterangan</th>
-                                <th class="text-center" style="width: 110px">Status</th>
-                                <th>FTP Path</th>
+                                <th>Uraian</th>
+                                <th>Lokasi File Final</th>
                                 <th style="width: 130px">Waktu Proses</th>
                                 <th>Pesan</th>
                             </tr>
@@ -88,8 +88,8 @@
                             <tr>
                                 <td class="text-center">{{ $logs->firstItem() + $key }}</td>
                                 <td class="text-nowrap">{{ $log->created_at?->format('d-m-Y H:i:s') }}</td>
-                                <td>
-                                    <span class="badge bg-soft-primary">{{ $log->event_label }}</span>
+                                <td class="text-center">
+                                    <span class="badge {{ $log->status_badge_class }}">{{ $log->status_label }}</span>
                                 </td>
                                 <td class="fw-semibold">
                                     <i class="mdi mdi-file me-1 text-muted"></i>{{ $log->filename ?? '-' }}
@@ -103,8 +103,8 @@
                                 <td class="text-truncate" style="max-width: 200px" title="{{ $log->keterangan }}">
                                     {{ $log->keterangan ?? '-' }}
                                 </td>
-                                <td class="text-center">
-                                    <span class="badge {{ $log->status_badge_class }}">{{ $log->status_label }}</span>
+                                <td class="text-truncate" style="max-width: 200px" title="{{ $log->uraian }}">
+                                    {{ $log->uraian ?? '-' }}
                                 </td>
                                 <td class="text-truncate" style="max-width: 200px" title="{{ $log->ftp_path }}">
                                     {{ $log->ftp_path ?? '-' }}
@@ -122,7 +122,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="12" class="text-center text-muted py-4">
+                                <td colspan="13" class="text-center text-muted py-4">
                                     <i class="mdi mdi-file-remove text-secondary" style="font-size: 2.5rem;"></i>
                                     <p class="mt-2 fw-semibold mb-0">Belum ada data log.</p>
                                 </td>

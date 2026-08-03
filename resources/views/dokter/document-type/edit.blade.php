@@ -58,6 +58,19 @@
                         </div>
 
                         <div class="col-md-6">
+                            <label class="form-label fw-bold">Uraian Regex</label>
+                            <input type="text" name="uraian_regex" class="form-control @error('uraian_regex') is-invalid @enderror" value="{{ old('uraian_regex', $documentType->uraian_regex) }}" maxlength="255" placeholder="Contoh: /URAIAN\s*\n(.+?)\n\s*TOTAL/si">
+                            @error('uraian_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Regex untuk menangkap data Uraian (multi-baris, antara URAIAN dan TOTAL) dari hasil OCR.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Uraian Label</label>
+                            <input type="text" name="uraian_label" class="form-control @error('uraian_label') is-invalid @enderror" value="{{ old('uraian_label', $documentType->uraian_label) }}" maxlength="255" placeholder="Contoh: uraian">
+                            @error('uraian_label') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-6">
                             <label class="form-label fw-bold">Filename Template</label>
                             <input type="text" name="filename_template" class="form-control @error('filename_template') is-invalid @enderror" value="{{ old('filename_template', $documentType->filename_template) }}" maxlength="255">
                             @error('filename_template') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -93,6 +106,16 @@
                                     <input type="hidden" name="keterangan_enabled" value="0">
                                     <input type="checkbox" name="keterangan_enabled" class="form-check-input" id="keterangan_enabled" value="1" {{ old('keterangan_enabled', $documentType->keterangan_enabled) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-bold" for="keterangan_enabled">Keterangan Regex Enabled</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mt-4">
+                                <div class="form-check form-switch">
+                                    <input type="hidden" name="uraian_enabled" value="0">
+                                    <input type="checkbox" name="uraian_enabled" class="form-check-input" id="uraian_enabled" value="1" {{ old('uraian_enabled', $documentType->uraian_enabled) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold" for="uraian_enabled">Uraian Regex Enabled</label>
                                 </div>
                             </div>
                         </div>

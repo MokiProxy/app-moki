@@ -16,6 +16,7 @@ class DocumentTypeProcessor
 
     public function extractDocumentNumber(DocumentType $docType, string $ocrText): ?string
     {
+        // Algoritma 1: number_regex (default, sesuai konfigurasi jenis dokumen).
         $pattern = $docType->number_regex
             ?? '/No\s+Inv\s*\n?\s*:\s*(.+)/i';
 
@@ -28,21 +29,90 @@ class DocumentTypeProcessor
             }
         }
 
+        // Algoritma 2 (fallback): ambil nilai dari baris setelah "TAX CODR".
+        return $this->extractNumberFromTaxCode($ocrText);
+    }
+
+    protected function extractNumberFromTaxCode(string $ocrText): ?string
+    {
+        if (preg_match('/TAX\s*CODR\s*\R\s*:?\s*([^\r\n]+)/i', $ocrText, $matches)) {
+            $cleaned = $this->cleanOcrNoise($matches[1]);
+
+            if ($cleaned !== '' && strtolower($cleaned) !== 'null') {
+                return $cleaned;
+            }
+        }
+
         return null;
     }
 
-    public function extractKeterangan(DocumentType $docType, string $ocrText): ?string
+    public function extractKeterangan(DocumentType $docType, string $ocrText, ?string $vendorName = null): ?string
     {
         if (! ($docType->keterangan_enabled ?? true)) {
             return null;
         }
 
+        // Algoritma 1: keterangan_regex (default, sesuai konfigurasi jenis dokumen).
         $pattern = $docType->keterangan_regex
             ?? '/Keterangan\s*:\s*(.+)/i';
 
         if (preg_match($pattern, $ocrText, $matches)) {
             $raw = trim($matches[1]);
             $cleaned = $this->cleanKeterangan($raw);
+
+            if ($cleaned !== '') {
+                return $cleaned;
+            }
+        }
+
+        // Algoritma 2 (fallback): ambil baris tepat setelah posisi vendor di OCR.
+        return $this->extractKeteranganFromVendor($ocrText, $vendorName);
+    }
+
+    protected function extractKeteranganFromVendor(string $ocrText, ?string $vendorName): ?string
+    {
+        if ($vendorName === null || $vendorName === '') {
+            return null;
+        }
+
+        $pos = stripos($ocrText, $vendorName);
+
+        if ($pos === false) {
+            return null;
+        }
+
+        $segment = substr($ocrText, $pos);
+
+        $firstNl = strpos($segment, "\n");
+
+        if ($firstNl === false) {
+            return null;
+        }
+
+        $secondNl = strpos($segment, "\n", $firstNl + 1);
+
+        if ($secondNl === false) {
+            return null;
+        }
+
+        $line = substr($segment, $firstNl + 1, $secondNl - $firstNl - 1);
+        $line = preg_replace('/^\s*:?\s*/', '', $line);
+        $cleaned = $this->cleanKeterangan($line);
+
+        return $cleaned !== '' ? $cleaned : null;
+    }
+
+    public function extractUraian(DocumentType $docType, string $ocrText): ?string
+    {
+        if (! ($docType->uraian_enabled ?? true)) {
+            return null;
+        }
+
+        $pattern = $docType->uraian_regex
+            ?? '/URAIAN\s*\n(.+?)\n\s*TOTAL/si';
+
+        if (preg_match($pattern, $ocrText, $matches)) {
+            $cleaned = $this->cleanUraian($matches[1]);
 
             if ($cleaned !== '') {
                 return $cleaned;
@@ -100,8 +170,8 @@ class DocumentTypeProcessor
     protected function cleanOcrNoise(string $value): string
     {
         return Str::of($value)
-            ->replace(['\\', '/'], '')
-            ->replace(',', '')
+            ->replaceMatches('/[\x00-\x1F\x7F]/', ' ')
+            ->replace(['\\', '/', ':', '*', '?', '"', '<', '>', '|', ','], '')
             ->replaceMatches('/\s{2,}/', ' ')
             ->trim()
             ->__toString();
@@ -113,5 +183,15 @@ class DocumentTypeProcessor
             ->replaceMatches('/\s{2,}/', ' ')
             ->trim()
             ->__toString();
+    }
+
+    protected function cleanUraian(string $value): string
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $value);
+
+        $lines = array_map('trim', $lines);
+        $lines = array_filter($lines, fn ($line) => $line !== '');
+
+        return implode(' | ', $lines);
     }
 }
