@@ -7,6 +7,7 @@ use App\Services\DocumentTypeProcessor;
 use App\Services\FileConversionService;
 use App\Services\OcrSearchService;
 use App\Services\OcrService;
+use App\Services\PdfMergeService;
 use App\Services\ScanLogger;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -39,6 +40,7 @@ class ProcessScanFile implements ShouldQueue
         OcrService $ocr,
         OcrSearchService $search,
         FileConversionService $converter,
+        PdfMergeService $merger,
         ScanLogger $logger,
     ): void {
         $incomingPath = "scanner/incoming/{$this->filename}";
@@ -146,6 +148,62 @@ class ProcessScanFile implements ShouldQueue
         $ftpDisk = Storage::disk('ftp_final');
         $ftpAdapter = $ftpDisk->getAdapter();
 
+        $mergeStatus = 'new';
+        $totalPages = 1;
+
+        $existingContent = null;
+        try {
+            if ($ftpDisk->exists($ftpPath)) {
+                $existingContent = $ftpDisk->get($ftpPath);
+            }
+        } catch (Exception $e) {
+            Log::warning('Failed to check existing file on FTP', [
+                'ftp_path' => $ftpPath,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        if ($existingContent !== null) {
+            $tempExisting = storage_path('app/private/scanner/temp/existing_'.$pdfFilename);
+            $tempNew = storage_path('app/private/scanner/temp/new_'.$pdfFilename);
+            $mergedDir = storage_path('app/private/scanner/merged');
+            $mergedPath = $mergedDir.'/'.$pdfFilename;
+
+            $this->ensureDirectoryExists(dirname($tempExisting));
+            $this->ensureDirectoryExists($mergedDir);
+
+            file_put_contents($tempExisting, $existingContent);
+            file_put_contents($tempNew, $ftpContent);
+
+            try {
+                $merger->mergePdfs(
+                    [$tempExisting, $tempNew],
+                    $mergedPath
+                );
+
+                $ftpContent = file_get_contents($mergedPath);
+                $totalPages = $merger->getPageCount($mergedPath);
+                $mergeStatus = 'merged';
+
+                Log::info('PDF merged successfully', [
+                    'file' => $pdfFilename,
+                    'total_pages' => $totalPages,
+                ]);
+
+                @unlink($mergedPath);
+            } catch (Exception $e) {
+                Log::warning('PDF merge failed, uploading new file only', [
+                    'file' => $pdfFilename,
+                    'error' => $e->getMessage(),
+                ]);
+
+                $mergeStatus = 'merge_failed';
+            }
+
+            @unlink($tempExisting);
+            @unlink($tempNew);
+        }
+
         $lastException = null;
 
         for ($attempt = 1; $attempt <= 3; $attempt++) {
@@ -176,6 +234,12 @@ class ProcessScanFile implements ShouldQueue
 
         Storage::disk('local')->delete($incomingPath);
 
+        $mergeMessage = match ($mergeStatus) {
+            'merged' => "File digabung, total {$totalPages} pages",
+            'merge_failed' => 'File merge gagal, file baru diupload saja',
+            default => 'File baru diupload (1 page)',
+        };
+
         $logger->log('job_completed', 'success', [
             'filename' => $this->filename,
             'document_type_id' => $documentType->id,
@@ -187,7 +251,9 @@ class ProcessScanFile implements ShouldQueue
             'uraian' => $uraian,
             'ftp_path' => $ftpPath,
             'processing_time_ms' => $ocrData['processing_time_ms'],
-            'message' => 'File berhasil diproses dan masuk ke sistem',
+            'merge_status' => $mergeStatus,
+            'total_pages' => $totalPages,
+            'message' => $mergeMessage,
         ]);
 
         Log::info('OCR processed successfully', [
@@ -200,6 +266,8 @@ class ProcessScanFile implements ShouldQueue
             'uraian' => $uraian,
             'ftp_path' => $ftpPath,
             'processing_time_ms' => $ocrData['processing_time_ms'],
+            'merge_status' => $mergeStatus,
+            'total_pages' => $totalPages,
         ]);
     }
 
@@ -265,5 +333,12 @@ class ProcessScanFile implements ShouldQueue
         }
 
         return null;
+    }
+
+    protected function ensureDirectoryExists(string $directory): void
+    {
+        if (! is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
     }
 }
