@@ -11,10 +11,7 @@ class VendorSeeder extends Seeder
 {
     public function run(): void
     {
-        $documentType = DocumentType::firstOrCreate(
-            ['name' => 'SLIP PEMBUKUAN AP'],
-            ['slug' => 'slip-pembukuan-ap', 'description' => 'Slip Pembukuan AP']
-        );
+        $documentTypes = DocumentType::all();
 
         $vendors = [
             [
@@ -46,8 +43,10 @@ class VendorSeeder extends Seeder
 
         foreach ($vendors as $vendorData) {
             $vendor = Vendor::create($vendorData);
-            $vendor->documentTypes()->attach($documentType->id);
-            Storage::disk('ftp_final')->makeDirectory("{$documentType->name}/{$vendor->name}");
+            foreach ($documentTypes as $documentType) {
+                $vendor->documentTypes()->attach($documentType->id);
+                Storage::disk('ftp_final')->makeDirectory("{$documentType->name}/{$vendor->name}");
+            }
         }
     }
 }

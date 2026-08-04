@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Models\DocumentType;
 use App\Services\DocumentTypeProcessor;
 use App\Services\FileConversionService;
-use App\Services\OcrSearchService;
 use App\Services\OcrService;
 use App\Services\PdfMergeService;
 use App\Services\ScanLogger;
@@ -38,7 +37,6 @@ class ProcessScanFile implements ShouldQueue
     public function handle(
         DocumentTypeProcessor $processor,
         OcrService $ocr,
-        OcrSearchService $search,
         FileConversionService $converter,
         PdfMergeService $merger,
         ScanLogger $logger,
@@ -58,7 +56,7 @@ class ProcessScanFile implements ShouldQueue
 
         $uploadedFile = new UploadedFile($fullPath, $this->filename, mime_content_type($fullPath), null, true);
 
-        $documentType = $this->resolveDocumentType($uploadedFile, $ocr, $search);
+        $documentType = $this->resolveDocumentType($uploadedFile, $ocr);
 
         if ($documentType === null) {
             throw new Exception("Could not detect document type for: {$this->filename}");
@@ -284,7 +282,7 @@ class ProcessScanFile implements ShouldQueue
         ]);
     }
 
-    protected function resolveDocumentType(UploadedFile $uploadedFile, OcrService $ocr, OcrSearchService $search): ?DocumentType
+    protected function resolveDocumentType(UploadedFile $uploadedFile, OcrService $ocr): ?DocumentType
     {
         if ($this->documentTypeId !== null) {
             return DocumentType::find($this->documentTypeId);
@@ -308,31 +306,43 @@ class ProcessScanFile implements ShouldQueue
             return null;
         }
 
-        $ocrText = strtolower($result['text'] ?? '');
+        $ocrText = $result['text'] ?? '';
 
-        $typeNames = $documentTypes->pluck('name')->toArray();
-
-        $match = $search->searchData(
-            [['text' => $ocrText]],
-            $typeNames,
-        )->first();
-
-        if ($match) {
-            $matchedName = strtoupper($match['matches']->first()['keyword'] ?? '');
-
-            $matched = $documentTypes->firstWhere('name', $matchedName);
-
-            if ($matched) {
-                Log::info('Document type detected from OCR text', [
+        // Header Match (Primary Identifier) - satu-satunya algoritma deteksi jenis dokumen.
+        foreach ($documentTypes as $docType) {
+            if ($this->matchHeader($docType, $ocrText)) {
+                Log::info('Document type detected via header match', [
                     'file' => $this->filename,
-                    'detected_type' => $matched->name,
+                    'detected_type' => $docType->name,
                 ]);
 
-                return $matched;
+                return $docType;
             }
         }
 
         return null;
+    }
+
+    protected function matchHeader(DocumentType $docType, string $ocrText): bool
+    {
+        $pattern = $docType->header_regex ?? null;
+
+        if ($pattern === null || $pattern === '') {
+            return false;
+        }
+
+        $result = @preg_match($pattern, $ocrText);
+
+        if ($result === false) {
+            Log::warning('Invalid header_regex', [
+                'doc_type' => $docType->name,
+                'regex' => $pattern,
+            ]);
+
+            return false;
+        }
+
+        return $result === 1;
     }
 
     protected function ensureDirectoryExists(string $directory): void

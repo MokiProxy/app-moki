@@ -25,6 +25,13 @@
                             @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Header Regex</label>
+                            <input type="text" name="header_regex" class="form-control @error('header_regex') is-invalid @enderror" value="{{ old('header_regex') }}" maxlength="255" placeholder="Contoh: /^PEMBAYARAN$/mi">
+                            @error('header_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Regex untuk mencocokkan judul/header dokumen. Ini adalah <strong>primary identifier</strong> untuk deteksi jenis dokumen.</small>
+                        </div>
+
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Deskripsi</label>
                             <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3" maxlength="1000">{{ old('description') }}</textarea>

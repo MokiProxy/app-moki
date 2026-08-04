@@ -11,6 +11,7 @@ class DocumentType extends Model
 {
     protected $fillable = [
         'name',
+        'header_regex',
         'description',
         'number_regex',
         'number_label',

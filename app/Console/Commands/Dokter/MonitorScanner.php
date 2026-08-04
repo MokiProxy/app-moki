@@ -5,7 +5,6 @@ namespace App\Console\Commands\Dokter;
 use App\Jobs\ProcessScanFile;
 use App\Models\DocumentType;
 use App\Services\FileConversionService;
-use App\Services\OcrSearchService;
 use App\Services\OcrService;
 use App\Services\ScanLogger;
 use Exception;
@@ -29,6 +28,7 @@ class MonitorScanner extends Command
      * @var string
      */
     protected $description = 'Monitor FTP Scanner and dispatch OCR jobs';
+
     protected $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
 
     /**
@@ -43,10 +43,8 @@ class MonitorScanner extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
-    public function handle(OcrService $ocr, OcrSearchService $search, FileConversionService $converter, ScanLogger $logger): int
+    public function handle(OcrService $ocr, FileConversionService $converter, ScanLogger $logger): int
     {
         $documentTypes = DocumentType::all();
 
@@ -56,7 +54,7 @@ class MonitorScanner extends Command
             return self::FAILURE;
         }
 
-        $this->processRootFiles($documentTypes, $ocr, $search, $converter, $logger);
+        $this->processRootFiles($documentTypes, $ocr, $converter, $logger);
         $this->processSubfolderFiles($documentTypes, $converter, $logger);
 
         Log::debug('Scanner monitor cycle completed');
@@ -64,7 +62,7 @@ class MonitorScanner extends Command
         return self::SUCCESS;
     }
 
-    protected function processRootFiles($documentTypes, OcrService $ocr, OcrSearchService $search, FileConversionService $converter, ScanLogger $logger): void
+    protected function processRootFiles($documentTypes, OcrService $ocr, FileConversionService $converter, ScanLogger $logger): void
     {
         $files = Storage::disk('ftp_scanner')->files();
 
@@ -94,15 +92,18 @@ class MonitorScanner extends Command
             Storage::disk('ftp_scanner')->delete($file);
 
             $fullPath = storage_path("app/private/{$localPath}");
-            $docType = $this->detectDocumentType($fullPath, $filename, $documentTypes, $ocr, $search);
+            $docType = $this->detectDocumentType($fullPath, $filename, $documentTypes, $ocr);
 
             if ($docType === null) {
-                $this->warn("Could not detect document type for: {$filename}. Skipping.");
+                $this->warn("Could not detect document type for: {$filename}. Moving to FAILED folder.");
+                $moved = $this->uploadToFailedFolder($filename, $content);
                 Storage::disk('local')->delete($localPath);
                 $logger->log('detection_failed', 'failed', [
                     'filename' => $filename,
                     'extension' => $extension,
-                    'message' => 'Auto-detect tipe dokumen gagal',
+                    'message' => $moved
+                        ? 'Header match gagal, file dipindah ke folder FAILED'
+                        : 'Header match gagal, upload ke folder FAILED gagal',
                 ]);
 
                 continue;
@@ -124,6 +125,7 @@ class MonitorScanner extends Command
                             'document_type_name' => $docType->name,
                             'message' => 'Konversi PDF ke gambar gagal',
                         ]);
+
                         continue;
                     }
 
@@ -229,13 +231,13 @@ class MonitorScanner extends Command
         }
     }
 
-    protected function detectDocumentType(string $filePath, string $filename, $documentTypes, OcrService $ocr, OcrSearchService $search): ?DocumentType
+    protected function detectDocumentType(string $filePath, string $filename, $documentTypes, OcrService $ocr): ?DocumentType
     {
         $uploadedFile = new UploadedFile($filePath, $filename, mime_content_type($filePath), null, true);
 
         try {
             $result = $ocr->extractText($uploadedFile);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->warn("OCR failed: {$e->getMessage()}");
 
             return null;
@@ -246,44 +248,70 @@ class MonitorScanner extends Command
         }
 
         $ocrText = $result['text'] ?? '';
-        $bestDocType = null;
-        $bestScore = 0;
 
+        // Header Match (Primary Identifier) - satu-satunya algoritma deteksi jenis dokumen.
         foreach ($documentTypes as $docType) {
-            $score = $this->scoreDocumentType($docType, $ocrText, $search);
+            if ($this->matchHeader($docType, $ocrText)) {
+                Log::info('Document type detected via header match', [
+                    'file' => $filename,
+                    'detected_type' => $docType->name,
+                ]);
 
-            if ($score > $bestScore) {
-                $bestScore = $score;
-                $bestDocType = $docType;
+                return $docType;
             }
         }
 
-        return $bestDocType;
+        return null;
     }
 
-    protected function scoreDocumentType(DocumentType $docType, string $ocrText, OcrSearchService $search): int
+    protected function matchHeader(DocumentType $docType, string $ocrText): bool
     {
-        $score = 0;
+        $pattern = $docType->header_regex ?? null;
 
-        $pattern = $docType->number_regex ?? null;
-
-        if ($pattern && @preg_match($pattern, $ocrText)) {
-            $score += 10;
+        if ($pattern === null || $pattern === '') {
+            return false;
         }
 
-        $vendorNames = $docType->vendors()->pluck('name')->toArray();
+        $result = @preg_match($pattern, $ocrText);
 
-        if (! empty($vendorNames)) {
-            $match = $search->searchData(
-                [['text' => $ocrText]],
-                $vendorNames,
-            )->first();
+        if ($result === false) {
+            Log::warning('Invalid header_regex', [
+                'doc_type' => $docType->name,
+                'regex' => $pattern,
+            ]);
 
-            if ($match) {
-                $score += 5;
+            return false;
+        }
+
+        return $result === 1;
+    }
+
+    protected function uploadToFailedFolder(string $filename, string $content): bool
+    {
+        $failedPath = "FAILED/{$filename}";
+        $ftpDisk = Storage::disk('ftp_final');
+        $ftpAdapter = $ftpDisk->getAdapter();
+
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            try {
+                $ftpAdapter->disconnect();
+                $ftpDisk->put($failedPath, $content);
+                $this->info("File dipindah ke FAILED folder: {$failedPath}");
+
+                return true;
+            } catch (Exception $e) {
+                Log::warning("FTP upload attempt {$attempt} failed (FAILED folder)", [
+                    'file' => $filename,
+                    'ftp_path' => $failedPath,
+                    'error' => $e->getMessage(),
+                ]);
+
+                if ($attempt < 3) {
+                    sleep(5);
+                }
             }
         }
 
-        return $score;
+        return false;
     }
 }
