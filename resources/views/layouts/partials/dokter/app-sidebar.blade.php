@@ -51,6 +51,15 @@ $roleColor = "primary-dokter";
             </ul>
         </li>
         @endcan
+
+        @can('dokter.merge-flows.view')
+        <li>
+            <a href="{{ route('dokter.merge-flows.index') }}" class="waves-effect">
+                <i class='bx bx-git-merge'></i>
+                <span key="t-alur-birokrasi">Alur Birokrasi</span>
+            </a>
+        </li>
+        @endcan
         <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">
                 <i class="bx bx-grid-alt text-{{ $roleColor }}"></i>

@@ -6,6 +6,7 @@ use App\Models\DocumentType;
 use App\Services\DocumentTypeProcessor;
 use App\Services\FileConversionService;
 use App\Services\OcrService;
+use App\Services\MergeFlowService;
 use App\Services\PdfMergeService;
 use App\Services\ScanLogger;
 use Exception;
@@ -238,7 +239,7 @@ class ProcessScanFile implements ShouldQueue
             default => 'File baru diupload (1 page)',
         };
 
-        $logger->log('job_completed', 'success', [
+        $scanLog = $logger->log('job_completed', 'success', [
             'filename' => $this->filename,
             'document_type_id' => $documentType->id,
             'document_type_name' => $documentType->name,
@@ -252,7 +253,10 @@ class ProcessScanFile implements ShouldQueue
             'merge_status' => $mergeStatus,
             'total_pages' => $totalPages,
             'message' => $mergeMessage,
+            'ocr_text' => $ocrText,
         ]);
+
+        app(MergeFlowService::class)->processAfterUpload($scanLog);
 
         Log::info('OCR processed successfully', [
             'filename' => $this->filename,

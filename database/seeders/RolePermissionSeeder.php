@@ -97,7 +97,20 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'dokter.file-managements.download', 'guard_name' => 'web'],
             ['name' => 'dokter.log-file.view', 'guard_name' => 'web'],
             ['name' => 'dokter.log-file.export', 'guard_name' => 'web'],
+            ['name' => 'dokter.merge-flows.view', 'guard_name' => 'web'],
+            ['name' => 'dokter.merge-flows.create', 'guard_name' => 'web'],
+            ['name' => 'dokter.merge-flows.edit', 'guard_name' => 'web'],
+            ['name' => 'dokter.merge-flows.delete', 'guard_name' => 'web'],
         ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate($permission);
+        }
+
+        $admin = Role::where('name', 'admin')->first();
+        $approver = Role::where('name', 'approver')->first();
+        $staff = Role::where('name', 'staff')->first();
+        $teknisi = Role::where('name', 'teknisi')->first();
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate($permission);

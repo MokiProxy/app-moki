@@ -27,10 +27,13 @@ class ScanLog extends Model
         'processing_time_ms',
         'message',
         'metadata',
+        'linked_numbers',
+        'ocr_text',
     ];
 
     protected $casts = [
         'metadata' => 'array',
+        'linked_numbers' => 'array',
         'file_size' => 'integer',
         'processing_time_ms' => 'integer',
     ];

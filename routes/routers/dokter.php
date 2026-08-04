@@ -4,6 +4,7 @@ use App\Http\Controllers\Dokter\DashboardController;
 use App\Http\Controllers\Dokter\DocumentTypeController;
 use App\Http\Controllers\Dokter\FileManagementController;
 use App\Http\Controllers\Dokter\LogFileController;
+use App\Http\Controllers\Dokter\MergeFlowController;
 use App\Http\Controllers\Dokter\VendorController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,5 +56,21 @@ Route::prefix("dokter")->name("dokter.")->middleware(['permission:dokter.menu'])
         Route::middleware('permission:dokter.log-file.export')->group(function () {
             Route::get('/export', [LogFileController::class, 'export'])->name('export');
         });
+    });
+
+    Route::middleware('permission:dokter.merge-flows.view')->group(function () {
+        Route::get('merge-flows', [MergeFlowController::class, 'index'])->name('merge-flows.index');
+        Route::get('merge-flows/groups', [MergeFlowController::class, 'groups'])->name('merge-flows.groups');
+    });
+    Route::middleware('permission:dokter.merge-flows.create')->group(function () {
+        Route::get('merge-flows/create', [MergeFlowController::class, 'create'])->name('merge-flows.create');
+        Route::post('merge-flows', [MergeFlowController::class, 'store'])->name('merge-flows.store');
+    });
+    Route::middleware('permission:dokter.merge-flows.edit')->group(function () {
+        Route::get('merge-flows/{mergeFlow}/edit', [MergeFlowController::class, 'edit'])->name('merge-flows.edit');
+        Route::put('merge-flows/{mergeFlow}', [MergeFlowController::class, 'update'])->name('merge-flows.update');
+    });
+    Route::middleware('permission:dokter.merge-flows.delete')->group(function () {
+        Route::delete('merge-flows/{mergeFlow}', [MergeFlowController::class, 'destroy'])->name('merge-flows.destroy');
     });
 });
