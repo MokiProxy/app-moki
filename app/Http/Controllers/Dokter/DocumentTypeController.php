@@ -37,7 +37,14 @@ class DocumentTypeController extends Controller
 
             return redirect()->route('dokter.document-types.index')->with('success', 'Jenis dokumen baru berhasil disimpan!');
         } catch (Exception $err) {
-            return redirect()->route('dokter.document-types.index')->with('error', $err->getMessage());
+            return redirect()->route('dokter.document-types.create')
+                ->withInput()
+                ->with('error', $err->getMessage())
+                ->with('error_detail', [
+                    'file' => $err->getFile(),
+                    'line' => $err->getLine(),
+                    'trace' => $err->getTraceAsString(),
+                ]);
         }
     }
 
@@ -62,7 +69,14 @@ class DocumentTypeController extends Controller
 
             return redirect()->route('dokter.document-types.index')->with('success', 'Jenis dokumen berhasil diperbarui!');
         } catch (Exception $err) {
-            return redirect()->route('dokter.document-types.index')->with('error', $err->getMessage());
+            return redirect()->route('dokter.document-types.edit', $documentType->id)
+                ->withInput()
+                ->with('error', $err->getMessage())
+                ->with('error_detail', [
+                    'file' => $err->getFile(),
+                    'line' => $err->getLine(),
+                    'trace' => $err->getTraceAsString(),
+                ]);
         }
     }
 

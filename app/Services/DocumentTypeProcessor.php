@@ -21,11 +21,13 @@ class DocumentTypeProcessor
             ?? '/No\s+Inv\s*\n?\s*:\s*(.+)/i';
 
         if (preg_match($pattern, $ocrText, $matches)) {
-            $raw = trim($matches[1]);
-            $cleaned = $this->cleanOcrNoise($raw);
+            if (isset($matches[1])) {
+                $raw = trim($matches[1]);
+                $cleaned = $this->cleanOcrNoise($raw);
 
-            if ($cleaned !== '') {
-                return $cleaned;
+                if ($cleaned !== '') {
+                    return $cleaned;
+                }
             }
         }
 
@@ -57,11 +59,13 @@ class DocumentTypeProcessor
             ?? '/Tgl\s*\n?\s*:\s*(.+)/i';
 
         if (preg_match($pattern, $ocrText, $matches)) {
-            $raw = trim($matches[1]);
-            $cleaned = $this->cleanTanggal($raw);
+            if (isset($matches[1])) {
+                $raw = trim($matches[1]);
+                $cleaned = $this->cleanTanggal($raw);
 
-            if ($cleaned !== '') {
-                return $cleaned;
+                if ($cleaned !== '') {
+                    return $cleaned;
+                }
             }
         }
 
@@ -95,11 +99,13 @@ class DocumentTypeProcessor
             ?? '/Keterangan\s*:\s*(.+)/i';
 
         if (preg_match($pattern, $ocrText, $matches)) {
-            $raw = trim($matches[1]);
-            $cleaned = $this->cleanKeterangan($raw);
+            if (isset($matches[1])) {
+                $raw = trim($matches[1]);
+                $cleaned = $this->cleanKeterangan($raw);
 
-            if ($cleaned !== '') {
-                return $cleaned;
+                if ($cleaned !== '') {
+                    return $cleaned;
+                }
             }
         }
 
@@ -150,10 +156,12 @@ class DocumentTypeProcessor
             ?? '/URAIAN\s*\n(.+?)\n\s*TOTAL/si';
 
         if (preg_match($pattern, $ocrText, $matches)) {
-            $cleaned = $this->cleanUraian($matches[1]);
+            if (isset($matches[1])) {
+                $cleaned = $this->cleanUraian($matches[1]);
 
-            if ($cleaned !== '') {
-                return $cleaned;
+                if ($cleaned !== '') {
+                    return $cleaned;
+                }
             }
         }
 

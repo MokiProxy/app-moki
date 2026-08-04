@@ -15,7 +15,25 @@
                 </div>
             </div>
             <div class="card-body">
-                <form action="{{ route('dokter.document-types.update', $documentType->id) }}" method="POST">
+                @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong><i class="mdi mdi-alert-circle me-1"></i>Error:</strong> {{ session('error') }}
+                    @if(session('error_detail'))
+                    <hr>
+                    <small class="text-muted">
+                        <strong>File:</strong> {{ session('error_detail.file') }}<br>
+                        <strong>Line:</strong> {{ session('error_detail.line') }}
+                    </small>
+                    <details class="mt-2">
+                        <summary class="text-muted" style="cursor:pointer">Stack Trace</summary>
+                        <pre class="mt-1 p-2 bg-light border rounded" style="font-size:11px;max-height:200px;overflow:auto">{{ session('error_detail.trace') }}</pre>
+                    </details>
+                    @endif
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                @endif
+
+                <form action="{{ route('dokter.document-types.update', $documentType->id) }}" method="POST" id="document-type-form">
                     @csrf
                     @method('PUT')
 
@@ -28,7 +46,8 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Header Regex</label>
-                            <input type="text" name="header_regex" class="form-control @error('header_regex') is-invalid @enderror" value="{{ old('header_regex', $documentType->header_regex) }}" maxlength="255" placeholder="Contoh: /^PEMBAYARAN$/mi">
+                            <input type="hidden" name="header_regex" id="header_regex" value="{{ old('header_regex', $documentType->header_regex) }}">
+                            <div id="header_regex-builder-container" data-regex-builder="header_regex" data-regex-builder-options='{"label":"Header Regex","sampleText":"INVOICE\nPEMBAYARAN\nNo: INV-001\nTgl: 12/03/2026"}'></div>
                             @error('header_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <small class="text-muted">Regex untuk mencocokkan judul/header dokumen. Ini adalah <strong>primary identifier</strong> untuk deteksi jenis dokumen.</small>
                         </div>
@@ -41,7 +60,8 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Number Regex</label>
-                            <input type="text" name="number_regex" class="form-control @error('number_regex') is-invalid @enderror" value="{{ old('number_regex', $documentType->number_regex) }}" maxlength="255" placeholder="Contoh: /^DOC-\d+$/">
+                            <input type="hidden" name="number_regex" id="number_regex" value="{{ old('number_regex', $documentType->number_regex) }}">
+                            <div id="number_regex-builder-container" data-regex-builder="number_regex" data-regex-builder-options='{"label":"Number Regex","sampleText":"No: INV-001\nNomor: 12345"}'></div>
                             @error('number_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
@@ -53,7 +73,8 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Keterangan Regex</label>
-                            <input type="text" name="keterangan_regex" class="form-control @error('keterangan_regex') is-invalid @enderror" value="{{ old('keterangan_regex', $documentType->keterangan_regex) }}" maxlength="255" placeholder="Contoh: /Keterangan\s*:\s*(.+)/i">
+                            <input type="hidden" name="keterangan_regex" id="keterangan_regex" value="{{ old('keterangan_regex', $documentType->keterangan_regex) }}">
+                            <div id="keterangan_regex-builder-container" data-regex-builder="keterangan_regex" data-regex-builder-options='{"label":"Keterangan Regex","sampleText":"Keterangan: Pembayaran supplier ABC"}'></div>
                             @error('keterangan_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <small class="text-muted">Regex untuk menangkap data Keterangan dari hasil OCR.</small>
                         </div>
@@ -66,7 +87,8 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Uraian Regex</label>
-                            <input type="text" name="uraian_regex" class="form-control @error('uraian_regex') is-invalid @enderror" value="{{ old('uraian_regex', $documentType->uraian_regex) }}" maxlength="255" placeholder="Contoh: /URAIAN\s*\n(.+?)\n\s*TOTAL/si">
+                            <input type="hidden" name="uraian_regex" id="uraian_regex" value="{{ old('uraian_regex', $documentType->uraian_regex) }}">
+                            <div id="uraian_regex-builder-container" data-regex-builder="uraian_regex" data-regex-builder-options='{"label":"Uraian Regex","sampleText":"URAIAN\nBarang A x 10\nBarang B x 5\nTOTAL Rp 1.000.000"}'></div>
                             @error('uraian_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <small class="text-muted">Regex untuk menangkap data Uraian (multi-baris, antara URAIAN dan TOTAL) dari hasil OCR.</small>
                         </div>
@@ -79,7 +101,8 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Tanggal Regex</label>
-                            <input type="text" name="tanggal_regex" class="form-control @error('tanggal_regex') is-invalid @enderror" value="{{ old('tanggal_regex', $documentType->tanggal_regex) }}" maxlength="255" placeholder="Contoh: /Tgl\s*\n?\s*:\s*(.+)/i">
+                            <input type="hidden" name="tanggal_regex" id="tanggal_regex" value="{{ old('tanggal_regex', $documentType->tanggal_regex) }}">
+                            <div id="tanggal_regex-builder-container" data-regex-builder="tanggal_regex" data-regex-builder-options='{"label":"Tanggal Regex","sampleText":"Tgl: 12/03/2026\nTanggal: 2026-03-12"}'></div>
                             @error('tanggal_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <small class="text-muted">Regex untuk menangkap data Tgl (tanggal) dari hasil OCR.</small>
                         </div>
@@ -162,4 +185,48 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('plugin')
+<script src="{{ asset('js/regex-builder.js') }}"></script>
+<script>
+$(document).ready(function() {
+    // Form submit validation
+    $('#document-type-form').on('submit', function(e) {
+        var isValid = true;
+        var errors = [];
+        
+        // Validate all regex fields
+        var regexFields = ['header_regex', 'number_regex', 'keterangan_regex', 'uraian_regex', 'tanggal_regex'];
+        
+        regexFields.forEach(function(field) {
+            var value = $('#' + field).val();
+            if (value) {
+                // Validate format /pattern/flags
+                var regexMatch = value.match(/^\/(.+)\/([gimsuy]*)$/);
+                if (!regexMatch) {
+                    isValid = false;
+                    errors.push(field + ': Format harus /pattern/flags');
+                } else {
+                    // Try to create regex to check validity
+                    try {
+                        new RegExp(regexMatch[1], regexMatch[2]);
+                    } catch (ex) {
+                        isValid = false;
+                        errors.push(field + ': ' + ex.message);
+                    }
+                }
+            }
+        });
+        
+        if (!isValid) {
+            alert('Error validasi regex:\n' + errors.join('\n'));
+            e.preventDefault();
+            return false;
+        }
+        
+        return true;
+    });
+});
+</script>
 @endsection

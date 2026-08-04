@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\ValidRegex;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateDocumentTypeRequest extends FormRequest
@@ -10,17 +11,17 @@ class UpdateDocumentTypeRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'header_regex' => ['nullable', 'string', 'max:255'],
+            'header_regex' => ['nullable', 'string', 'max:255', new ValidRegex],
             'description' => ['nullable', 'string', 'max:1000'],
-            'number_regex' => ['nullable', 'string', 'max:255'],
+            'number_regex' => ['nullable', 'string', 'max:255', new ValidRegex],
             'number_label' => ['nullable', 'string', 'max:255'],
-            'keterangan_regex' => ['nullable', 'string', 'max:255'],
+            'keterangan_regex' => ['nullable', 'string', 'max:255', new ValidRegex],
             'keterangan_label' => ['nullable', 'string', 'max:255'],
             'keterangan_enabled' => ['nullable', 'boolean'],
-            'uraian_regex' => ['nullable', 'string', 'max:255'],
+            'uraian_regex' => ['nullable', 'string', 'max:255', new ValidRegex],
             'uraian_label' => ['nullable', 'string', 'max:255'],
             'uraian_enabled' => ['nullable', 'boolean'],
-            'tanggal_regex' => ['nullable', 'string', 'max:255'],
+            'tanggal_regex' => ['nullable', 'string', 'max:255', new ValidRegex],
             'tanggal_label' => ['nullable', 'string', 'max:255'],
             'tanggal_enabled' => ['nullable', 'boolean'],
             'filename_template' => ['nullable', 'string', 'max:255'],
