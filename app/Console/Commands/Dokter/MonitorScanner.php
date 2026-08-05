@@ -31,6 +31,10 @@ class MonitorScanner extends Command
 
     protected $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
 
+    protected int $maxRetries = 5;
+
+    protected int $retryInterval = 3;
+
     /**
      * Create a new command instance.
      *
@@ -92,18 +96,41 @@ class MonitorScanner extends Command
             Storage::disk('ftp_scanner')->delete($file);
 
             $fullPath = storage_path("app/private/{$localPath}");
-            $docType = $this->detectDocumentType($fullPath, $filename, $documentTypes, $ocr);
+            $docType = null;
+            $lastAttempt = 0;
+
+            for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
+                $lastAttempt = $attempt;
+                $docType = $this->detectDocumentType($fullPath, $filename, $documentTypes, $ocr, $attempt);
+
+                if ($docType !== null) {
+                    break;
+                }
+
+                if ($attempt < $this->maxRetries) {
+                    $this->warn("Deteksi jenis dokumen gagal (percobaan {$attempt}/{$this->maxRetries}), retry dalam {$this->retryInterval} detik...");
+                    $logger->log('detection_retry', 'warning', [
+                        'filename' => $filename,
+                        'extension' => $extension,
+                        'attempt' => $attempt,
+                        'max_retries' => $this->maxRetries,
+                        'message' => "Percobaan {$attempt}/{$this->maxRetries} gagal, retry dalam {$this->retryInterval} detik",
+                    ]);
+                    sleep($this->retryInterval);
+                }
+            }
 
             if ($docType === null) {
-                $this->warn("Could not detect document type for: {$filename}. Moving to FAILED folder.");
-                $moved = $this->uploadToFailedFolder($filename, $content);
+                $this->warn("Could not detect document type for: {$filename} after {$this->maxRetries} attempts. Moving to FAILED folder.");
+                $moved = $this->uploadToFailedFolder($filename, $content, $lastAttempt);
                 Storage::disk('local')->delete($localPath);
                 $logger->log('detection_failed', 'failed', [
                     'filename' => $filename,
                     'extension' => $extension,
+                    'total_attempts' => $lastAttempt,
                     'message' => $moved
-                        ? 'Header match gagal, file dipindah ke folder FAILED'
-                        : 'Header match gagal, upload ke folder FAILED gagal',
+                        ? "Header match gagal setelah {$lastAttempt} percobaan, file dipindah ke folder FAILED"
+                        : "Header match gagal setelah {$lastAttempt} percobaan, upload ke folder FAILED gagal",
                 ]);
 
                 continue;
@@ -231,19 +258,29 @@ class MonitorScanner extends Command
         }
     }
 
-    protected function detectDocumentType(string $filePath, string $filename, $documentTypes, OcrService $ocr): ?DocumentType
+    protected function detectDocumentType(string $filePath, string $filename, $documentTypes, OcrService $ocr, int $attempt = 1): ?DocumentType
     {
         $uploadedFile = new UploadedFile($filePath, $filename, mime_content_type($filePath), null, true);
+
+        Log::info("Memulai deteksi jenis dokumen (percobaan {$attempt})", [
+            'file' => $filename,
+            'attempt' => $attempt,
+        ]);
 
         try {
             $result = $ocr->extractText($uploadedFile);
         } catch (Exception $e) {
-            $this->warn("OCR failed: {$e->getMessage()}");
+            $this->warn("OCR failed (percobaan {$attempt}): {$e->getMessage()}");
 
             return null;
         }
 
         if (empty($result['success'])) {
+            Log::warning("OCR tidak menghasilkan teks (percobaan {$attempt})", [
+                'file' => $filename,
+                'attempt' => $attempt,
+            ]);
+
             return null;
         }
 
@@ -286,11 +323,16 @@ class MonitorScanner extends Command
         return $result === 1;
     }
 
-    protected function uploadToFailedFolder(string $filename, string $content): bool
+    protected function uploadToFailedFolder(string $filename, string $content, int $totalAttempts = 1): bool
     {
         $failedPath = "FAILED/{$filename}";
         $ftpDisk = Storage::disk('ftp_final');
         $ftpAdapter = $ftpDisk->getAdapter();
+
+        Log::info("Memindahkan file ke FAILED folder setelah {$totalAttempts} percobaan", [
+            'file' => $filename,
+            'total_attempts' => $totalAttempts,
+        ]);
 
         for ($attempt = 1; $attempt <= 3; $attempt++) {
             try {

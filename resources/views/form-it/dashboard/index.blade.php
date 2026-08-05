@@ -131,9 +131,9 @@ $authUserName = auth()->user()->name;
                             <a href="{{ route($form['link']) }}" class="text-decoration-none">
                                 <div class="folder-card h-100 border rounded">
                                     <div class="card-body text-center">
-                                        <div class="folder-icon text-primary-form-it mb-2">
-                                            <i class="mdi mdi-file-document-edit fs-1"></i>
-                                        </div>
+                        <div class="folder-icon text-primary-form-it mb-2">
+                            <i class="mdi {{ $form['icon'] ?? 'mdi-file-document-edit' }} fs-1"></i>
+                        </div>
                                         <h6 class="text-dark fw-semibold">{{ $form["name"] }}</h6>
                                     </div>
                                 </div>

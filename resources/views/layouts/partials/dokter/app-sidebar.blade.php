@@ -56,7 +56,7 @@ $roleColor = "primary-dokter";
         <li>
             <a href="{{ route('dokter.merge-flows.index') }}" class="waves-effect">
                 <i class='bx bx-git-merge'></i>
-                <span key="t-alur-birokrasi">Alur Birokrasi</span>
+                <span key="t-alur-birokrasi">Merge Flows</span>
             </a>
         </li>
         @endcan
