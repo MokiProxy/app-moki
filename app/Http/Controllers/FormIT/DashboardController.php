@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\FormIT;
 
 use App\Http\Controllers\Controller;
-use App\Models\FormitApproval;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function index() {
-        $employeeId = auth()->user()->employee_id;
-        $isApprover = FormitApproval::where('approver_id', $employeeId)->exists();
+        $isApprover = auth()->user()->hasPermissionTo('form-it.approval.view');
+        $canCreateFixedAsset = auth()->user()->hasPermissionTo('form-it.fixed-asset.create');
+        $canApproveFixedAsset = auth()->user()->hasPermissionTo('form-it.fixed-asset.approve');
+        $canViewFixedAsset = auth()->user()->hasPermissionTo('form-it.fixed-asset.view');
 
         $forms = [
             [
@@ -25,6 +26,22 @@ class DashboardController extends Controller
             ],
         ];
 
+        if ($canCreateFixedAsset) {
+            $forms[] = [
+                "name" => "Peminjaman Fixed Asset IT",
+                "link" => "form-it.forms.fixed-asset.create",
+                "icon" => "mdi-laptop"
+            ];
+        }
+
+        if ($canViewFixedAsset) {
+            $forms[] = [
+                "name" => "Pengajuan Fixed Asset Saya",
+                "link" => "form-it.forms.fixed-asset.my-submissions",
+                "icon" => "mdi-laptop"
+            ];
+        }
+
         if ($isApprover) {
             $forms[] = [
                 "name" => "Approval Pengajuan IT",
@@ -33,11 +50,13 @@ class DashboardController extends Controller
             ];
         }
 
-        $forms[] = [
-            "name" => "Peminjaman Fixed Asset IT",
-            "link" => "form-it.index",
-            "icon" => "mdi-laptop"
-        ];
+        if ($canApproveFixedAsset) {
+            $forms[] = [
+                "name" => "Approval Fixed Asset",
+                "link" => "form-it.approval.fixed-asset.index",
+                "icon" => "mdi-check-square"
+            ];
+        }
 
         return view('form-it.dashboard.index', compact("forms"));
     }

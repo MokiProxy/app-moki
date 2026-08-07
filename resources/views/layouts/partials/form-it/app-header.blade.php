@@ -1,5 +1,4 @@
 @php
-$role = session('user_role');
 $roleColor = "primary-form-it";
 @endphp
 

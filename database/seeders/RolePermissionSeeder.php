@@ -95,22 +95,27 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'dokter.document-types.delete', 'guard_name' => 'web'],
             ['name' => 'dokter.file-managements.view', 'guard_name' => 'web'],
             ['name' => 'dokter.file-managements.download', 'guard_name' => 'web'],
+            ['name' => 'dokter.file-managements.validate', 'guard_name' => 'web'],
             ['name' => 'dokter.log-file.view', 'guard_name' => 'web'],
             ['name' => 'dokter.log-file.export', 'guard_name' => 'web'],
             ['name' => 'dokter.merge-flows.view', 'guard_name' => 'web'],
             ['name' => 'dokter.merge-flows.create', 'guard_name' => 'web'],
             ['name' => 'dokter.merge-flows.edit', 'guard_name' => 'web'],
             ['name' => 'dokter.merge-flows.delete', 'guard_name' => 'web'],
+            ['name' => 'dokter.auditor-access.manage', 'guard_name' => 'web'],
+
+            // Form IT
+            ['name' => 'form-it.dashboard', 'guard_name' => 'web'],
+            ['name' => 'form-it.forms.view', 'guard_name' => 'web'],
+            ['name' => 'form-it.forms.create', 'guard_name' => 'web'],
+            ['name' => 'form-it.approval.view', 'guard_name' => 'web'],
+            ['name' => 'form-it.approval.process', 'guard_name' => 'web'],
+
+            // Form IT - Fixed Asset
+            ['name' => 'form-it.fixed-asset.view', 'guard_name' => 'web'],
+            ['name' => 'form-it.fixed-asset.create', 'guard_name' => 'web'],
+            ['name' => 'form-it.fixed-asset.approve', 'guard_name' => 'web'],
         ];
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate($permission);
-        }
-
-        $admin = Role::where('name', 'admin')->first();
-        $approver = Role::where('name', 'approver')->first();
-        $staff = Role::where('name', 'staff')->first();
-        $teknisi = Role::where('name', 'teknisi')->first();
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate($permission);
@@ -144,12 +149,18 @@ class RolePermissionSeeder extends Seeder
             'dokter.menu', 'dokter.dashboard',
             'dokter.vendors.view', 'dokter.vendors.create', 'dokter.vendors.edit', 'dokter.vendors.delete',
             'dokter.document-types.view', 'dokter.document-types.create', 'dokter.document-types.edit', 'dokter.document-types.delete',
-            'dokter.file-managements.view', 'dokter.file-managements.download',
+            'dokter.file-managements.view', 'dokter.file-managements.download', 'dokter.file-managements.validate',
             'dokter.log-file.view', 'dokter.log-file.export',
+            'dokter.auditor-access.manage',
+            // Form IT
+            'form-it.dashboard', 'form-it.forms.view', 'form-it.forms.create',
+            'form-it.approval.view', 'form-it.approval.process',
+            // Form IT - Fixed Asset
+            'form-it.fixed-asset.view', 'form-it.fixed-asset.create', 'form-it.fixed-asset.approve',
         ]);
 
         $approver->givePermissionTo([
-            'portal.access', 'ams.menu', 'data-pegawai.menu',
+            'portal.access', 'ams.menu', 'data-pegawai.menu', 'form-it.menu',
             'ams.dashboard', 'ams.assets.view',
             'ams.transactions.view', 'ams.transactions.approve', 'ams.transactions.export-pdf',
             'ams.employees.view',
@@ -159,10 +170,15 @@ class RolePermissionSeeder extends Seeder
             'ams.settings.reset-password', 'ams.settings.approve',
             'helpdesk.dashboard', 'helpdesk.tickets.view', 'helpdesk.tickets.view-all',
             'helpdesk.technicians.view', 'helpdesk.reports.view',
+            // Form IT
+            'form-it.dashboard', 'form-it.forms.view',
+            'form-it.approval.view', 'form-it.approval.process',
+            // Form IT - Fixed Asset
+            'form-it.fixed-asset.view', 'form-it.fixed-asset.approve',
         ]);
 
         $staff->givePermissionTo([
-            'portal.access', 'ams.menu', 'helpdesk.menu',
+            'portal.access', 'ams.menu', 'helpdesk.menu', 'form-it.menu',
             'ams.dashboard', 'ams.assets.view',
             'ams.transactions.view', 'ams.transactions.create', 'ams.transactions.export-pdf',
             'ams.employees.view',
@@ -173,6 +189,13 @@ class RolePermissionSeeder extends Seeder
             'helpdesk.dashboard', 'helpdesk.tickets.view', 'helpdesk.tickets.create',
             'helpdesk.tickets.edit', 'helpdesk.tickets.delete',
             'helpdesk.tickets.confirm', 'helpdesk.tickets.reopen', 'helpdesk.tickets.comment',
+            // Dokter
+            'dokter.menu', 'dokter.dashboard',
+            'dokter.file-managements.view', 'dokter.file-managements.download', 'dokter.file-managements.validate',
+            // Form IT
+            'form-it.dashboard', 'form-it.forms.view', 'form-it.forms.create',
+            // Form IT - Fixed Asset
+            'form-it.fixed-asset.view', 'form-it.fixed-asset.create',
         ]);
 
         $teknisi->givePermissionTo([

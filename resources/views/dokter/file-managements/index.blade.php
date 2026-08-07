@@ -5,12 +5,12 @@
 @php
 function formatBytes($bytes, $precision = 2)
 {
-    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    $bytes = max($bytes, 0);
-    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-    $pow = min($pow, count($units) - 1);
-    $bytes /= pow(1024, $pow);
-    return round($bytes, $precision) . ' ' . $units[$pow];
+$units = ['B', 'KB', 'MB', 'GB', 'TB'];
+$bytes = max($bytes, 0);
+$pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+$pow = min($pow, count($units) - 1);
+$bytes /= pow(1024, $pow);
+return round($bytes, $precision) . ' ' . $units[$pow];
 }
 @endphp
 
@@ -21,38 +21,45 @@ function formatBytes($bytes, $precision = 2)
         transition: all 0.2s ease;
         border: 1px solid #e9ecef;
     }
+
     .folder-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
         border-color: #f6c23e;
     }
+
     .folder-icon {
         font-size: 2.8rem;
         line-height: 1;
     }
+
     .file-icon-table {
         font-size: 1.2rem;
         line-height: 1;
     }
-    .breadcrumb-item + .breadcrumb-item::before {
+
+    .breadcrumb-item+.breadcrumb-item::before {
         content: "\F0142";
         font-family: "Material Design Icons";
     }
+
     #pdfViewerModal .modal-dialog {
         max-width: 95%;
         height: 95vh;
     }
+
     #pdfViewerModal .modal-content {
         height: 100%;
     }
+
     #pdfViewerModal .modal-body {
         padding: 0;
         overflow: hidden;
     }
-    #pdfViewerModal iframe {
+
+    #pdfViewerModal #pdfjsContainer {
         width: 100%;
         height: 100%;
-        border: none;
     }
 </style>
 @endsection
@@ -76,17 +83,17 @@ function formatBytes($bytes, $precision = 2)
             </div>
             <div class="card-body">
                 @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 @isset($breadcrumbs)
@@ -98,15 +105,15 @@ function formatBytes($bytes, $precision = 2)
                             </a>
                         </li>
                         @foreach($breadcrumbs as $crumb)
-                            <li class="breadcrumb-item {{ $loop->last ? 'active fw-bold' : '' }}">
-                                @if($loop->last)
-                                    {{ $crumb['label'] }}
-                                @else
-                                    <a href="{{ route('dokter.file-managements.index', ['path' => $crumb['path']]) }}">
-                                        {{ $crumb['label'] }}
-                                    </a>
-                                @endif
-                            </li>
+                        <li class="breadcrumb-item {{ $loop->last ? 'active fw-bold' : '' }}">
+                            @if($loop->last)
+                            {{ $crumb['label'] }}
+                            @else
+                            <a href="{{ route('dokter.file-managements.index', ['path' => $crumb['path']]) }}">
+                                {{ $crumb['label'] }}
+                            </a>
+                            @endif
+                        </li>
                         @endforeach
                     </ol>
                 </nav>
@@ -142,18 +149,37 @@ function formatBytes($bytes, $precision = 2)
 
                 @isset($files)
                 @if(count($files) > 0)
-                <h6 class="text-muted text-uppercase fw-bold mb-3 mt-1">
-                    <i class="mdi mdi-file-outline me-1"></i> File
-                    <span class="badge bg-secondary ms-1">{{ count($files) }}</span>
-                </h6>
+                @php
+                $validatedCount = collect($files)->where('is_validated', true)->count();
+                $totalCount = count($files);
+                @endphp
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-bold mb-0">
+                        <i class="mdi mdi-file-outline me-1"></i> File
+                        <span class="badge bg-secondary ms-1">{{ $totalCount }}</span>
+                    </h6>
+                    <small class="text-muted">
+                        <i class="mdi mdi-check-circle text-success me-1"></i>
+                        {{ $validatedCount }}/{{ $totalCount }} divalidasi
+                    </small>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle w-100 mb-0">
                         <thead class="table-dark">
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
+                                @if(auth()->user()->hasPermissionTo('dokter.file-managements.validate'))
+                                <th class="text-center" style="width: 60px">
+                                    <input type="checkbox" id="checkAll" class="form-check-input" title="Validated Semua">
+                                </th>
+                                @endif
                                 <th>Nama File</th>
                                 <th style="width: 100px">Ukuran</th>
                                 <th style="width: 70px">Tipe</th>
+                                @if(auth()->user()->hasPermissionTo('dokter.file-managements.validate'))
+                                <th class="text-center" style="width: 110px">Validated</th>
+                                <th style="width: 160px">Divalidasi Oleh</th>
+                                @endif
                                 <th style="width: 200px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -161,38 +187,68 @@ function formatBytes($bytes, $precision = 2)
                             @foreach($files as $key => $file)
                             <tr>
                                 <td class="text-center">{{ $key + 1 }}</td>
+                                @if(auth()->user()->hasPermissionTo('dokter.file-managements.validate'))
+                                <td class="text-center">
+                                    <input type="checkbox"
+                                        class="form-check-input file-validate-checkbox"
+                                        data-path="{{ $file['path'] }}"
+                                        data-name="{{ $file['name'] }}"
+                                        data-folder="{{ $path ?? '' }}"
+                                        {{ $file['is_validated'] ? 'checked' : '' }}
+                                        title="Validated">
+                                </td>
+                                @endif
                                 <td>
                                     @php
-                                        $icon = 'mdi-file';
-                                        $iconColor = 'text-info';
-                                        if ($file['extension'] === 'pdf') {
-                                            $icon = 'mdi-file-pdf-box';
-                                            $iconColor = 'text-danger';
-                                        } elseif (in_array($file['extension'], ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'])) {
-                                            $icon = 'mdi-file-image';
-                                            $iconColor = 'text-success';
-                                        } elseif (in_array($file['extension'], ['doc', 'docx'])) {
-                                            $icon = 'mdi-file-word';
-                                            $iconColor = 'text-primary';
-                                        } elseif (in_array($file['extension'], ['xls', 'xlsx', 'csv'])) {
-                                            $icon = 'mdi-file-excel';
-                                            $iconColor = 'text-success';
-                                        } elseif (in_array($file['extension'], ['zip', 'rar', '7z', 'tar', 'gz'])) {
-                                            $icon = 'mdi-file-archive';
-                                            $iconColor = 'text-secondary';
-                                        }
+                                    $icon = 'mdi-file';
+                                    $iconColor = 'text-info';
+                                    if ($file['extension'] === 'pdf') {
+                                    $icon = 'mdi-file-pdf-box';
+                                    $iconColor = 'text-danger';
+                                    } elseif (in_array($file['extension'], ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'])) {
+                                    $icon = 'mdi-file-image';
+                                    $iconColor = 'text-success';
+                                    } elseif (in_array($file['extension'], ['doc', 'docx'])) {
+                                    $icon = 'mdi-file-word';
+                                    $iconColor = 'text-primary';
+                                    } elseif (in_array($file['extension'], ['xls', 'xlsx', 'csv'])) {
+                                    $icon = 'mdi-file-excel';
+                                    $iconColor = 'text-success';
+                                    } elseif (in_array($file['extension'], ['zip', 'rar', '7z', 'tar', 'gz'])) {
+                                    $icon = 'mdi-file-archive';
+                                    $iconColor = 'text-secondary';
+                                    }
                                     @endphp
                                     <i class="mdi {{ $icon }} {{ $iconColor }} file-icon-table me-1"></i>
                                     {{ $file['name'] }}
                                 </td>
                                 <td class="text-nowrap">{{ formatBytes($file['size']) }}</td>
                                 <td><span class="badge bg-secondary">{{ strtoupper($file['extension']) }}</span></td>
+                                @if(auth()->user()->hasPermissionTo('dokter.file-managements.validate'))
+                                <td class="text-center validation-status">
+                                    @if($file['is_validated'])
+                                    <span class="badge bg-success"><i class="mdi mdi-check-circle me-1"></i> Validated</span>
+                                    @else
+                                    <span class="badge bg-secondary">Belum</span>
+                                    @endif
+                                </td>
+                                <td class="text-nowrap validated-info">
+                                    @if($file['validated_by'])
+                                    <small class="text-muted">
+                                        {{ $file['validated_by'] }}<br>
+                                        {{ $file['validated_at']?->format('d M Y H:i') }}
+                                    </small>
+                                    @else
+                                    <small class="text-muted">-</small>
+                                    @endif
+                                </td>
+                                @endif
                                 <td class="text-center">
                                     @if($file['extension'] === 'pdf')
                                     <button type="button" class="btn btn-info btn-sm btn-view-pdf"
-                                            data-path="{{ $file['path'] }}"
-                                            data-filename="{{ $file['name'] }}"
-                                            title="Lihat PDF">
+                                        data-path="{{ $file['path'] }}"
+                                        data-filename="{{ $file['name'] }}"
+                                        title="Lihat PDF">
                                         <i class="mdi mdi-eye"></i> Lihat
                                     </button>
                                     @endif
@@ -234,14 +290,11 @@ function formatBytes($bytes, $precision = 2)
                     <span id="pdfModalFileName"></span>
                 </h5>
                 <div class="d-flex gap-1">
-                    <a href="#" class="btn btn-success btn-sm" id="btnDownloadFromModal">
-                        <i class="mdi mdi-download"></i> Download
-                    </a>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
             </div>
             <div class="modal-body">
-                <iframe id="pdfViewerFrame" src="about:blank"></iframe>
+                <div id="pdfjsContainer" class="pdfjs-viewer-container"></div>
             </div>
         </div>
     </div>
@@ -249,6 +302,7 @@ function formatBytes($bytes, $precision = 2)
 @endsection
 
 @section('plugin')
+@include('components.pdf-viewer')
 <script>
     $(document).ready(function() {
         $('#btn-refresh').click(function(e) {
@@ -259,17 +313,81 @@ function formatBytes($bytes, $precision = 2)
         $(document).on('click', '.btn-view-pdf', function() {
             var path = $(this).data('path');
             var filename = $(this).data('filename');
-            var rawUrl = '{{ route("dokter.file-managements.view", ["path" => "__PATH__", "raw" => true]) }}'.replace('__PATH__', encodeURIComponent(path));
-            var downloadUrl = '{{ route("dokter.file-managements.download", ["path" => "__PATH__"]) }}'.replace('__PATH__', encodeURIComponent(path));
+            var rawUrl = '{!! route("dokter.file-managements.view", ["path" => "__PATH__", "raw" => true]) !!}'.replace('__PATH__', encodeURIComponent(path));
 
             $('#pdfModalFileName').text(filename);
-            $('#pdfViewerFrame').attr('src', rawUrl);
-            $('#btnDownloadFromModal').attr('href', downloadUrl);
             $('#pdfViewerModal').modal('show');
+            renderPdfIntoContainer('pdfjsContainer', rawUrl);
         });
 
         $('#pdfViewerModal').on('hidden.bs.modal', function() {
-            $('#pdfViewerFrame').attr('src', 'about:blank');
+            document.getElementById('pdfjsContainer').innerHTML = '';
+        });
+
+        // Disable right-click on PDF viewer
+        $(document).on('contextmenu', '#pdfjsContainer', function(e) {
+            e.preventDefault();
+        });
+
+        // Disable keyboard shortcuts for download/print
+        $(document).on('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Check All
+        $('#checkAll').on('change', function() {
+            var isChecked = $(this).is(':checked');
+            $('.file-validate-checkbox').prop('checked', isChecked).trigger('change');
+        });
+
+        // Toggle validasi via AJAX
+        $(document).on('change', '.file-validate-checkbox', function() {
+            var $checkbox = $(this);
+            var filePath = $checkbox.data('path');
+            var fileName = $checkbox.data('name');
+            var folderPath = $checkbox.data('folder');
+            var is_checked = $checkbox.is(':checked');
+
+            var url = is_checked ?
+                '{{ route("dokter.file-managements.validate") }}' :
+                '{{ route("dokter.file-managements.unvalidate") }}';
+
+            var data = {
+                file_path: filePath,
+                file_name: fileName,
+                folder_path: folderPath,
+                _token: '{{ csrf_token() }}'
+            };
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    if (response.success) {
+                        var $row = $checkbox.closest('tr');
+                        var $statusBadge = $row.find('.validation-status');
+                        var $validatedInfo = $row.find('.validated-info');
+
+                        if (is_checked) {
+                            $statusBadge.html('<span class="badge bg-success"><i class="mdi mdi-check-circle me-1"></i> Validated</span>');
+                            $validatedInfo.html('<small class="text-muted">{{ auth()->user()->employee_id }}<br>{{ now()->format("d M Y H:i") }}</small>');
+                        } else {
+                            $statusBadge.html('<span class="badge bg-secondary">Belum</span>');
+                            $validatedInfo.html('<small class="text-muted">-</small>');
+                        }
+
+                        showToast(response.message, 'success');
+                    }
+                },
+                error: function(xhr) {
+                    $checkbox.prop('checked', !is_checked);
+                    showToast('Gagal memproses validasi.', 'error');
+                }
+            });
         });
     });
 </script>

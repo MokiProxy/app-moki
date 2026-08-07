@@ -3,38 +3,153 @@
 namespace App\Http\Controllers\Dokter;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditorAccessLink;
+use App\Models\DocumentMergeGroup;
 use App\Models\FileValidation;
+use App\Models\ScanLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-class FileManagementController extends Controller
+class AuditorFileController extends Controller
 {
-    public function index(Request $request)
+    protected AuditorAccessLink $link;
+
+    public function index(Request $request, string $token)
     {
-        $pageName = 'File Management';
+        $this->link = $this->resolveLink($token);
+
         $path = $request->query('path', '');
         $disk = Storage::disk('ftp_final');
 
         if ($path !== '') {
-            return $this->showFolder($disk, $path, $pageName);
+            return $this->showFolder($disk, $path);
         }
 
-        return $this->showRoot($disk, $pageName);
+        return $this->showRoot($disk);
     }
 
-    protected function showRoot($disk, string $pageName)
+    public function view(Request $request, string $token)
+    {
+        $this->link = $this->resolveLink($token);
+
+        [$path, $filename] = $this->resolvePdfFile($request->query('path', ''));
+
+        if ($request->boolean('raw')) {
+            return $this->streamFile($path, 'inline', [
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+                'Pragma' => 'no-cache',
+            ]);
+        }
+
+        return view('auditor.view', compact('path', 'filename', 'token'));
+    }
+
+    public function download(Request $request, string $token)
+    {
+        abort(403, 'Auditor tidak memiliki akses untuk mengunduh file.');
+    }
+
+    protected function resolveLink(string $token): AuditorAccessLink
+    {
+        $link = AuditorAccessLink::where('token', $token)->first();
+
+        if (! $link) {
+            abort(404);
+        }
+
+        if (! $link->is_active) {
+            abort(403, 'Link akses ini sudah tidak aktif.');
+        }
+
+        $link->update(['last_accessed_at' => now()]);
+
+        return $link;
+    }
+
+    protected function getAllowedFtpPaths(): array
+    {
+        $allowedYears = $this->link->allowed_years ?? [];
+
+        if (empty($allowedYears)) {
+            return [];
+        }
+
+        // 1. Ambil path dari scan_logs langsung
+        $allLogs = ScanLog::whereNotNull('ftp_path')
+            ->whereNotNull('tanggal')
+            ->select('ftp_path', 'tanggal')
+            ->get();
+
+        $allowedPaths = [];
+
+        foreach ($allLogs as $log) {
+            $year = $this->extractYearFromTanggal($log->tanggal);
+
+            if ($year !== null && in_array($year, $allowedYears)) {
+                $allowedPaths[] = $log->ftp_path;
+            }
+        }
+
+        // 2. Ambil final_pdf_path dari document_merge_groups yang sudah selesai
+        //    File FINAL tidak punya scan_logs sendiri, tapi item-nya punya scan_log dengan tanggal
+        $mergeGroups = DocumentMergeGroup::where('status', 2)
+            ->whereNotNull('final_pdf_path')
+            ->with('items.scanLog')
+            ->get();
+
+        foreach ($mergeGroups as $group) {
+            foreach ($group->items as $item) {
+                if ($item->scanLog && $item->scanLog->tanggal) {
+                    $year = $this->extractYearFromTanggal($item->scanLog->tanggal);
+
+                    if ($year !== null && in_array($year, $allowedYears)) {
+                        $allowedPaths[] = $group->final_pdf_path;
+                        break; // Satu item cocok sudah cukup untuk group ini
+                    }
+                }
+            }
+        }
+
+        return array_unique($allowedPaths);
+    }
+
+    protected function extractYearFromTanggal(?string $tanggal): ?int
+    {
+        if (! $tanggal || trim($tanggal) === '') {
+            return null;
+        }
+
+        $tanggal = trim($tanggal);
+        $yearSuffix = substr($tanggal, -2);
+
+        if (! is_numeric($yearSuffix)) {
+            return null;
+        }
+
+        return 2000 + (int) $yearSuffix;
+    }
+
+    protected function showRoot($disk)
     {
         $directories = $this->getDirectories($disk);
+        $link = $this->link;
 
-        return view('dokter.file-managements.index', compact('pageName', 'directories'));
+        return view('auditor.index', compact('directories', 'link'));
     }
 
-    protected function showFolder($disk, string $path, string $pageName)
+    protected function showFolder($disk, string $path)
     {
         $breadcrumbs = $this->buildBreadcrumbs($path);
         $directories = $this->getSubDirectories($disk, $path);
         $files = $this->getFiles($disk, $path);
+
+        $allowedPaths = $this->getAllowedFtpPaths();
+
+        $files = array_filter($files, function ($file) use ($allowedPaths) {
+            return in_array($file['path'], $allowedPaths);
+        });
+        $files = array_values($files);
 
         $validatedFiles = FileValidation::whereIn('file_path', collect($files)->pluck('path')->toArray())
             ->get()
@@ -47,86 +162,11 @@ class FileManagementController extends Controller
             $file['validated_at'] = $validation?->validated_at ?? null;
         }
 
-        return view('dokter.file-managements.index', compact('pageName', 'breadcrumbs', 'directories', 'files', 'path'));
+        $link = $this->link;
+
+        return view('auditor.index', compact('breadcrumbs', 'directories', 'files', 'path', 'link'));
     }
 
-    public function validateFile(Request $request)
-    {
-        $request->validate([
-            'file_path' => 'required|string',
-            'file_name' => 'required|string',
-            'folder_path' => 'nullable|string',
-        ]);
-
-        $employeeId = auth()->user()->employee_id;
-
-        FileValidation::updateOrCreate(
-            ['file_path' => $request->file_path],
-            [
-                'file_name' => $request->file_name,
-                'folder_path' => $request->folder_path,
-                'is_validated' => true,
-                'validated_by' => $employeeId,
-                'validated_at' => now(),
-                'unvalidated_by' => null,
-                'unvalidated_at' => null,
-            ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'File berhasil divalidasi.',
-        ]);
-    }
-
-    public function unvalidateFile(Request $request)
-    {
-        $request->validate([
-            'file_path' => 'required|string',
-        ]);
-
-        $employeeId = auth()->user()->employee_id;
-
-        $validation = FileValidation::where('file_path', $request->file_path)->first();
-
-        if ($validation) {
-            $validation->update([
-                'is_validated' => false,
-                'unvalidated_by' => $employeeId,
-                'unvalidated_at' => now(),
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Validasi file dibatalkan.',
-        ]);
-    }
-
-    public function view(Request $request)
-    {
-        [$path, $filename] = $this->resolvePdfFile($request->query('path', ''));
-
-        if ($request->boolean('raw')) {
-            return $this->streamFile($path, 'inline', [
-                'Cache-Control' => 'no-store, no-cache, must-revalidate',
-                'Pragma' => 'no-cache',
-            ]);
-        }
-
-        return view('dokter.file-managements.view', compact('path', 'filename'));
-    }
-
-    public function download(Request $request)
-    {
-        [$path] = $this->resolveStorageFile($request->query('path', ''));
-
-        return $this->streamFile($path, 'attachment');
-    }
-
-    /**
-     * @return array{0: string, 1: string}
-     */
     protected function resolvePdfFile(string $path): array
     {
         [$path, $filename] = $this->resolveStorageFile($path);
@@ -138,9 +178,6 @@ class FileManagementController extends Controller
         return [$path, $filename];
     }
 
-    /**
-     * @return array{0: string, 1: string}
-     */
     protected function resolveStorageFile(string $path): array
     {
         if ($path === '') {
@@ -183,9 +220,6 @@ class FileManagementController extends Controller
         ], $headers));
     }
 
-    /**
-     * @return array<int, array{path: string, name: string, file_count: int}>
-     */
     protected function getDirectories($disk): array
     {
         $directories = [];
@@ -194,23 +228,19 @@ class FileManagementController extends Controller
             $dirs = $disk->directories();
         } catch (\Exception $e) {
             Log::error('Failed to list FTP directories', ['error' => $e->getMessage()]);
-
             return [];
         }
 
         foreach ($dirs as $dir) {
             $name = basename($dir);
-
             if ($name === '' || $name === '.' || $name === '..') {
                 continue;
             }
-
             try {
                 $fileCount = count($disk->files($dir));
             } catch (\Exception $e) {
                 $fileCount = 0;
             }
-
             $directories[] = [
                 'path' => $dir,
                 'name' => $name,
@@ -223,9 +253,6 @@ class FileManagementController extends Controller
         return $directories;
     }
 
-    /**
-     * @return array<int, array{path: string, name: string}>
-     */
     protected function getSubDirectories($disk, string $parentPath): array
     {
         $directories = [];
@@ -238,11 +265,9 @@ class FileManagementController extends Controller
 
         foreach ($dirs as $dir) {
             $name = basename($dir);
-
             if ($name === '' || $name === '.' || $name === '..') {
                 continue;
             }
-
             $directories[] = [
                 'path' => $dir,
                 'name' => $name,
@@ -254,9 +279,6 @@ class FileManagementController extends Controller
         return $directories;
     }
 
-    /**
-     * @return array<int, array{name: string, path: string, size: int, extension: string}>
-     */
     protected function getFiles($disk, string $dirPath): array
     {
         $files = [];
@@ -269,13 +291,11 @@ class FileManagementController extends Controller
 
         foreach ($fileList as $filePath) {
             $name = basename($filePath);
-
             try {
                 $size = $disk->size($filePath);
             } catch (\Exception $e) {
                 $size = 0;
             }
-
             $files[] = [
                 'name' => $name,
                 'path' => $filePath,
@@ -289,9 +309,6 @@ class FileManagementController extends Controller
         return $files;
     }
 
-    /**
-     * @return array<int, array{label: string, path: string}>
-     */
     protected function buildBreadcrumbs(string $path): array
     {
         $parts = explode('/', $path);

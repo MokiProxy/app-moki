@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Dokter\AuditorAccessController;
 use App\Http\Controllers\Dokter\DashboardController;
 use App\Http\Controllers\Dokter\DocumentTypeController;
 use App\Http\Controllers\Dokter\FileManagementController;
@@ -47,6 +48,8 @@ Route::prefix("dokter")->name("dokter.")->middleware(['permission:dokter.menu'])
             Route::get('/view', [FileManagementController::class, 'view'])->name('view');
         });
         Route::get('/download', [FileManagementController::class, 'download'])->name('download')->middleware('permission:dokter.file-managements.download');
+        Route::post('/validate', [FileManagementController::class, 'validateFile'])->name('validate')->middleware('permission:dokter.file-managements.validate');
+        Route::post('/unvalidate', [FileManagementController::class, 'unvalidateFile'])->name('unvalidate')->middleware('permission:dokter.file-managements.validate');
     });
 
     Route::prefix('log-file')->name('log-file.')->group(function () {
@@ -72,5 +75,14 @@ Route::prefix("dokter")->name("dokter.")->middleware(['permission:dokter.menu'])
     });
     Route::middleware('permission:dokter.merge-flows.delete')->group(function () {
         Route::delete('merge-flows/{mergeFlow}', [MergeFlowController::class, 'destroy'])->name('merge-flows.destroy');
+    });
+
+    Route::prefix('auditor-access')->name('auditor-access.')->middleware('permission:dokter.auditor-access.manage')->group(function () {
+        Route::get('/', [AuditorAccessController::class, 'index'])->name('index');
+        Route::post('/', [AuditorAccessController::class, 'store'])->name('store');
+        Route::get('/{auditorAccessLink}', [AuditorAccessController::class, 'show'])->name('show');
+        Route::put('/{auditorAccessLink}', [AuditorAccessController::class, 'update'])->name('update');
+        Route::delete('/{auditorAccessLink}', [AuditorAccessController::class, 'destroy'])->name('destroy');
+        Route::post('/{auditorAccessLink}/toggle', [AuditorAccessController::class, 'toggle'])->name('toggle');
     });
 });

@@ -55,8 +55,8 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small mb-1">Pencarian</label>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama file / vendor / nomor dokumen / tanggal / keterangan / FTP path"
-                               class="form-control form-control-sm">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama file / vendor / nomor dokumen / tanggal / FTP path"
+                            class="form-control form-control-sm">
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary btn-sm w-100">
@@ -74,14 +74,8 @@
                                 <th class="text-center" style="width: 110px">Status</th>
                                 <th>Nama File</th>
                                 <th>Jenis Dokumen</th>
-                                <th>Nomor Dokumen</th>
-                                <th>Tanggal</th>
                                 <th>Vendor</th>
-                                <th>Keterangan</th>
-                                <th>Uraian</th>
-                                <th>Lokasi File Final</th>
-                                <th style="width: 130px">Waktu Proses</th>
-                                <th>Pesan</th>
+                                <th class="text-center" style="width: 90px">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -93,38 +87,38 @@
                                     <span class="badge {{ $log->status_badge_class }}">{{ $log->status_label }}</span>
                                 </td>
                                 <td class="fw-semibold">
-                                    <i class="mdi mdi-file me-1 text-muted"></i>{{ $log->filename ?? '-' }}
+                                    <i class="mdi mdi-file me-1 text-muted"></i>{{ explode("/", $log->ftp_path)[2] ?? '-' }}
                                     @if($log->extension)
                                     <span class="badge bg-secondary ms-1">{{ strtoupper($log->extension) }}</span>
                                     @endif
                                 </td>
                                 <td>{{ $log->document_type_name ?? '-' }}</td>
-                                <td>{{ $log->document_number ?? '-' }}</td>
-                                <td class="text-nowrap">{{ $log->tanggal ?? '-' }}</td>
                                 <td>{{ $log->vendor_name ?? '-' }}</td>
-                                <td class="text-truncate" style="max-width: 200px" title="{{ $log->keterangan }}">
-                                    {{ $log->keterangan ?? '-' }}
-                                </td>
-                                <td class="text-truncate" style="max-width: 200px" title="{{ $log->uraian }}">
-                                    {{ $log->uraian ?? '-' }}
-                                </td>
-                                <td class="text-truncate" style="max-width: 200px" title="{{ $log->ftp_path }}">
-                                    {{ $log->ftp_path ?? '-' }}
-                                </td>
-                                <td class="text-nowrap">
-                                    @if($log->processing_time_ms)
-                                    {{ number_format($log->processing_time_ms) }} ms
-                                    @else
-                                    -
-                                    @endif
-                                </td>
-                                <td class="text-truncate" style="max-width: 220px" title="{{ $log->message }}">
-                                    {{ $log->message ?? '-' }}
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-info btn-sm btn-view-log"
+                                        data-id="{{ $log->id }}"
+                                        data-created="{{ $log->created_at?->format('d-m-Y H:i:s') ?? '-' }}"
+                                        data-status="{{ $log->status_label }}"
+                                        data-status-class="{{ $log->status_badge_class }}"
+                                        data-filename="{{ $log->filename ?? '-' }}"
+                                        data-extension="{{ strtoupper($log->extension) }}"
+                                        data-doctype="{{ $log->document_type_name ?? '-' }}"
+                                        data-docnum="{{ $log->document_number ?? '-' }}"
+                                        data-tanggal="{{ $log->tanggal ?? '-' }}"
+                                        data-vendor="{{ $log->vendor_name ?? '-' }}"
+                                        data-keterangan="{{ $log->keterangan ?? '-' }}"
+                                        data-ftp="{{ $log->ftp_path ?? '-' }}"
+                                        data-size="{{ $log->file_size }}"
+                                        data-processing="{{ $log->processing_time_ms }}"
+                                        data-message="{{ $log->message ?? '-' }}"
+                                        title="Lihat Detail">
+                                        <i class="mdi mdi-eye"></i> View
+                                    </button>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="14" class="text-center text-muted py-4">
+                                <td colspan="7" class="text-center text-muted py-4">
                                     <i class="mdi mdi-file-remove text-secondary" style="font-size: 2.5rem;"></i>
                                     <p class="mt-2 fw-semibold mb-0">Belum ada data log.</p>
                                 </td>
@@ -147,6 +141,71 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="logDetailModal" tabindex="-1" aria-labelledby="logDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title text-dark fw-bold" id="logDetailModalLabel">
+                    <i class="mdi mdi-information-outline text-info me-1"></i> Detail Log File
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Waktu Scan</label>
+                        <p class="fw-semibold mb-0" id="detail-created">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Status</label>
+                        <p class="mb-0" id="detail-status">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Nama File</label>
+                        <p class="fw-semibold mb-0" id="detail-filename">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Jenis Dokumen</label>
+                        <p class="mb-0" id="detail-doctype">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Nomor Dokumen</label>
+                        <p class="mb-0" id="detail-docnum">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Tanggal</label>
+                        <p class="mb-0" id="detail-tanggal">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Vendor</label>
+                        <p class="mb-0" id="detail-vendor">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Ukuran File</label>
+                        <p class="mb-0" id="detail-size">-</p>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small text-muted mb-0">Keterangan</label>
+                        <p class="mb-0" id="detail-keterangan">-</p>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small text-muted mb-0">Lokasi File Final (FTP Path)</label>
+                        <p class="mb-0 text-break" id="detail-ftp">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted mb-0">Waktu Proses</label>
+                        <p class="mb-0" id="detail-processing">-</p>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small text-muted mb-0">Pesan</label>
+                        <p class="mb-0" id="detail-message">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('plugin')
@@ -155,6 +214,39 @@
         $('#btn-reset').click(function() {
             window.location.href = "{{ route('dokter.log-file.index') }}";
         });
+
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '-';
+            var units = ['B', 'KB', 'MB', 'GB'];
+            var i = 0;
+            var size = parseFloat(bytes);
+            while (size >= 1024 && i < units.length - 1) {
+                size /= 1024;
+                i++;
+            }
+            return size.toFixed(i === 0 ? 0 : 1) + ' ' + units[i];
+        }
+
+        $(document).on('click', '.btn-view-log', function() {
+            var $btn = $(this);
+            $('#detail-created').text($btn.data('created'));
+            $('#detail-status').html('<span class="badge ' + $btn.data('status-class') + '">' + $btn.data('status') + '</span>');
+            $('#detail-filename').html('<i class="mdi mdi-file me-1 text-muted"></i>' + $btn.data('filename') + ($btn.data('extension') ? ' <span class="badge bg-secondary ms-1">' + $btn.data('extension') + '</span>' : ''));
+            $('#detail-doctype').text($btn.data('doctype'));
+            $('#detail-docnum').text($btn.data('docnum'));
+            $('#detail-tanggal').text($btn.data('tanggal'));
+            $('#detail-vendor').text($btn.data('vendor'));
+            $('#detail-size').text(formatBytes($btn.data('size')));
+            $('#detail-keterangan').text($btn.data('keterangan'));
+            $('#detail-ftp').text($btn.data('ftp'));
+            $('#detail-processing').text($btn.data('processing') ? number_format($btn.data('processing')) + ' ms' : '-');
+            $('#detail-message').text($btn.data('message'));
+            $('#logDetailModal').modal('show');
+        });
+
+        function number_format(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
     });
 </script>
 @endsection

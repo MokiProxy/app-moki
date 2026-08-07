@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $filename }}</title>
+    <title>{{ $filename }} - Audit Access</title>
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
     <style>
         body { margin: 0; padding: 0; overflow: hidden; background: #525659; }
@@ -17,12 +17,11 @@
     @include('components.pdf-viewer')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            renderPdfIntoContainer('pdfjsContainer', '{!! route("dokter.file-managements.view", ["path" => $path, "raw" => true]) !!}');
+            renderPdfIntoContainer('pdfjsContainer', '{{ url("auditor/{$token}/view") }}?path={{ urlencode($path) }}&raw=true');
         });
 
         // Disable keyboard shortcuts that might allow download
         document.addEventListener('keydown', function(e) {
-            // Ctrl+S (save), Ctrl+P (print), Ctrl+U (view source)
             if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
                 e.preventDefault();
                 return false;

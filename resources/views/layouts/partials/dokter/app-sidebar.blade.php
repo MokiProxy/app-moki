@@ -26,6 +26,15 @@ $roleColor = "primary-dokter";
         </li>
         @endcan
 
+        @can('dokter.auditor-access.manage')
+        <li>
+            <a href="{{ route('dokter.auditor-access.index') }}" class="waves-effect">
+                <i class='bx bx-link'></i>
+                <span key="t-auditor-access">Akses Auditor</span>
+            </a>
+        </li>
+        @endcan
+
         @can('dokter.log-file.view')
         <li>
             <a href="{{ route('dokter.log-file.index') }}" class="waves-effect">

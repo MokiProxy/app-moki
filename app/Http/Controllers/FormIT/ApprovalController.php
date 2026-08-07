@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\FormIT;
 
 use App\Http\Controllers\Controller;
+use App\Models\FixedAssetBorrowing;
 use App\Models\FormitApproval;
 use App\Models\SoftwareInstallation;
 use Illuminate\Http\Request;
@@ -12,6 +13,8 @@ class ApprovalController extends Controller
 {
     public function index()
     {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.approval.view'), 403);
+
         $employeeId = auth()->user()->employee_id;
 
         $pendingApprovals = SoftwareInstallation::with(['pemohon', 'pemohon.division'])
@@ -38,6 +41,8 @@ class ApprovalController extends Controller
 
     public function show($id)
     {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.approval.view'), 403);
+
         $employeeId = auth()->user()->employee_id;
 
         $softwareInstallation = SoftwareInstallation::with([
@@ -57,6 +62,8 @@ class ApprovalController extends Controller
 
     public function process(Request $request, $id)
     {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.approval.process'), 403);
+
         $validated = $request->validate([
             'action' => 'required|in:approve,reject',
             'notes' => 'nullable|string|max:500',
@@ -120,6 +127,95 @@ class ApprovalController extends Controller
 
             return back()->with('success', $message);
 
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memproses approval: ' . $e->getMessage());
+        }
+    }
+
+    public function fixedAssetIndex()
+    {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.approve'), 403);
+
+        $employeeId = auth()->user()->employee_id;
+
+        $pendingApprovals = FixedAssetBorrowing::with(['pemohon', 'pemohon.division'])
+            ->where('approver_id', $employeeId)
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        $historyApprovals = FixedAssetBorrowing::with(['pemohon', 'pemohon.division'])
+            ->where('approver_id', $employeeId)
+            ->where('status', '!=', 'pending')
+            ->latest()
+            ->get();
+
+        $pageName = 'Approval Peminjaman Fixed Asset';
+        return view('form-it.approval.fixed-asset-index', compact('pageName', 'pendingApprovals', 'historyApprovals'));
+    }
+
+    public function fixedAssetShow($id)
+    {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.approve'), 403);
+
+        $borrowing = FixedAssetBorrowing::with(['pemohon', 'pemohon.division', 'pemohon.regional', 'approver'])
+            ->findOrFail($id);
+
+        $pageName = 'Review Pengajuan Peminjaman Fixed Asset';
+        return view('form-it.approval.fixed-asset-show', compact('pageName', 'borrowing'));
+    }
+
+    public function fixedAssetProcess(Request $request, $id)
+    {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.approve'), 403);
+
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'notes' => 'nullable|string|max:500',
+            'penyerahkan_name' => 'required_if:action,approve|string|max:255',
+            'penyerahkan_jabatan' => 'required_if:action,approve|string|max:255',
+            'penyerahkan_departemen' => 'required_if:action,approve|string|max:255',
+            'penyerahkan_area' => 'required_if:action,approve|string|max:255',
+        ]);
+
+        $employeeId = auth()->user()->employee_id;
+        $borrowing = FixedAssetBorrowing::findOrFail($id);
+
+        if ($borrowing->approver_id !== $employeeId) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk melakukan approval ini.');
+        }
+
+        if ($borrowing->status !== 'pending') {
+            return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
+        }
+
+        DB::beginTransaction();
+        try {
+            if ($validated['action'] === 'approve') {
+                $borrowing->update([
+                    'status' => 'approved',
+                    'approved_at' => now(),
+                    'penyerahkan_name' => $validated['penyerahkan_name'],
+                    'penyerahkan_jabatan' => $validated['penyerahkan_jabatan'],
+                    'penyerahkan_departemen' => $validated['penyerahkan_departemen'],
+                    'penyerahkan_area' => $validated['penyerahkan_area'],
+                ]);
+
+                $message = 'Pengajuan peminjaman fixed asset berhasil disetujui!';
+            } else {
+                $borrowing->update([
+                    'status' => 'rejected',
+                    'rejected_by' => $employeeId,
+                    'rejection_reason' => $validated['notes'] ?? null,
+                    'rejected_at' => now(),
+                ]);
+
+                $message = 'Pengajuan peminjaman fixed asset berhasil ditolak.';
+            }
+
+            DB::commit();
+            return back()->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal memproses approval: ' . $e->getMessage());

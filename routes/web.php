@@ -21,6 +21,7 @@ use App\Http\Controllers\ApprovedController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\WhatsappController;
 use App\Http\Controllers\PortalController;
+use App\Http\Controllers\Dokter\AuditorFileController;
 use App\Http\Controllers\Auth\MicrosoftAuthController;
 use Illuminate\Support\Facades\Route;
 /*
@@ -43,6 +44,11 @@ Route::group(['middleware' => ['guest']], function () {
 Route::get("/laporan", function() {
     return view("laporan");
 });
+
+// --- AUDITOR PUBLIC ACCESS (No Auth Required) ---
+Route::get('/auditor/{token}', [AuditorFileController::class, 'index'])->name('auditor.access');
+Route::get('/auditor/{token}/view', [AuditorFileController::class, 'view'])->name('auditor.view');
+Route::get('/auditor/{token}/download', [AuditorFileController::class, 'download'])->name('auditor.download');
 
 // --- AUTH AREA (Harus login) ---
 Route::group(['middleware' => ['auth']], function () {

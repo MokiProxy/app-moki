@@ -204,17 +204,6 @@ class MergeFlowService
                 'merged_at' => now(),
             ]);
 
-            $totalPages = $merger->getPageCount($mergedPath);
-            app(ScanLogger::class)->log('final_merge_completed', 'success', [
-                'merge_group_id' => $group->id,
-                'vendor_name' => $group->vendor_name,
-                'root_document_number' => $group->root_document_number,
-                'final_pdf_path' => $finalPath,
-                'total_documents' => $items->count(),
-                'total_pages' => $totalPages,
-                'message' => "Final merge selesai: {$items->count()} dokumen, {$totalPages} halaman",
-            ]);
-
             Log::info('Final merge completed', [
                 'group_id' => $group->id,
                 'final_path' => $finalPath,
@@ -224,13 +213,6 @@ class MergeFlowService
             Log::error('Final merge failed', [
                 'group_id' => $group->id,
                 'error' => $e->getMessage(),
-            ]);
-
-            app(ScanLogger::class)->log('final_merge_failed', 'failed', [
-                'merge_group_id' => $group->id,
-                'vendor_name' => $group->vendor_name,
-                'root_document_number' => $group->root_document_number,
-                'message' => "Final merge gagal: {$e->getMessage()}",
             ]);
 
         } finally {

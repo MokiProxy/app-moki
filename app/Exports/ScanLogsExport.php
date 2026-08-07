@@ -65,9 +65,8 @@ class ScanLogsExport implements FromCollection, WithHeadings, WithMapping, Shoul
         return [
             'D' => 38,
             'I' => 45,
-            'J' => 45,
-            'L' => 45,
-            'O' => 55,
+            'K' => 45,
+            'N' => 55,
         ];
     }
 
@@ -83,7 +82,6 @@ class ScanLogsExport implements FromCollection, WithHeadings, WithMapping, Shoul
             'Tanggal',
             'Vendor',
             'Keterangan',
-            'Uraian',
             'Status',
             'FTP Path',
             'Ukuran',
@@ -106,7 +104,6 @@ class ScanLogsExport implements FromCollection, WithHeadings, WithMapping, Shoul
             $log->tanggal ?? '-',
             $log->vendor_name ?? '-',
             $log->keterangan ?? '-',
-            $log->uraian ?? '-',
             $log->status_label,
             $log->ftp_path ?? '-',
             $this->formatBytes($log->file_size),
@@ -177,7 +174,7 @@ class ScanLogsExport implements FromCollection, WithHeadings, WithMapping, Shoul
             return;
         }
 
-        $statusColumn = Coordinate::stringFromColumnIndex(11);
+        $statusColumn = Coordinate::stringFromColumnIndex(10);
         $statusColors = [
             'success' => ['fill' => 'C6EFCE', 'font' => '006100'],
             'failed' => ['fill' => 'FFC7CE', 'font' => '9C0006'],
@@ -211,8 +208,8 @@ class ScanLogsExport implements FromCollection, WithHeadings, WithMapping, Shoul
 
         $sheet->getStyle("A4:A{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("{$statusColumn}4:{$statusColumn}{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle("L4:L{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         $sheet->getStyle("M4:M{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-        $sheet->getStyle("N4:N{$lastDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
     }
 
     protected function writeFooterRow($sheet, string $lastColumn, int $lastDataRow): void
@@ -220,9 +217,9 @@ class ScanLogsExport implements FromCollection, WithHeadings, WithMapping, Shoul
         $footerRow = $lastDataRow + 1;
 
         $sheet->setCellValue("A{$footerRow}", 'TOTAL DATA');
-        $sheet->mergeCells("A{$footerRow}:J{$footerRow}");
-        $sheet->setCellValue("K{$footerRow}", count($this->logs));
-        $sheet->mergeCells("K{$footerRow}:{$lastColumn}{$footerRow}");
+        $sheet->mergeCells("A{$footerRow}:I{$footerRow}");
+        $sheet->setCellValue("J{$footerRow}", count($this->logs));
+        $sheet->mergeCells("J{$footerRow}:{$lastColumn}{$footerRow}");
 
         $sheet->getStyle("A{$footerRow}:{$lastColumn}{$footerRow}")->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => 'D9E2F3']],

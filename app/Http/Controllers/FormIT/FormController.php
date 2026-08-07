@@ -4,8 +4,10 @@ namespace App\Http\Controllers\FormIT;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\FixedAssetBorrowing;
 use App\Models\FormitApproval;
 use App\Models\SoftwareInstallation;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +31,8 @@ class FormController extends Controller
 
     public function mySubmissions()
     {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.forms.view'), 403);
+
         $employeeId = auth()->user()->employee_id;
 
         $submissions = SoftwareInstallation::with(['pemohon', 'pemohon.division', 'approvals'])
@@ -43,6 +47,8 @@ class FormController extends Controller
 
     public function softwareInstallation()
     {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.forms.create'), 403);
+
         $pageName = 'Form Pengajuan Install Software & Aplikasi';
         $pemohon = Employee::with(['division', 'regional'])->where('employee_id', auth()->user()->employee_id)->first();
         $softwareOptions = $this->softwareOptions;
@@ -52,6 +58,8 @@ class FormController extends Controller
 
     public function softwareInstallationCreate(Request $request)
     {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.forms.create'), 403);
+
         $validated = $request->validate([
             'softwares' => 'required|array|min:1',
             'softwares.*' => 'string',
@@ -103,7 +111,6 @@ class FormController extends Controller
             return redirect()
                 ->route('form-it.forms.software-installation.show', $softwareInstallation->id)
                 ->with('success', 'Pengajuan berhasil dibuat! Menunggu approval dari Superior dan Manager IT.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Gagal membuat pengajuan: ' . $e->getMessage());
@@ -112,10 +119,16 @@ class FormController extends Controller
 
     public function softwareInstallationShow($id)
     {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.forms.view'), 403);
+
         $softwareInstallation = SoftwareInstallation::with([
-            'pemohon', 'pemohon.division', 'pemohon.regional',
-            'superior1', 'managerIt',
-            'approvals', 'approvals.approver',
+            'pemohon',
+            'pemohon.division',
+            'pemohon.regional',
+            'superior1',
+            'managerIt',
+            'approvals',
+            'approvals.approver',
         ])->findOrFail($id);
 
         $pageName = 'Detail Pengajuan Install Software';
@@ -126,9 +139,15 @@ class FormController extends Controller
 
     public function showPdf($id)
     {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.forms.view'), 403);
+
         $softwareInstallation = SoftwareInstallation::with([
-            'pemohon', 'pemohon.division', 'pemohon.regional',
-            'superior1', 'managerIt', 'approvals',
+            'pemohon',
+            'pemohon.division',
+            'pemohon.regional',
+            'superior1',
+            'managerIt',
+            'approvals',
         ])->findOrFail($id);
 
         $pemohon = $softwareInstallation->pemohon;
@@ -152,12 +171,100 @@ class FormController extends Controller
             'disetujui_date' => $managerITApproval?->approved_at?->format('d M Y'),
         ];
 
-        $pdf = Pdf::loadView('laporan', compact(
-            'pemohon', 'date', 'softwareOptions', 'selectedSoftware', 'keterangan', 'sign'
+        $pdf = Pdf::loadView('form-it.templates.software-installation', compact(
+            'pemohon',
+            'date',
+            'softwareOptions',
+            'selectedSoftware',
+            'keterangan',
+            'sign'
         ))->setPaper('a4', 'portrait');
 
         $pdf->getDomPDF()->getOptions()->set('isImagickEnabled', false);
 
         return $pdf->stream("install-software-{$id}.pdf");
+    }
+
+    public function fixedAssetCreate()
+    {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.create'), 403);
+
+        $pageName = 'Form Peminjaman Fixed Asset IT';
+        $pemohon = Employee::with(['division', 'regional'])
+            ->where('employee_id', auth()->user()->employee_id)
+            ->first();
+
+        return view('form-it.forms.fixed-asset-create', compact('pageName', 'pemohon'));
+    }
+
+    public function fixedAssetStore(Request $request)
+    {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.create'), 403);
+
+        $validated = $request->validate([
+            'date_start' => 'required|date',
+            'date_end' => 'required|date|after_or_equal:date_start',
+            'tujuan_lokasi' => 'required|string|max:255',
+            'keperluan' => 'required|string|max:1000',
+            'tipe_perangkat' => 'required|string|max:255',
+        ]);
+
+        $pemohon = Employee::with(['division', 'regional'])
+            ->where('employee_id', auth()->user()->employee_id)
+            ->first();
+
+        $approver = $pemohon->superior1();
+
+        DB::beginTransaction();
+        try {
+            $borrowing = FixedAssetBorrowing::create([
+                'pemohon_id' => $pemohon->employee_id,
+                'pemohon_name' => $pemohon->name,
+                'pemohon_jabatan' => $pemohon->jabatan,
+                'pemohon_departemen' => $pemohon->division->name ?? null,
+                'pemohon_area' => $pemohon->regional->name ?? null,
+                'date_start' => $validated['date_start'],
+                'date_end' => $validated['date_end'],
+                'tujuan_lokasi' => $validated['tujuan_lokasi'],
+                'keperluan' => $validated['keperluan'],
+                'tipe_perangkat' => $validated['tipe_perangkat'],
+                'status' => 'pending',
+                'approver_id' => $approver?->employee_id,
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('form-it.forms.fixed-asset.my-submissions')
+                ->with('success', 'Pengajuan peminjaman fixed asset berhasil dibuat! Menunggu approval.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal membuat pengajuan: ' . $e->getMessage());
+        }
+    }
+
+    public function fixedAssetMySubmissions()
+    {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.view'), 403);
+
+        $employeeId = auth()->user()->employee_id;
+        $submissions = FixedAssetBorrowing::with(['pemohon', 'approver'])
+            ->where('pemohon_id', $employeeId)
+            ->latest()
+            ->get();
+
+        $pageName = 'Pengajuan Peminjaman Fixed Asset Saya';
+        return view('form-it.forms.fixed-asset-my-submissions', compact('pageName', 'submissions'));
+    }
+
+    public function fixedAssetShow($id)
+    {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.view'), 403);
+
+        $borrowing = FixedAssetBorrowing::with(['pemohon', 'pemohon.division', 'pemohon.regional', 'approver'])
+            ->findOrFail($id);
+
+        $pageName = 'Detail Pengajuan Peminjaman Fixed Asset';
+        return view('form-it.forms.fixed-asset-show', compact('pageName', 'borrowing'));
     }
 }
