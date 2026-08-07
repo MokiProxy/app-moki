@@ -130,6 +130,38 @@
                                 </div>
                             </div>
                         </div>
+
+                        @if($borrowing->deviceCompletions && $borrowing->deviceCompletions->count() > 0)
+                        <div class="card mb-3 border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="mdi mdi-clipboard-check me-1"></i> Kelengkapan Perangkat</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered table-sm mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="5%" class="text-center">No</th>
+                                            <th width="35%">Uraian</th>
+                                            <th width="10%" class="text-center">Ada</th>
+                                            <th width="10%" class="text-center">Tidak Ada</th>
+                                            <th width="40%">Keterangan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($borrowing->deviceCompletions as $index => $device)
+                                        <tr>
+                                            <td class="text-center">{{ $index + 1 }}</td>
+                                            <td>{{ $device->uraian }}</td>
+                                            <td class="text-center">{{ $device->ada ? '✓' : '-' }}</td>
+                                            <td class="text-center">{{ $device->tidak_ada ? '✓' : '-' }}</td>
+                                            <td>{{ $device->keterangan ?? '-' }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        @endif
                         @endif
 
                         @if($borrowing->status === 'rejected' && $borrowing->rejection_reason)

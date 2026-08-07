@@ -5,12 +5,12 @@ use App\Http\Controllers\FormIT\DashboardController;
 use App\Http\Controllers\FormIT\FormController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix("form-it")->name("form-it.")->group(function() {
+Route::prefix("form-it")->name("form-it.")->group(function () {
     Route::get("/", [DashboardController::class, 'index'])
         ->name("index")
         ->middleware('permission:form-it.dashboard');
 
-    Route::prefix("forms")->name("forms.")->group(function() {
+    Route::prefix("forms")->name("forms.")->group(function () {
         Route::get("my-submissions", [FormController::class, "mySubmissions"])
             ->name("my-submissions")
             ->middleware('permission:form-it.forms.view');
@@ -30,7 +30,7 @@ Route::prefix("form-it")->name("form-it.")->group(function() {
             ->middleware('permission:form-it.forms.view');
 
         // PEMINJAMAN FIXED ASSET IT
-        Route::prefix("fixed-asset")->name("fixed-asset.")->group(function() {
+        Route::prefix("fixed-asset")->name("fixed-asset.")->group(function () {
             Route::get("create", [FormController::class, "fixedAssetCreate"])
                 ->name("create")
                 ->middleware('permission:form-it.fixed-asset.create');
@@ -39,17 +39,37 @@ Route::prefix("form-it")->name("form-it.")->group(function() {
                 ->name("store")
                 ->middleware('permission:form-it.fixed-asset.create');
 
+            Route::get("my-submissions", [FormController::class, "fixedAssetMySubmissions"])
+                ->name("my-submissions")
+                ->middleware('permission:form-it.fixed-asset.view');
+
             Route::get("{id}", [FormController::class, "fixedAssetShow"])
                 ->name("show")
                 ->middleware('permission:form-it.fixed-asset.view');
 
-            Route::get("my-submissions", [FormController::class, "fixedAssetMySubmissions"])
-                ->name("my-submissions")
-                ->middleware('permission:form-it.fixed-asset.view');
+            Route::get("fixed-asset/{id}/pdf", [FormController::class, "fixedAssetShowPdf"])
+                ->name("pdf")
+                ->middleware('permission:form-it.forms.view');
         });
     });
 
-    Route::prefix("approval")->name("approval.")->middleware(['approver'])->group(function() {
+    // APPROVAL FIXED ASSET (permission check only, no approver middleware)
+    Route::prefix("approval/fixed-asset")->name("approval.fixed-asset.")->group(function () {
+        Route::get("/", [ApprovalController::class, "fixedAssetIndex"])
+            ->name("index")
+            ->middleware('permission:form-it.fixed-asset.approve');
+
+        Route::get("/{id}", [ApprovalController::class, "fixedAssetShow"])
+            ->name("show")
+            ->middleware('permission:form-it.fixed-asset.approve');
+
+        Route::post("/{id}/process", [ApprovalController::class, "fixedAssetProcess"])
+            ->name("process")
+            ->middleware('permission:form-it.fixed-asset.approve');
+    });
+
+    // APPROVAL SOFTWARE INSTALLATION (requires approver middleware)
+    Route::prefix("approval")->name("approval.")->middleware(['approver'])->group(function () {
         Route::get("/", [ApprovalController::class, "index"])
             ->name("index")
             ->middleware('permission:form-it.approval.view');
@@ -59,20 +79,5 @@ Route::prefix("form-it")->name("form-it.")->group(function() {
         Route::post("/{id}/process", [ApprovalController::class, "process"])
             ->name("process")
             ->middleware('permission:form-it.approval.process');
-
-        // APPROVAL FIXED ASSET
-        Route::prefix("fixed-asset")->name("fixed-asset.")->group(function() {
-            Route::get("/", [ApprovalController::class, "fixedAssetIndex"])
-                ->name("index")
-                ->middleware('permission:form-it.fixed-asset.approve');
-
-            Route::get("/{id}", [ApprovalController::class, "fixedAssetShow"])
-                ->name("show")
-                ->middleware('permission:form-it.fixed-asset.approve');
-
-            Route::post("/{id}/process", [ApprovalController::class, "fixedAssetProcess"])
-                ->name("process")
-                ->middleware('permission:form-it.fixed-asset.approve');
-        });
     });
 });

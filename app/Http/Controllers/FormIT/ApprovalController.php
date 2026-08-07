@@ -140,13 +140,11 @@ class ApprovalController extends Controller
         $employeeId = auth()->user()->employee_id;
 
         $pendingApprovals = FixedAssetBorrowing::with(['pemohon', 'pemohon.division'])
-            ->where('approver_id', $employeeId)
             ->where('status', 'pending')
             ->latest()
             ->get();
 
         $historyApprovals = FixedAssetBorrowing::with(['pemohon', 'pemohon.division'])
-            ->where('approver_id', $employeeId)
             ->where('status', '!=', 'pending')
             ->latest()
             ->get();
@@ -159,7 +157,7 @@ class ApprovalController extends Controller
     {
         abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.approve'), 403);
 
-        $borrowing = FixedAssetBorrowing::with(['pemohon', 'pemohon.division', 'pemohon.regional', 'approver'])
+        $borrowing = FixedAssetBorrowing::with(['pemohon', 'pemohon.division', 'pemohon.regional', 'approver', 'deviceCompletions'])
             ->findOrFail($id);
 
         $pageName = 'Review Pengajuan Peminjaman Fixed Asset';
@@ -177,14 +175,15 @@ class ApprovalController extends Controller
             'penyerahkan_jabatan' => 'required_if:action,approve|string|max:255',
             'penyerahkan_departemen' => 'required_if:action,approve|string|max:255',
             'penyerahkan_area' => 'required_if:action,approve|string|max:255',
+            'device_completions' => 'required_if:action,approve|array|min:1',
+            'device_completions.*.uraian' => 'required|string|max:255',
+            'device_completions.*.ada' => 'nullable|boolean',
+            'device_completions.*.tidak_ada' => 'nullable|boolean',
+            'device_completions.*.keterangan' => 'nullable|string|max:255',
         ]);
 
         $employeeId = auth()->user()->employee_id;
         $borrowing = FixedAssetBorrowing::findOrFail($id);
-
-        if ($borrowing->approver_id !== $employeeId) {
-            return back()->with('error', 'Anda tidak memiliki akses untuk melakukan approval ini.');
-        }
 
         if ($borrowing->status !== 'pending') {
             return back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
@@ -196,11 +195,21 @@ class ApprovalController extends Controller
                 $borrowing->update([
                     'status' => 'approved',
                     'approved_at' => now(),
+                    'approver_id' => $employeeId,
                     'penyerahkan_name' => $validated['penyerahkan_name'],
                     'penyerahkan_jabatan' => $validated['penyerahkan_jabatan'],
                     'penyerahkan_departemen' => $validated['penyerahkan_departemen'],
                     'penyerahkan_area' => $validated['penyerahkan_area'],
                 ]);
+
+                foreach ($validated['device_completions'] as $device) {
+                    $borrowing->deviceCompletions()->create([
+                        'uraian' => $device['uraian'],
+                        'ada' => $device['ada'] ?? false,
+                        'tidak_ada' => $device['tidak_ada'] ?? false,
+                        'keterangan' => $device['keterangan'] ?? null,
+                    ]);
+                }
 
                 $message = 'Pengajuan peminjaman fixed asset berhasil disetujui!';
             } else {

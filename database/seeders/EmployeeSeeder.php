@@ -16,14 +16,13 @@ class EmployeeSeeder extends Seeder
     {
         $employees = [
             // Employee For Test Hierarchy
-            ["nik" => "0595987493881", "name" => "Abimana CEO", "email" => "abimana.ceo@tpm-facility.com", "hp" => null, "address" => null],
-            ["nik" => "0595987493882", "name" => "Bayu GMIT", "email" => "bayu.gmit@tpm-facility.com", "hp" => null, "address" => null],
-            ["nik" => "0595987493883", "name" => "Irsyad MGRDEV", "email" => "irsyad.mgrdev@tpm-facility.com", "hp" => null, "address" => null],
-            ["nik" => "0595987493884", "name" => "Humam SPVBE", "email" => "humam.spvbe@tpm-facility.com", "hp" => null, "address" => null],
-            ["nik" => "0595987493885", "name" => "Wahid PGRBE", "email" => "wahid.pgrbe@tpm-facility.com", "hp" => null, "address" => null],
-
-            ["name" => "MOKODEV", "email" => "superadmin@sistem.com", "hp" => "087893244578", "address" => null],
-            ["name" => "HIDDEV", "email" => "admin@sistem.com", "hp" => "087893244578", "address" => null],
+            ["nik" => "0595987493881", "name" => "Abimana CEO", "email" => "abimana.ceo@tpm-facility.com", "hp" => null, "jabatan" => "CEO", "address" => null],
+            ["nik" => "0595987493882", "name" => "Bayu GMIT", "email" => "bayu.gmit@tpm-facility.com", "hp" => null, "jabatan" => "GMIT", "address" => null],
+            ["nik" => "0595987493883", "name" => "Irsyad MGRDEV", "email" => "irsyad.mgrdev@tpm-facility.com", "hp" => null, "jabatan" => "MGRDEV", "address" => null],
+            ["nik" => "0595987493884", "name" => "Humam SPVBE", "email" => "humam.spvbe@tpm-facility.com", "hp" => null, "jabatan" => "SPVBE", "address" => null],
+            ["nik" => "0595987493885", "name" => "Wahid PGRBE", "email" => "wahid.pgrbe@tpm-facility.com", "hp" => null, "jabatan" => "PGRBE", "address" => null],
+            ["name" => "MOKODEV", "email" => "superadmin@sistem.com", "hp" => "087893244578", "jabatan" => "SUPER ADMIN", "address" => null],
+            ["name" => "HIDDEV", "email" => "admin@sistem.com", "hp" => "087893244578", "jabatan" => "ADMIN", "address" => null],
 
             ["name" => "Prasojo Utomo", "email" => "prasojo.utomo@tpm-facility.com", "hp" => null, "address" => null],
             ["name" => "Arvita Tiarawati", "email" => "arvitatiarawati@tpm-facility.com", "hp" => null, "address" => null],

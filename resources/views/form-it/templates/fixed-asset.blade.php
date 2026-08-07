@@ -114,12 +114,12 @@
 
                     <tr>
 
-                        <td width="150">Tanggal Pengajuan</td>
-                        <td width="15">:</td>
-                        <td width="180" class="line">{{ $borrowing->date_start->format('d F Y') }}</td>
+                        <td width="100">Tanggal Pengajuan</td>
+                        <td width="10">:</td>
+                        <td width="80" class="line">{{ $borrowing->date_start->format('d F Y') }}</td>
 
-                        <td width="100">s/d Tanggal</td>
-                        <td width="15">:</td>
+                        <td width="60">s/d Tanggal</td>
+                        <td width="10">:</td>
                         <td class="line">{{ $borrowing->date_end->format('d F Y') }}</td>
 
                     </tr>
@@ -136,34 +136,9 @@
 
                         <td>Keperluan</td>
                         <td>:</td>
-                        <td colspan="4" class="line">{{ $borrowing->keperluan }}</td>
+                        <td colspan="4" class="line">{{ $borrowing->keperluan }} </td>
 
                     </tr>
-
-                    <tr>
-
-                        <td></td>
-                        <td></td>
-                        <td colspan="4" class="line"></td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td></td>
-                        <td></td>
-                        <td colspan="4" class="line"></td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td></td>
-                        <td></td>
-                        <td colspan="4" class="line"></td>
-
-                    </tr>
-
                     <tr>
 
                         <td>Type Perangkat</td>
@@ -198,7 +173,7 @@
                 <table class="input-table">
 
                     <tr style="border-top: 1px solid #000;">
-                        <td width="120">Nama</td>
+                        <td width="70">Nama</td>
                         <td width="10">:</td>
                         <td class="line">{{ $borrowing->pemohon_name }}</td>
                     </tr>
@@ -230,7 +205,7 @@
                 <table class="input-table">
 
                     <tr style="border-top: 1px solid #000;">
-                        <td width="120">Nama</td>
+                        <td width="70">Nama</td>
                         <td width="10">:</td>
                         <td class="line">{{ $borrowing->penyerahkan_name ?? '-' }}</td>
                     </tr>
@@ -284,23 +259,27 @@
 
         </tr>
 
+        @if(isset($borrowing->deviceCompletions) && $borrowing->deviceCompletions->count() > 0)
+        @foreach($borrowing->deviceCompletions as $index => $device)
+        <tr>
+            <td class="center">{{ $index + 1 }}</td>
+            <td>{{ $device->uraian }}</td>
+            <td class="center">{{ $device->ada ? 'V' : '' }}</td>
+            <td class="center">{{ $device->tidak_ada ? 'V' : '' }}</td>
+            <td>{{ $device->keterangan ?? '' }}</td>
+        </tr>
+        @endforeach
+        @else
         @for($i=1;$i<=5;$i++)
-
             <tr>
-
             <td class="center">{{ $i }}</td>
-
             <td></td>
-
             <td></td>
-
             <td></td>
-
             <td></td>
-
             </tr>
-
             @endfor
+            @endif
 
     </table>
 
@@ -326,9 +305,23 @@
 
         <tr>
 
-            <td class="signature-space"></td>
+            <td class="signature-space">
+                @if($borrowing->getApprovalStatusLabel() == "Disetujui")
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; vertical-align: middle; margin-top: 15px;">
+                    <img src="{{ public_path('images/approved.svg') }}"
+                        width="150" style="transform: rotate(3deg);">
+                </div>
+                @endif
+            </td>
 
-            <td></td>
+            <td>
+                @if($borrowing->getApprovalStatusLabel() == "Disetujui")
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; vertical-align: middle; margin-top: 15px;">
+                    <img src="{{ public_path('images/approved.svg') }}"
+                        width="150" style="transform: rotate(3deg);">
+                </div>
+                @endif
+            </td>
 
         </tr>
 
@@ -336,13 +329,13 @@
 
             <td class="center">
 
-                Departmen MSI
+                {{ $borrowing->approver->name ?? '-' }}
 
             </td>
 
             <td class="center">
 
-                User
+                {{ $borrowing->pemohon->name ?? '-' }}
 
             </td>
 

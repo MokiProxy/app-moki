@@ -50,7 +50,7 @@
                 @endif
 
                 <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         <div class="card mb-3">
                             <div class="card-header bg-light">
                                 <h6 class="mb-0"><i class="mdi mdi-account-circle me-1"></i> Data Pemohon</h6>
@@ -123,7 +123,7 @@
                         @endif
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         @if($borrowing->status === 'pending')
                         <div class="card border-primary">
                             <div class="card-header bg-primary text-white">
@@ -160,6 +160,20 @@
                                         <label class="form-label fw-bold">Catatan (Opsional)</label>
                                         <textarea name="notes" class="form-control" rows="2" placeholder="Tambahkan catatan jika diperlukan...">{{ old('notes') }}</textarea>
                                     </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Kelengkapan Perangkat <span class="text-danger">*</span></label>
+                                        <small class="text-muted d-block mb-2">Wajib diisi saat menyetujui pengajuan</small>
+                                        <div id="device-completion-list">
+                                            <!-- Dynamic rows will be added here -->
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addDeviceCompletion">
+                                            <i class="mdi mdi-plus"></i> Tambah Item
+                                        </button>
+                                        @error('device_completions') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                        @error('device_completions.*.uraian') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                    </div>
+
                                     <div class="d-grid gap-2">
                                         <button type="submit" name="action" value="approve" class="btn btn-success" onclick="return confirm('Apakah Anda yakin ingin menyetujui pengajuan ini?')">
                                             <i class="mdi mdi-check-circle me-1"></i> Setujui
@@ -229,11 +243,103 @@
 </div>
 @endsection
 
-@section('scripts')
+@section('plugin')
 <script>
 function showRejectModal() {
     var rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
     rejectModal.show();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    let rowIndex = 0;
+
+    document.getElementById('addDeviceCompletion').addEventListener('click', function() {
+        console.log("ok");
+        addDeviceRow();
+    });
+
+    function addDeviceRow(uraian = '', ada = false, tidak_ada = false, keterangan = '') {
+        const list = document.getElementById('device-completion-list');
+        const row = document.createElement('div');
+        row.className = 'row mb-2 device-completion-row align-items-center';
+        row.innerHTML = `
+            <div class="col-md-4">
+                <input type="text" name="device_completions[${rowIndex}][uraian]"
+                       class="form-control form-control-sm" placeholder="Uraian"
+                       value="${uraian}" required>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check">
+                    <input type="checkbox" name="device_completions[${rowIndex}][ada]"
+                           class="form-check-input device-ada" value="1"
+                           ${ada ? 'checked' : ''}>
+                    <label class="form-check-label small">Ada</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check">
+                    <input type="checkbox" name="device_completions[${rowIndex}][tidak_ada]"
+                           class="form-check-input device-tidak-ada" value="1"
+                           ${tidak_ada ? 'checked' : ''}>
+                    <label class="form-check-label small">Tidak Ada</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="device_completions[${rowIndex}][keterangan]"
+                       class="form-control form-control-sm" placeholder="Keterangan"
+                       value="${keterangan}">
+            </div>
+            <div class="col-md-1 text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-device">
+                    <i class="mdi mdi-delete"></i>
+                </button>
+            </div>
+        `;
+        list.appendChild(row);
+        rowIndex++;
+
+        // Add event listeners for checkbox mutual exclusion
+        const adaCheckbox = row.querySelector('.device-ada');
+        const tidakAdaCheckbox = row.querySelector('.device-tidak-ada');
+
+        adaCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                tidakAdaCheckbox.checked = false;
+            }
+        });
+
+        tidakAdaCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                adaCheckbox.checked = false;
+            }
+        });
+    }
+
+    // Event delegation for remove button
+    document.getElementById('device-completion-list').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-device')) {
+            e.target.closest('.device-completion-row').remove();
+            reindexRows();
+        }
+    });
+
+    function reindexRows() {
+        const rows = document.querySelectorAll('.device-completion-row');
+        rowIndex = 0;
+        rows.forEach((row) => {
+            const uraianInput = row.querySelector('[name*="[uraian]"]');
+            const adaCheckbox = row.querySelector('[name*="[ada]"]');
+            const tidakAdaCheckbox = row.querySelector('[name*="[idak_ada]"]');
+            const keteranganInput = row.querySelector('[name*="[eterangan]"]');
+
+            uraianInput.name = `device_completions[${rowIndex}][uraian]`;
+            adaCheckbox.name = `device_completions[${rowIndex}][ada]`;
+            tidakAdaCheckbox.name = `device_completions[${rowIndex}][tidak_ada]`;
+            keteranganInput.name = `device_completions[${rowIndex}][keterangan]`;
+
+            rowIndex++;
+        });
+    }
+});
 </script>
 @endsection

@@ -213,8 +213,6 @@ class FormController extends Controller
             ->where('employee_id', auth()->user()->employee_id)
             ->first();
 
-        $approver = $pemohon->superior1();
-
         DB::beginTransaction();
         try {
             $borrowing = FixedAssetBorrowing::create([
@@ -229,7 +227,6 @@ class FormController extends Controller
                 'keperluan' => $validated['keperluan'],
                 'tipe_perangkat' => $validated['tipe_perangkat'],
                 'status' => 'pending',
-                'approver_id' => $approver?->employee_id,
             ]);
 
             DB::commit();
@@ -261,10 +258,60 @@ class FormController extends Controller
     {
         abort_unless(auth()->user()->hasPermissionTo('form-it.fixed-asset.view'), 403);
 
-        $borrowing = FixedAssetBorrowing::with(['pemohon', 'pemohon.division', 'pemohon.regional', 'approver'])
+        $borrowing = FixedAssetBorrowing::with(['pemohon', 'pemohon.division', 'pemohon.regional', 'approver', 'deviceCompletions'])
             ->findOrFail($id);
 
         $pageName = 'Detail Pengajuan Peminjaman Fixed Asset';
         return view('form-it.forms.fixed-asset-show', compact('pageName', 'borrowing'));
+    }
+
+    public function fixedAssetShowPdf($id)
+    {
+        abort_unless(auth()->user()->hasPermissionTo('form-it.forms.view'), 403);
+
+        $borrowing = FixedAssetBorrowing::with([
+            'pemohon',
+            "deviceCompletions",
+            "approver",
+        ])->findOrFail($id);
+
+        $pdf = Pdf::loadView('form-it.templates.fixed-asset', compact('borrowing'))->setPaper('a4', 'portrait');
+        $pdf->getDomPDF()->getOptions()->set('isImagickEnabled', false);
+
+        return $pdf->stream("fixed-asset-{$id}.pdf");
+
+        $pemohon = $softwareInstallation->pemohon;
+        $date = $softwareInstallation->created_at->format('d F Y');
+        $softwareOptions = $this->softwareOptions;
+        $selectedSoftware = $softwareInstallation->softwares;
+        $keterangan = $softwareInstallation->keterangan;
+
+        $superior1Approval = $softwareInstallation->approvals->where('level', 1)->first();
+        $managerITApproval = $softwareInstallation->approvals->where('level', 2)->first();
+
+        $sign = [
+            'diajukan' => $softwareInstallation->pemohon->name,
+            'diketahui' => $softwareInstallation->superior1,
+            'disetujui' => $softwareInstallation->managerIt,
+            'diajukan_approved' => true,
+            'diketahui_approved' => $superior1Approval?->status === 'approved',
+            'disetujui_approved' => $managerITApproval?->status === 'approved',
+            'diajukan_date' => $softwareInstallation->created_at->format('d M Y'),
+            'diketahui_date' => $superior1Approval?->approved_at?->format('d M Y'),
+            'disetujui_date' => $managerITApproval?->approved_at?->format('d M Y'),
+        ];
+
+        $pdf = Pdf::loadView('form-it.templates.software-installation', compact(
+            'pemohon',
+            'date',
+            'softwareOptions',
+            'selectedSoftware',
+            'keterangan',
+            'sign'
+        ))->setPaper('a4', 'portrait');
+
+        $pdf->getDomPDF()->getOptions()->set('isImagickEnabled', false);
+
+        return $pdf->stream("install-software-{$id}.pdf");
     }
 }

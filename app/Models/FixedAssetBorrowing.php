@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FixedAssetBorrowing extends Model
 {
@@ -47,6 +48,11 @@ class FixedAssetBorrowing extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'approver_id', 'employee_id');
+    }
+
+    public function deviceCompletions(): HasMany
+    {
+        return $this->hasMany(FixedAssetDeviceCompletion::class, 'fixed_asset_borrowing_id');
     }
 
     public function getApprovalStatusLabel(): string

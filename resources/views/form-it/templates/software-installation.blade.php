@@ -217,31 +217,25 @@
                     <tr>
                         <td class="sign-space">
                             @if($sign['diajukan_approved'] ?? false)
-                            <div style="text-align: center; color: green; padding-top: 20px;">
-                                &#10003; Disetujui
-                                @if($sign['diajukan_date'] ?? false)
-                                <br><small style="font-size: 10px;">{{ $sign['diajukan_date'] }}</small>
-                                @endif
+                            <div style="width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; vertical-align: middle; margin-top: 15px;">
+                                <img src="{{ public_path('images/approved.svg') }}"
+                                    width="150" style="transform: rotate(3deg);">
                             </div>
                             @endif
                         </td>
                         <td class="sign-space">
                             @if($sign['diketahui_approved'] ?? false)
-                            <div style="text-align: center; color: green; padding-top: 20px;">
-                                &#10003; Disetujui
-                                @if($sign['diketahui_date'] ?? false)
-                                <br><small style="font-size: 10px;">{{ $sign['diketahui_date'] }}</small>
-                                @endif
+                            <div style="width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; vertical-align: middle; margin-top: 15px;">
+                                <img src="{{ public_path('images/approved.svg') }}"
+                                    width="150" style="transform: rotate(3deg);">
                             </div>
                             @endif
                         </td>
                         <td class="sign-space">
                             @if($sign['disetujui_approved'] ?? false)
-                            <div style="text-align: center; color: green; padding-top: 20px;">
-                                &#10003; Disetujui
-                                @if($sign['disetujui_date'] ?? false)
-                                <br><small style="font-size: 10px;">{{ $sign['disetujui_date'] }}</small>
-                                @endif
+                            <div style="width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; vertical-align: middle; margin-top: 15px;">
+                                <img src="{{ public_path('images/approved.svg') }}"
+                                    width="150" style="transform: rotate(3deg);">
                             </div>
                             @endif
                         </td>

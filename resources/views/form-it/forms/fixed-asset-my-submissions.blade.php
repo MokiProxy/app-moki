@@ -8,12 +8,15 @@
         font-size: 0.7rem;
         padding: 0.4em 0.7em;
     }
+
     .bg-soft-warning {
         background-color: rgba(241, 180, 76, 0.18);
     }
+
     .bg-soft-success {
         background-color: rgba(54, 203, 131, 0.18);
     }
+
     .bg-soft-danger {
         background-color: rgba(240, 101, 101, 0.18);
     }
@@ -69,6 +72,11 @@
                                 <a href="{{ route('form-it.forms.fixed-asset.show', $item->id) }}" class="btn btn-sm btn-info">
                                     <i class="mdi mdi-eye"></i>
                                 </a>
+                                @if($item->status === 'approved')
+                                <a href="{{ route('form-it.forms.fixed-asset.pdf', $item->id) }}" class="btn btn-sm btn-success" target="_blank">
+                                    <i class="mdi mdi-file-pdf"></i>
+                                </a>
+                                @endif
                             </td>
                         </tr>
                         @empty
