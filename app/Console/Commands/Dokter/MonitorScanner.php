@@ -5,7 +5,7 @@ namespace App\Console\Commands\Dokter;
 use App\Jobs\ProcessScanFile;
 use App\Models\DocumentType;
 use App\Services\FileConversionService;
-use App\Services\OcrService;
+use App\Services\Ocr\GeminiEngine;
 use App\Services\ScanLogger;
 use Exception;
 use Illuminate\Console\Command;
@@ -48,7 +48,7 @@ class MonitorScanner extends Command
     /**
      * Execute the console command.
      */
-    public function handle(OcrService $ocr, FileConversionService $converter, ScanLogger $logger): int
+    public function handle(FileConversionService $converter, ScanLogger $logger): int
     {
         $documentTypes = DocumentType::all();
 
@@ -58,6 +58,8 @@ class MonitorScanner extends Command
             return self::FAILURE;
         }
 
+        $ocr = new GeminiEngine();
+
         $this->processRootFiles($documentTypes, $ocr, $converter, $logger);
         $this->processSubfolderFiles($documentTypes, $converter, $logger);
 
@@ -66,7 +68,7 @@ class MonitorScanner extends Command
         return self::SUCCESS;
     }
 
-    protected function processRootFiles($documentTypes, OcrService $ocr, FileConversionService $converter, ScanLogger $logger): void
+    protected function processRootFiles($documentTypes, GeminiEngine $ocr, FileConversionService $converter, ScanLogger $logger): void
     {
         $files = Storage::disk('ftp_scanner')->files();
 
@@ -84,13 +86,14 @@ class MonitorScanner extends Command
                 $logger->log('file_skipped', 'skipped', [
                     'filename' => $filename,
                     'extension' => $extension,
-                    'message' => 'Ekstensi file tidak didukung: '.$extension,
+                    'message' => 'Ekstensi file tidak didukung: ' . $extension,
                 ]);
 
                 continue;
             }
 
             $content = Storage::disk('ftp_scanner')->get($file);
+
             $localPath = "scanner/incoming/{$filename}";
             Storage::disk('local')->put($localPath, $content);
             Storage::disk('ftp_scanner')->delete($file);
@@ -129,8 +132,8 @@ class MonitorScanner extends Command
                     'extension' => $extension,
                     'total_attempts' => $lastAttempt,
                     'message' => $moved
-                        ? "Header match gagal setelah {$lastAttempt} percobaan, file dipindah ke folder FAILED"
-                        : "Header match gagal setelah {$lastAttempt} percobaan, upload ke folder FAILED gagal",
+                        ? "Deteksi jenis dokumen gagal setelah {$lastAttempt} percobaan, file dipindah ke folder FAILED"
+                        : "Deteksi jenis dokumen gagal setelah {$lastAttempt} percobaan, upload ke folder FAILED gagal",
                 ]);
 
                 continue;
@@ -209,7 +212,7 @@ class MonitorScanner extends Command
                 'extension' => $extension,
                 'document_type_id' => $documentType->id,
                 'document_type_name' => $documentType->name,
-                'message' => 'Ekstensi file tidak didukung: '.$extension,
+                'message' => 'Ekstensi file tidak didukung: ' . $extension,
             ]);
 
             return;
@@ -258,11 +261,11 @@ class MonitorScanner extends Command
         }
     }
 
-    protected function detectDocumentType(string $filePath, string $filename, $documentTypes, OcrService $ocr, int $attempt = 1): ?DocumentType
+    protected function detectDocumentType(string $filePath, string $filename, $documentTypes, GeminiEngine $ocr, int $attempt = 1): ?DocumentType
     {
         $uploadedFile = new UploadedFile($filePath, $filename, mime_content_type($filePath), null, true);
 
-        Log::info("Memulai deteksi jenis dokumen (percobaan {$attempt})", [
+        Log::info("Memulai deteksi jenis dokumen via Gemini (percobaan {$attempt})", [
             'file' => $filename,
             'attempt' => $attempt,
         ]);
@@ -284,43 +287,47 @@ class MonitorScanner extends Command
             return null;
         }
 
-        $ocrText = $result['text'] ?? '';
+        $ocrData = $result['ocr_data'] ?? null;
 
-        // Header Match (Primary Identifier) - satu-satunya algoritma deteksi jenis dokumen.
-        foreach ($documentTypes as $docType) {
-            if ($this->matchHeader($docType, $ocrText)) {
-                Log::info('Document type detected via header match', [
-                    'file' => $filename,
-                    'detected_type' => $docType->name,
-                ]);
-
-                return $docType;
-            }
-        }
-
-        return null;
-    }
-
-    protected function matchHeader(DocumentType $docType, string $ocrText): bool
-    {
-        $pattern = $docType->header_regex ?? null;
-
-        if ($pattern === null || $pattern === '') {
-            return false;
-        }
-
-        $result = @preg_match($pattern, $ocrText);
-
-        if ($result === false) {
-            Log::warning('Invalid header_regex', [
-                'doc_type' => $docType->name,
-                'regex' => $pattern,
+        if ($ocrData === null) {
+            Log::warning("Gemini tidak mengembalikan structured data (percobaan {$attempt})", [
+                'file' => $filename,
+                'attempt' => $attempt,
             ]);
 
-            return false;
+            return null;
         }
 
-        return $result === 1;
+        $documentTypeName = strtoupper($ocrData['document_type'] ?? '');
+
+        if ($documentTypeName === '') {
+            Log::warning("document_type kosong dari Gemini (percobaan {$attempt})", [
+                'file' => $filename,
+                'attempt' => $attempt,
+            ]);
+
+            return null;
+        }
+
+        $docType = DocumentType::whereRaw('UPPER(name) = ?', [$documentTypeName])->first();
+
+        if ($docType === null) {
+            Log::warning("document_type '{$documentTypeName}' tidak ditemukan di database", [
+                'file' => $filename,
+                'attempt' => $attempt,
+                'available_types' => $documentTypes->pluck('name')->toArray(),
+            ]);
+
+            return null;
+        }
+
+        Log::info('Document type detected via Gemini', [
+            'file' => $filename,
+            'detected_type' => $docType->name,
+            'gemini_document_type' => $documentTypeName,
+        ]);
+
+        return $docType;
     }
 
     protected function uploadToFailedFolder(string $filename, string $content, int $totalAttempts = 1): bool

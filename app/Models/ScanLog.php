@@ -82,4 +82,15 @@ class ScanLog extends Model
             default => ucwords(str_replace('_', ' ', $this->event)),
         };
     }
+
+    public function getUraianDecodedAttribute()
+    {
+        if (is_array($this->uraian)) {
+            return $this->uraian;
+        }
+
+        $decoded = json_decode($this->uraian, true);
+
+        return json_last_error() === JSON_ERROR_NONE ? $decoded : $this->uraian;
+    }
 }

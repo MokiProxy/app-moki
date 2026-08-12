@@ -33,7 +33,7 @@
                 </div>
                 @endif
 
-                <form action="{{ route('dokter.document-types.update', $documentType->id) }}" method="POST" id="document-type-form">
+                <form action="{{ route('dokter.document-types.update', $documentType->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -45,72 +45,16 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Header Regex</label>
-                            <input type="hidden" name="header_regex" id="header_regex" value="{{ old('header_regex', $documentType->header_regex) }}">
-                            <div id="header_regex-builder-container" data-regex-builder="header_regex" data-regex-builder-options='{"label":"Header Regex","sampleText":"INVOICE\nPEMBAYARAN\nNo: INV-001\nTgl: 12/03/2026"}'></div>
-                            @error('header_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            <small class="text-muted">Regex untuk mencocokkan judul/header dokumen. Ini adalah <strong>primary identifier</strong> untuk deteksi jenis dokumen.</small>
-                        </div>
-
-                        <div class="col-md-12">
                             <label class="form-label fw-bold">Deskripsi</label>
-                            <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3" maxlength="1000">{{ old('description', $documentType->description) }}</textarea>
+                            <input type="text" name="description" class="form-control @error('description') is-invalid @enderror" value="{{ old('description', $documentType->description) }}" maxlength="1000">
                             @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Number Regex</label>
-                            <input type="hidden" name="number_regex" id="number_regex" value="{{ old('number_regex', $documentType->number_regex) }}">
-                            <div id="number_regex-builder-container" data-regex-builder="number_regex" data-regex-builder-options='{"label":"Number Regex","sampleText":"No: INV-001\nNomor: 12345"}'></div>
-                            @error('number_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Number Label</label>
-                            <input type="text" name="number_label" class="form-control @error('number_label') is-invalid @enderror" value="{{ old('number_label', $documentType->number_label) }}" maxlength="255" placeholder="Contoh: Nomor Dokumen">
-                            @error('number_label') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Keterangan Regex</label>
-                            <input type="hidden" name="keterangan_regex" id="keterangan_regex" value="{{ old('keterangan_regex', $documentType->keterangan_regex) }}">
-                            <div id="keterangan_regex-builder-container" data-regex-builder="keterangan_regex" data-regex-builder-options='{"label":"Keterangan Regex","sampleText":"Keterangan: Pembayaran supplier ABC"}'></div>
-                            @error('keterangan_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            <small class="text-muted">Regex untuk menangkap data Keterangan dari hasil OCR.</small>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Keterangan Label</label>
-                            <input type="text" name="keterangan_label" class="form-control @error('keterangan_label') is-invalid @enderror" value="{{ old('keterangan_label', $documentType->keterangan_label) }}" maxlength="255" placeholder="Contoh: keterangan">
-                            @error('keterangan_label') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Uraian Regex</label>
-                            <input type="hidden" name="uraian_regex" id="uraian_regex" value="{{ old('uraian_regex', $documentType->uraian_regex) }}">
-                            <div id="uraian_regex-builder-container" data-regex-builder="uraian_regex" data-regex-builder-options='{"label":"Uraian Regex","sampleText":"URAIAN\nBarang A x 10\nBarang B x 5\nTOTAL Rp 1.000.000"}'></div>
-                            @error('uraian_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            <small class="text-muted">Regex untuk menangkap data Uraian (multi-baris, antara URAIAN dan TOTAL) dari hasil OCR.</small>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Uraian Label</label>
-                            <input type="text" name="uraian_label" class="form-control @error('uraian_label') is-invalid @enderror" value="{{ old('uraian_label', $documentType->uraian_label) }}" maxlength="255" placeholder="Contoh: uraian">
-                            @error('uraian_label') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Tanggal Regex</label>
-                            <input type="hidden" name="tanggal_regex" id="tanggal_regex" value="{{ old('tanggal_regex', $documentType->tanggal_regex) }}">
-                            <div id="tanggal_regex-builder-container" data-regex-builder="tanggal_regex" data-regex-builder-options='{"label":"Tanggal Regex","sampleText":"Tgl: 12/03/2026\nTanggal: 2026-03-12"}'></div>
-                            @error('tanggal_regex') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            <small class="text-muted">Regex untuk menangkap data Tgl (tanggal) dari hasil OCR.</small>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Tanggal Label</label>
-                            <input type="text" name="tanggal_label" class="form-control @error('tanggal_label') is-invalid @enderror" value="{{ old('tanggal_label', $documentType->tanggal_label) }}" maxlength="255" placeholder="Contoh: tanggal">
-                            @error('tanggal_label') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Gemini Fields (JSON Array)</label>
+                            <input type="text" name="gemini_fields" class="form-control @error('gemini_fields') is-invalid @enderror" value="{{ old('gemini_fields', $documentType->gemini_fields ? json_encode($documentType->gemini_fields) : '["document_type","document_number","document_date","vendor_name","customer","keterangan","uraian"]') }}" maxlength="1000" placeholder='["document_type","document_number","document_date","vendor_name","customer","keterangan","uraian"]'>
+                            @error('gemini_fields') <div class="invalid-feedback">{{ $message }}</div> @enderror>
+                            <small class="text-muted">Field JSON yang akan diekstrak oleh Gemini API untuk jenis dokumen ini. Format: <code>["field1","field2","field3"]</code>. Jika dikosongkan, akan menggunakan default fields.</small>
                         </div>
 
                         <div class="col-md-6">
@@ -142,36 +86,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-md-6">
-                            <div class="mt-4">
-                                <div class="form-check form-switch">
-                                    <input type="hidden" name="keterangan_enabled" value="0">
-                                    <input type="checkbox" name="keterangan_enabled" class="form-check-input" id="keterangan_enabled" value="1" {{ old('keterangan_enabled', $documentType->keterangan_enabled) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="keterangan_enabled">Keterangan Regex Enabled</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="mt-4">
-                                <div class="form-check form-switch">
-                                    <input type="hidden" name="uraian_enabled" value="0">
-                                    <input type="checkbox" name="uraian_enabled" class="form-check-input" id="uraian_enabled" value="1" {{ old('uraian_enabled', $documentType->uraian_enabled) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="uraian_enabled">Uraian Regex Enabled</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="mt-4">
-                                <div class="form-check form-switch">
-                                    <input type="hidden" name="tanggal_enabled" value="0">
-                                    <input type="checkbox" name="tanggal_enabled" class="form-check-input" id="tanggal_enabled" value="1" {{ old('tanggal_enabled', $documentType->tanggal_enabled) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="tanggal_enabled">Tanggal Regex Enabled</label>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="mt-4 border-top pt-3">
@@ -185,48 +99,4 @@
         </div>
     </div>
 </div>
-@endsection
-
-@section('plugin')
-<script src="{{ asset('js/regex-builder.js') }}"></script>
-<script>
-$(document).ready(function() {
-    // Form submit validation
-    $('#document-type-form').on('submit', function(e) {
-        var isValid = true;
-        var errors = [];
-        
-        // Validate all regex fields
-        var regexFields = ['header_regex', 'number_regex', 'keterangan_regex', 'uraian_regex', 'tanggal_regex'];
-        
-        regexFields.forEach(function(field) {
-            var value = $('#' + field).val();
-            if (value) {
-                // Validate format /pattern/flags
-                var regexMatch = value.match(/^\/(.+)\/([gimsuy]*)$/);
-                if (!regexMatch) {
-                    isValid = false;
-                    errors.push(field + ': Format harus /pattern/flags');
-                } else {
-                    // Try to create regex to check validity
-                    try {
-                        new RegExp(regexMatch[1], regexMatch[2]);
-                    } catch (ex) {
-                        isValid = false;
-                        errors.push(field + ': ' + ex.message);
-                    }
-                }
-            }
-        });
-        
-        if (!isValid) {
-            alert('Error validasi regex:\n' + errors.join('\n'));
-            e.preventDefault();
-            return false;
-        }
-        
-        return true;
-    });
-});
-</script>
 @endsection

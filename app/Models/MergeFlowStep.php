@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MergeFlowStep extends Model
 {
-    protected $fillable = ['merge_flow_id', 'document_type_id', 'order', 'link_regex', 'link_label'];
+    protected $fillable = ['merge_flow_id', 'document_type_id', 'order', 'link_regex', 'link_label', 'link_field'];
 
     public function mergeFlow(): BelongsTo
     {

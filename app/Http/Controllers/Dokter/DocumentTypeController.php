@@ -30,7 +30,10 @@ class DocumentTypeController extends Controller
     public function store(StoreDocumentTypeRequest $request)
     {
         try {
-            $documentType = DocumentType::create($request->validated());
+            $data = $request->validated();
+            $data['gemini_fields'] = $this->parseGeminiFields($data['gemini_fields'] ?? null);
+
+            $documentType = DocumentType::create($data);
             Storage::disk('ftp_final')->makeDirectory("{$documentType->name}");
             $failedFolder = $documentType->attributes['ftp_failed_folder'] ?? 'FAILED';
             Storage::disk('ftp_final')->makeDirectory("{$failedFolder}");
@@ -65,7 +68,10 @@ class DocumentTypeController extends Controller
                 Storage::disk('ftp_final')->move($oldPath, $newPath);
             }
 
-            $documentType->update($request->validated());
+            $data = $request->validated();
+            $data['gemini_fields'] = $this->parseGeminiFields($data['gemini_fields'] ?? null);
+
+            $documentType->update($data);
 
             return redirect()->route('dokter.document-types.index')->with('success', 'Jenis dokumen berhasil diperbarui!');
         } catch (Exception $err) {
@@ -90,5 +96,20 @@ class DocumentTypeController extends Controller
         } catch (Exception $err) {
             return redirect()->route('dokter.document-types.index')->with('error', $err->getMessage());
         }
+    }
+
+    private function parseGeminiFields(?string $value): ?array
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        $decoded = json_decode($value, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+            return null;
+        }
+
+        return array_values(array_filter($decoded, fn ($item) => is_string($item) && trim($item) !== ''));
     }
 }

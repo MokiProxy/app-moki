@@ -73,12 +73,18 @@
                                 @error("steps.{$index}.link_regex") <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 <small class="text-muted">Regex untuk extract nomor induk dari OCR</small>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label fw-bold">Link Label</label>
                                 <input type="text" name="steps[{{ $index }}][link_label]" class="form-control @error('steps.'.$index.'.link_label') is-invalid @enderror" value="{{ old("steps.{$index}.link_label", $step->link_label ?? '') }}">
                                 @error("steps.{$index}.link_label") <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            <div class="col-md-2 d-flex align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Link Field (Gemini)</label>
+                                <input type="text" name="steps[{{ $index }}][link_field]" class="form-control @error('steps.'.$index.'.link_field') is-invalid @enderror" value="{{ old("steps.{$index}.link_field", $step->link_field ?? '') }}" placeholder="document_number">
+                                @error("steps.{$index}.link_field") <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <small class="text-muted">Field dari ocr_data Gemini</small>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
                                 <button type="button" class="btn btn-danger btn-sm btn-remove-step"><i class="mdi mdi-delete"></i></button>
                             </div>
                         </div>
@@ -128,11 +134,16 @@
                 <input type="text" name="steps[${stepIndex}][link_regex]" class="form-control" placeholder="/No\\s*BA\\s*\\n?\\s*:\\s*(.+)/i">
                 <small class="text-muted">Regex untuk extract nomor induk dari OCR</small>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label fw-bold">Link Label</label>
                 <input type="text" name="steps[${stepIndex}][link_label]" class="form-control" placeholder="No BA">
             </div>
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Link Field (Gemini)</label>
+                <input type="text" name="steps[${stepIndex}][link_field]" class="form-control" placeholder="document_number">
+                <small class="text-muted">Field dari ocr_data Gemini</small>
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
                 <button type="button" class="btn btn-danger btn-sm btn-remove-step"><i class="mdi mdi-delete"></i></button>
             </div>
         </div>`;

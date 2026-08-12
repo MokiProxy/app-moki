@@ -80,11 +80,13 @@ class MergeFlowService
 
     protected function handleChildDocument(MergeFlowStep $step, ScanLog $scanLog, string $ocrText, string $vendorName, string $documentNumber): void
     {
-        $linkedNumber = $this->extractLinkedNumber($step, $ocrText);
+        $linkedNumber = $this->extractLinkedNumber($step, $scanLog, $ocrText);
+
         if (! $linkedNumber) {
             Log::warning('Could not extract linked number from child document', [
                 'scan_log_id' => $scanLog->id,
                 'link_regex' => $step->link_regex,
+                'link_field' => $step->link_field,
             ]);
 
             return;
@@ -136,19 +138,34 @@ class MergeFlowService
         });
     }
 
-    protected function extractLinkedNumber(MergeFlowStep $step, string $ocrText): ?string
+    protected function extractLinkedNumber(MergeFlowStep $step, ScanLog $scanLog, string $ocrText): ?string
     {
-        if (! $step->link_regex) {
-            return null;
+        if ($step->link_field) {
+            $ocrData = $scanLog->metadata['ocr_data'] ?? null;
+            if ($ocrData && isset($ocrData[$step->link_field]) && $ocrData[$step->link_field] !== '') {
+                $value = trim($ocrData[$step->link_field]);
+                if ($value !== '') {
+                    return $value;
+                }
+            }
         }
 
-        if (preg_match($step->link_regex, $ocrText, $matches)) {
-            $raw = trim($matches[1]);
-            $cleaned = preg_replace('/[\x00-\x1F\x7F]/', ' ', $raw);
-            $cleaned = preg_replace('/\s{2,}/', ' ', $cleaned);
-            $cleaned = trim($cleaned);
+        if ($step->link_label) {
+            $linkedNumbers = $scanLog->linked_numbers ?? [];
+            if (isset($linkedNumbers[$step->link_label]) && $linkedNumbers[$step->link_label] !== '') {
+                return trim($linkedNumbers[$step->link_label]);
+            }
+        }
 
-            return $cleaned !== '' ? $cleaned : null;
+        if ($step->link_regex) {
+            if (preg_match($step->link_regex, $ocrText, $matches)) {
+                $raw = trim($matches[1]);
+                $cleaned = preg_replace('/[\x00-\x1F\x7F]/', ' ', $raw);
+                $cleaned = preg_replace('/\s{2,}/', ' ', $cleaned);
+                $cleaned = trim($cleaned);
+
+                return $cleaned !== '' ? $cleaned : null;
+            }
         }
 
         return null;

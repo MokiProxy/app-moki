@@ -13,41 +13,12 @@ $roleColor = "primary-form-it";
             </a>
         </li>
 
-        @can('form-it.forms.create')
         <li>
-            <a href="{{ route('form-it.forms.software-installation') }}" class="waves-effect">
+            <a href="{{ route('form-it.forms.index') }}" class="waves-effect">
                 <i class="bx bx-file"></i>
-                <span key="t-form-software">Buat Pengajuan</span>
+                <span key="t-dashboard">Formulir</span>
             </a>
         </li>
-        @endcan
-
-        @can('form-it.fixed-asset.create')
-        <li>
-            <a href="{{ route('form-it.forms.fixed-asset.create') }}" class="waves-effect">
-                <i class="bx bx-laptop"></i>
-                <span key="t-form-fixed-asset">Peminjaman Fixed Asset</span>
-            </a>
-        </li>
-        @endcan
-
-        @can('form-it.forms.view')
-        <li>
-            <a href="{{ route('form-it.forms.my-submissions') }}" class="waves-effect">
-                <i class="bx bx-list-ul"></i>
-                <span key="t-my-submissions">Pengajuan Saya</span>
-            </a>
-        </li>
-        @endcan
-
-        @can('form-it.fixed-asset.view')
-        <li>
-            <a href="{{ route('form-it.forms.fixed-asset.my-submissions') }}" class="waves-effect">
-                <i class="bx bx-list-check"></i>
-                <span key="t-my-submissions-fixed-asset">Pengajuan Fixed Asset Saya</span>
-            </a>
-        </li>
-        @endcan
 
         @can('form-it.approval.view')
         <li>

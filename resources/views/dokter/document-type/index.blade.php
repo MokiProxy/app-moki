@@ -45,14 +45,7 @@
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Nama</th>
                                 <th>Deskripsi</th>
-                                <th>Number Regex</th>
-                                <th>Number Label</th>
-                                <th>Keterangan Regex</th>
-                                <th class="text-center">Keterangan Enabled</th>
-                                <th>Uraian Regex</th>
-                                <th class="text-center">Uraian Enabled</th>
-                                <th>Tanggal Regex</th>
-                                <th class="text-center">Tanggal Enabled</th>
+                                <th>Gemini Fields</th>
                                 <th class="text-center">Vendor Search</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
@@ -63,30 +56,11 @@
                                 <td class="text-center">{{ $documentTypes->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $dt->name }}</td>
                                 <td>{{ $dt->description ?? '-' }}</td>
-                                <td><code>{{ $dt->number_regex ?? '-' }}</code></td>
-                                <td>{{ $dt->number_label ?? '-' }}</td>
-                                <td><code>{{ $dt->keterangan_regex ?? '-' }}</code></td>
-                                <td class="text-center">
-                                    @if($dt->keterangan_enabled)
-                                        <span class="badge bg-success">Yes</span>
+                                <td>
+                                    @if($dt->gemini_fields)
+                                        <small class="text-muted">{{ \Illuminate\Support\Str::limit(implode(', ', $dt->gemini_fields), 80) }}</small>
                                     @else
-                                        <span class="badge bg-secondary">No</span>
-                                    @endif
-                                </td>
-                                <td><code>{{ $dt->uraian_regex ?? '-' }}</code></td>
-                                <td class="text-center">
-                                    @if($dt->uraian_enabled)
-                                        <span class="badge bg-success">Yes</span>
-                                    @else
-                                        <span class="badge bg-secondary">No</span>
-                                    @endif
-                                </td>
-                                <td><code>{{ $dt->tanggal_regex ?? '-' }}</code></td>
-                                <td class="text-center">
-                                    @if($dt->tanggal_enabled)
-                                        <span class="badge bg-success">Yes</span>
-                                    @else
-                                        <span class="badge bg-secondary">No</span>
+                                        <span class="text-muted">- gunakan default -</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
@@ -107,7 +81,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="13" class="text-center text-muted">Belum ada data jenis dokumen.</td>
+                                <td colspan="6" class="text-center text-muted">Belum ada data jenis dokumen.</td>
                             </tr>
                             @endforelse
                         </tbody>

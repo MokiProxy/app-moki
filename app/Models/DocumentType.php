@@ -11,23 +11,18 @@ class DocumentType extends Model
 {
     protected $fillable = [
         'name',
-        'header_regex',
         'description',
-        'number_regex',
-        'number_label',
-        'keterangan_regex',
-        'keterangan_label',
-        'keterangan_enabled',
-        'uraian_regex',
-        'uraian_label',
-        'uraian_enabled',
-        'tanggal_regex',
-        'tanggal_label',
-        'tanggal_enabled',
+        'gemini_prompt',
+        'gemini_fields',
         'filename_template',
         'ftp_folder_template',
         'ftp_failed_folder',
         'vendor_search_enabled',
+    ];
+
+    protected $casts = [
+        'gemini_fields' => 'array',
+        'vendor_search_enabled' => 'boolean',
     ];
 
     #[Override]

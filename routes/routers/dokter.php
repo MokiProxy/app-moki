@@ -85,4 +85,5 @@ Route::prefix("dokter")->name("dokter.")->middleware(['permission:dokter.menu'])
         Route::delete('/{auditorAccessLink}', [AuditorAccessController::class, 'destroy'])->name('destroy');
         Route::post('/{auditorAccessLink}/toggle', [AuditorAccessController::class, 'toggle'])->name('toggle');
     });
+
 });

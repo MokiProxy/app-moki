@@ -5,8 +5,8 @@ namespace App\Jobs;
 use App\Models\DocumentType;
 use App\Services\DocumentTypeProcessor;
 use App\Services\FileConversionService;
-use App\Services\OcrService;
 use App\Services\MergeFlowService;
+use App\Services\Ocr\GeminiEngine;
 use App\Services\PdfMergeService;
 use App\Services\ScanLogger;
 use Exception;
@@ -37,7 +37,6 @@ class ProcessScanFile implements ShouldQueue
 
     public function handle(
         DocumentTypeProcessor $processor,
-        OcrService $ocr,
         FileConversionService $converter,
         PdfMergeService $merger,
         ScanLogger $logger,
@@ -57,45 +56,67 @@ class ProcessScanFile implements ShouldQueue
 
         $uploadedFile = new UploadedFile($fullPath, $this->filename, mime_content_type($fullPath), null, true);
 
+        $ocr = new GeminiEngine();
+
         $documentType = $this->resolveDocumentType($uploadedFile, $ocr);
 
         if ($documentType === null) {
             throw new Exception("Could not detect document type for: {$this->filename}");
         }
 
-        $result = $ocr->extractText($uploadedFile);
+        $result = $ocr->extractText($uploadedFile, $documentType);
 
         if (empty($result['success'])) {
-            throw new Exception('OCR failed: '.json_encode($result));
+            throw new Exception('OCR failed: ' . json_encode($result));
         }
 
         $ocrText = $result['text'] ?? '';
-        $documentNumber = $processor->extractDocumentNumber($documentType, $ocrText);
-        $vendorName = $processor->matchVendor($documentType, $ocrText);
-        $tanggal = $processor->extractTanggal($documentType, $ocrText);
-        $keterangan = $processor->extractKeterangan($documentType, $ocrText, $vendorName);
-        $uraian = $processor->extractUraian($documentType, $ocrText);
+        $ocrData = $result['ocr_data'] ?? null;
+
+        Log::info('OCR DATA', [
+            'data' => $ocrData,
+        ]);
+
+        if ($ocrData !== null) {
+            $documentNumber = $ocrData['document_number'] ?? null;
+            $vendorName = $this->sanitizeFilename($ocrData['vendor_name'] ?? null);
+            $tanggal = $ocrData['document_date'] ?? null;
+            $keterangan = $ocrData['keterangan'] ?? null;
+            $uraian = is_array($ocrData['uraian'] ?? null) ? json_encode($ocrData['uraian']) : ($ocrData['uraian'] ?? null);
+
+            $documentTypeName = strtoupper($ocrData['document_type'] ?? '');
+            $detectedType = DocumentType::whereRaw('UPPER(name) = ?', [$documentTypeName])->first();
+
+            if ($detectedType !== null) {
+                $documentType = $detectedType;
+            }
+
+            Log::info('Using structured data from Gemini', [
+                'file' => $this->filename,
+                'document_type' => $documentType->name,
+                'document_number' => $documentNumber,
+                'vendor_name' => $vendorName,
+            ]);
+        } else {
+            $vendorName = $processor->matchVendor($documentType, $ocrText);
+            $documentNumber = null;
+            $tanggal = null;
+            $keterangan = null;
+            $uraian = null;
+        }
 
         $originalExtension = pathinfo($this->filename, PATHINFO_EXTENSION);
         $targetFilename = $processor->generateFilename($documentType, $vendorName, $documentNumber, $originalExtension);
         $targetFilename = $targetFilename ?: $this->filename;
 
-        $numberLabel = $documentType->number_label ?? 'document_number';
-        $tanggalLabel = $documentType->tanggal_label ?? 'tanggal';
-        $keteranganLabel = $documentType->keterangan_label ?? 'keterangan';
-        $uraianLabel = $documentType->uraian_label ?? 'uraian';
-        $ocrData = [
+        $ocrTemp = [
             'filename' => $this->filename,
-            'document_type' => strtoupper($documentType->name),
-            $numberLabel => $documentNumber,
-            $tanggalLabel => $tanggal,
-            'vendor_name' => $vendorName,
-            $keteranganLabel => $keterangan,
-            $uraianLabel => $uraian,
             'text' => $ocrText,
             'processing_time_ms' => $result['processing_time_ms'] ?? null,
             'processed_at' => now()->toIso8601String(),
         ];
+
+        $ocrData = array_merge($ocrTemp, $ocrData ?? []);
 
         Storage::disk('local')->put(
             "scanner/ocr-results/{$this->filename}.json",
@@ -163,10 +184,10 @@ class ProcessScanFile implements ShouldQueue
         }
 
         if ($existingContent !== null) {
-            $tempExisting = storage_path('app/private/scanner/temp/existing_'.$pdfFilename);
-            $tempNew = storage_path('app/private/scanner/temp/new_'.$pdfFilename);
+            $tempExisting = storage_path('app/private/scanner/temp/existing_' . $pdfFilename);
+            $tempNew = storage_path('app/private/scanner/temp/new_' . $pdfFilename);
             $mergedDir = storage_path('app/private/scanner/merged');
-            $mergedPath = $mergedDir.'/'.$pdfFilename;
+            $mergedPath = $mergedDir . '/' . $pdfFilename;
 
             $this->ensureDirectoryExists(dirname($tempExisting));
             $this->ensureDirectoryExists($mergedDir);
@@ -256,12 +277,16 @@ class ProcessScanFile implements ShouldQueue
             'ocr_text' => $ocrText,
         ]);
 
+        $existingMetadata = $scanLog->metadata ?? [];
+        $existingMetadata['ocr_data'] = $ocrData;
+        $scanLog->update(['metadata' => $existingMetadata]);
+
         app(MergeFlowService::class)->processAfterUpload($scanLog);
 
         Log::info('OCR processed successfully', [
             'filename' => $this->filename,
             'document_type' => strtoupper($documentType->name),
-            $numberLabel => $documentNumber,
+            'document_number' => $documentNumber,
             'vendor_name' => $vendorName,
             'tanggal' => $tanggal,
             'keterangan' => $keterangan,
@@ -286,7 +311,7 @@ class ProcessScanFile implements ShouldQueue
         ]);
     }
 
-    protected function resolveDocumentType(UploadedFile $uploadedFile, OcrService $ocr): ?DocumentType
+    protected function resolveDocumentType(UploadedFile $uploadedFile, GeminiEngine $ocr): ?DocumentType
     {
         if ($this->documentTypeId !== null) {
             return DocumentType::find($this->documentTypeId);
@@ -299,7 +324,7 @@ class ProcessScanFile implements ShouldQueue
         }
 
         try {
-            $result = $ocr->extractText($uploadedFile);
+            $result = $ocr->extractText($uploadedFile, null);
         } catch (Exception $e) {
             Log::warning('Detection OCR failed', ['error' => $e->getMessage()]);
 
@@ -310,43 +335,42 @@ class ProcessScanFile implements ShouldQueue
             return null;
         }
 
-        $ocrText = $result['text'] ?? '';
+        $ocrData = $result['ocr_data'] ?? null;
 
-        // Header Match (Primary Identifier) - satu-satunya algoritma deteksi jenis dokumen.
-        foreach ($documentTypes as $docType) {
-            if ($this->matchHeader($docType, $ocrText)) {
-                Log::info('Document type detected via header match', [
-                    'file' => $this->filename,
-                    'detected_type' => $docType->name,
-                ]);
-
-                return $docType;
-            }
-        }
-
-        return null;
-    }
-
-    protected function matchHeader(DocumentType $docType, string $ocrText): bool
-    {
-        $pattern = $docType->header_regex ?? null;
-
-        if ($pattern === null || $pattern === '') {
-            return false;
-        }
-
-        $result = @preg_match($pattern, $ocrText);
-
-        if ($result === false) {
-            Log::warning('Invalid header_regex', [
-                'doc_type' => $docType->name,
-                'regex' => $pattern,
+        if ($ocrData === null) {
+            Log::warning('Gemini tidak mengembalikan structured data untuk deteksi', [
+                'file' => $this->filename,
             ]);
 
-            return false;
+            return null;
         }
 
-        return $result === 1;
+        $documentTypeName = strtoupper($ocrData['document_type'] ?? '');
+
+        if ($documentTypeName === '') {
+            Log::warning('document_type kosong dari Gemini', [
+                'file' => $this->filename,
+            ]);
+
+            return null;
+        }
+
+        $docType = DocumentType::whereRaw('UPPER(name) = ?', [$documentTypeName])->first();
+
+        if ($docType !== null) {
+            Log::info('Document type detected via Gemini', [
+                'file' => $this->filename,
+                'detected_type' => $docType->name,
+                'gemini_document_type' => $documentTypeName,
+            ]);
+        } else {
+            Log::warning("document_type '{$documentTypeName}' tidak ditemukan di database", [
+                'file' => $this->filename,
+                'available_types' => $documentTypes->pluck('name')->toArray(),
+            ]);
+        }
+
+        return $docType;
     }
 
     protected function ensureDirectoryExists(string $directory): void
@@ -354,5 +378,14 @@ class ProcessScanFile implements ShouldQueue
         if (! is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
+    }
+
+    protected function sanitizeFilename(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return preg_replace('#[/\\\\:*?"<>|]#', '_', $value);
     }
 }

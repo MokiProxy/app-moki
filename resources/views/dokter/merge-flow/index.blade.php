@@ -68,6 +68,9 @@
                                         @if($step->link_regex)
                                             <small class="text-muted d-block ms-2">Link: {{ $step->link_label ?? $step->link_regex }}</small>
                                         @endif
+                                        @if($step->link_field)
+                                            <small class="text-muted d-block ms-2">Field: {{ $step->link_field }}</small>
+                                        @endif
                                     @endforeach
                                 </td>
                                 <td class="text-center">

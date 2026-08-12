@@ -11,6 +11,9 @@ Route::prefix("form-it")->name("form-it.")->group(function () {
         ->middleware('permission:form-it.dashboard');
 
     Route::prefix("forms")->name("forms.")->group(function () {
+        Route::get("/", [FormController::class, "forms"])
+            ->name("index")
+            ->middleware('permission:form-it.forms.view');
         Route::get("my-submissions", [FormController::class, "mySubmissions"])
             ->name("my-submissions")
             ->middleware('permission:form-it.forms.view');

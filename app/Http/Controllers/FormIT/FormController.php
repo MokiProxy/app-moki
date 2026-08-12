@@ -29,6 +29,33 @@ class FormController extends Controller
         ],
     ];
 
+    public function forms()
+    {
+        $isApprover = auth()->user()->hasPermissionTo('form-it.approval.view');
+        $canCreateFixedAsset = auth()->user()->hasPermissionTo('form-it.fixed-asset.create');
+        $canApproveFixedAsset = auth()->user()->hasPermissionTo('form-it.fixed-asset.approve');
+        $canViewFixedAsset = auth()->user()->hasPermissionTo('form-it.fixed-asset.view');
+
+        $forms = [
+            [
+                "name" => "Pengajuan Install Software & Aplikasi",
+                "link" => "form-it.forms.my-submissions",
+                "icon" => "mdi-file-document-edit"
+            ],
+        ];
+
+        if ($canCreateFixedAsset) {
+            $forms[] = [
+                "name" => "Peminjaman Fixed Asset IT",
+                "link" => "form-it.forms.fixed-asset.my-submissions",
+                "icon" => "mdi-laptop"
+            ];
+        }
+
+        $pageName = "Form IT";
+        return view('form-it.forms.index', compact("forms", "pageName"));
+    }
+
     public function mySubmissions()
     {
         abort_unless(auth()->user()->hasPermissionTo('form-it.forms.view'), 403);

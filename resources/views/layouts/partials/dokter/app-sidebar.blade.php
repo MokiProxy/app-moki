@@ -69,6 +69,7 @@ $roleColor = "primary-dokter";
             </a>
         </li>
         @endcan
+
         <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">
                 <i class="bx bx-grid-alt text-{{ $roleColor }}"></i>

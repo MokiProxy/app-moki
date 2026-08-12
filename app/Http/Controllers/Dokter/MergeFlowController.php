@@ -47,6 +47,7 @@ class MergeFlowController extends Controller
             'steps.*.document_type_id' => 'required|exists:document_types,id',
             'steps.*.link_regex' => 'nullable|string',
             'steps.*.link_label' => 'nullable|string',
+            'steps.*.link_field' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -62,6 +63,7 @@ class MergeFlowController extends Controller
                     'order' => $index + 1,
                     'link_regex' => $step['link_regex'] ?? null,
                     'link_label' => $step['link_label'] ?? null,
+                    'link_field' => $step['link_field'] ?? null,
                 ]);
             }
 
@@ -90,6 +92,7 @@ class MergeFlowController extends Controller
             'steps.*.document_type_id' => 'required|exists:document_types,id',
             'steps.*.link_regex' => 'nullable|string',
             'steps.*.link_label' => 'nullable|string',
+            'steps.*.link_field' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -106,6 +109,7 @@ class MergeFlowController extends Controller
                     'order' => $index + 1,
                     'link_regex' => $step['link_regex'] ?? null,
                     'link_label' => $step['link_label'] ?? null,
+                    'link_field' => $step['link_field'] ?? null,
                 ]);
             }
 

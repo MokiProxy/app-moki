@@ -107,6 +107,7 @@
                                         data-tanggal="{{ $log->tanggal ?? '-' }}"
                                         data-vendor="{{ $log->vendor_name ?? '-' }}"
                                         data-keterangan="{{ $log->keterangan ?? '-' }}"
+                                        data-uraian="{{ is_array($log->uraian_decoded) ? htmlspecialchars(json_encode($log->uraian_decoded), ENT_QUOTES, 'UTF-8') : htmlspecialchars($log->uraian ?? '-', ENT_QUOTES, 'UTF-8') }}"
                                         data-ftp="{{ $log->ftp_path ?? '-' }}"
                                         data-size="{{ $log->file_size }}"
                                         data-processing="{{ $log->processing_time_ms }}"
@@ -190,6 +191,10 @@
                         <p class="mb-0" id="detail-keterangan">-</p>
                     </div>
                     <div class="col-md-12">
+                        <label class="form-label small text-muted mb-0">Uraian</label>
+                        <div id="detail-uraian">-</div>
+                    </div>
+                    <div class="col-md-12">
                         <label class="form-label small text-muted mb-0">Lokasi File Final (FTP Path)</label>
                         <p class="mb-0 text-break" id="detail-ftp">-</p>
                     </div>
@@ -241,6 +246,27 @@
             $('#detail-ftp').text($btn.data('ftp'));
             $('#detail-processing').text($btn.data('processing') ? number_format($btn.data('processing')) + ' ms' : '-');
             $('#detail-message').text($btn.data('message'));
+
+            var uraianRaw = $btn.data('uraian');
+            var uraianHtml = '-';
+            try {
+                var uraianData = JSON.parse(uraianRaw);
+                if (Array.isArray(uraianData) && uraianData.length > 0) {
+                    uraianHtml = '<ul class="mb-0 ps-3">';
+                    uraianData.forEach(function(item) {
+                        uraianHtml += '<li>' + $('<span>').text(item).html() + '</li>';
+                    });
+                    uraianHtml += '</ul>';
+                } else if (typeof uraianData === 'string' && uraianData !== '') {
+                    uraianHtml = $('<span>').text(uraianData).html();
+                }
+            } catch (e) {
+                if (uraianRaw && uraianRaw !== '-') {
+                    uraianHtml = $('<span>').text(uraianRaw).html();
+                }
+            }
+            $('#detail-uraian').html(uraianHtml);
+
             $('#logDetailModal').modal('show');
         });
 
