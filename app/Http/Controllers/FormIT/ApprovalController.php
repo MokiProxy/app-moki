@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class ApprovalController extends Controller
 {
+
     public function index()
     {
         abort_unless(auth()->user()->hasPermissionTo('form-it.approval.view'), 403);
@@ -20,7 +21,7 @@ class ApprovalController extends Controller
         $pendingApprovals = SoftwareInstallation::with(['pemohon', 'pemohon.division'])
             ->whereHas('approvals', function ($query) use ($employeeId) {
                 $query->where('approver_id', $employeeId)
-                      ->where('status', 'pending');
+                    ->where('status', 'pending');
             })
             ->where('status', '!=', 'rejected')
             ->latest()
@@ -29,7 +30,7 @@ class ApprovalController extends Controller
         $historyApprovals = SoftwareInstallation::with(['pemohon', 'pemohon.division', 'approvals'])
             ->whereHas('approvals', function ($query) use ($employeeId) {
                 $query->where('approver_id', $employeeId)
-                      ->where('status', '!=', 'pending');
+                    ->where('status', '!=', 'pending');
             })
             ->latest()
             ->get();
@@ -46,9 +47,13 @@ class ApprovalController extends Controller
         $employeeId = auth()->user()->employee_id;
 
         $softwareInstallation = SoftwareInstallation::with([
-            'pemohon', 'pemohon.division', 'pemohon.regional',
-            'superior1', 'managerIt',
-            'approvals', 'approvals.approver',
+            'pemohon',
+            'pemohon.division',
+            'pemohon.regional',
+            'superior1',
+            'managerIt',
+            'approvals',
+            'approvals.approver',
         ])->findOrFail($id);
 
         $myApproval = $softwareInstallation->approvals()
@@ -126,7 +131,6 @@ class ApprovalController extends Controller
                 : 'Pengajuan berhasil ditolak.';
 
             return back()->with('success', $message);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal memproses approval: ' . $e->getMessage());

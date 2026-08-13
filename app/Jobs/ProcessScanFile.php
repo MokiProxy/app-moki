@@ -58,16 +58,11 @@ class ProcessScanFile implements ShouldQueue
 
         $ocr = new GeminiEngine();
 
-        $documentType = $this->resolveDocumentType($uploadedFile, $ocr);
-
-        if ($documentType === null) {
-            throw new Exception("Could not detect document type for: {$this->filename}");
-        }
-
-        $result = $ocr->extractText($uploadedFile, $documentType);
+        // Single-pass: 1 Gemini call mengembalikan document_type + semua field
+        $result = $ocr->extractText($uploadedFile);
 
         if (empty($result['success'])) {
-            throw new Exception('OCR failed: ' . json_encode($result));
+            throw new Exception('OCR failed: '.json_encode($result));
         }
 
         $ocrText = $result['text'] ?? '';
@@ -77,19 +72,19 @@ class ProcessScanFile implements ShouldQueue
             'data' => $ocrData,
         ]);
 
+        // Resolve document type dari Gemini response
+        $documentType = $this->resolveDocumentType($this->documentTypeId, $ocrData);
+
+        if ($documentType === null) {
+            throw new Exception("Document type not found for: {$this->filename}");
+        }
+
         if ($ocrData !== null) {
             $documentNumber = $ocrData['document_number'] ?? null;
             $vendorName = $this->sanitizeFilename($ocrData['vendor_name'] ?? null);
             $tanggal = $ocrData['document_date'] ?? null;
             $keterangan = $ocrData['keterangan'] ?? null;
             $uraian = is_array($ocrData['uraian'] ?? null) ? json_encode($ocrData['uraian']) : ($ocrData['uraian'] ?? null);
-
-            $documentTypeName = strtoupper($ocrData['document_type'] ?? '');
-            $detectedType = DocumentType::whereRaw('UPPER(name) = ?', [$documentTypeName])->first();
-
-            if ($detectedType !== null) {
-                $documentType = $detectedType;
-            }
 
             Log::info('Using structured data from Gemini', [
                 'file' => $this->filename,
@@ -311,68 +306,6 @@ class ProcessScanFile implements ShouldQueue
         ]);
     }
 
-    protected function resolveDocumentType(UploadedFile $uploadedFile, GeminiEngine $ocr): ?DocumentType
-    {
-        if ($this->documentTypeId !== null) {
-            return DocumentType::find($this->documentTypeId);
-        }
-
-        $documentTypes = DocumentType::all();
-
-        if ($documentTypes->isEmpty()) {
-            return null;
-        }
-
-        try {
-            $result = $ocr->extractText($uploadedFile, null);
-        } catch (Exception $e) {
-            Log::warning('Detection OCR failed', ['error' => $e->getMessage()]);
-
-            return null;
-        }
-
-        if (empty($result['success'])) {
-            return null;
-        }
-
-        $ocrData = $result['ocr_data'] ?? null;
-
-        if ($ocrData === null) {
-            Log::warning('Gemini tidak mengembalikan structured data untuk deteksi', [
-                'file' => $this->filename,
-            ]);
-
-            return null;
-        }
-
-        $documentTypeName = strtoupper($ocrData['document_type'] ?? '');
-
-        if ($documentTypeName === '') {
-            Log::warning('document_type kosong dari Gemini', [
-                'file' => $this->filename,
-            ]);
-
-            return null;
-        }
-
-        $docType = DocumentType::whereRaw('UPPER(name) = ?', [$documentTypeName])->first();
-
-        if ($docType !== null) {
-            Log::info('Document type detected via Gemini', [
-                'file' => $this->filename,
-                'detected_type' => $docType->name,
-                'gemini_document_type' => $documentTypeName,
-            ]);
-        } else {
-            Log::warning("document_type '{$documentTypeName}' tidak ditemukan di database", [
-                'file' => $this->filename,
-                'available_types' => $documentTypes->pluck('name')->toArray(),
-            ]);
-        }
-
-        return $docType;
-    }
-
     protected function ensureDirectoryExists(string $directory): void
     {
         if (! is_dir($directory)) {
@@ -387,5 +320,40 @@ class ProcessScanFile implements ShouldQueue
         }
 
         return preg_replace('#[/\\\\:*?"<>|]#', '_', $value);
+    }
+
+    /**
+     * Resolve document type dari ID atau Gemini response.
+     *
+     * Jika documentTypeId ada, gunakan itu (subfolder flow).
+     * Jika null, deteksi dari document_type di Gemini response (root folder flow — single-pass).
+     */
+    protected function resolveDocumentType(?int $documentTypeId, ?array $ocrData): ?DocumentType
+    {
+        // Prioritas: gunakan ID yang sudah diketahui (dari subfolder)
+        if ($documentTypeId !== null) {
+            return DocumentType::find($documentTypeId);
+        }
+
+        // Single-pass: deteksi dari Gemini response
+        $documentTypeName = strtoupper($ocrData['document_type'] ?? '');
+
+        if ($documentTypeName === '') {
+            Log::warning('document_type kosong dari Gemini', [
+                'file' => $this->filename,
+            ]);
+
+            return null;
+        }
+
+        $docType = DocumentType::whereRaw('UPPER(name) = ?', [$documentTypeName])->first();
+
+        if ($docType === null) {
+            Log::warning("document_type '{$documentTypeName}' tidak ditemukan di database", [
+                'file' => $this->filename,
+            ]);
+        }
+
+        return $docType;
     }
 }

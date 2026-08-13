@@ -1,5 +1,9 @@
 @php
 $roleColor = "primary-form-it";
+use App\Models\FormitApproval;
+
+$employeeId = auth()->user()->employee_id;
+$isApprover = FormitApproval::where('approver_id', $employeeId)->exists();
 @endphp
 
 <div id="sidebar-menu" class="mt-2">
@@ -20,14 +24,14 @@ $roleColor = "primary-form-it";
             </a>
         </li>
 
-        @can('form-it.approval.view')
+        @if($isApprover)
         <li>
             <a href="{{ route('form-it.approval.index') }}" class="waves-effect">
                 <i class="bx bx-check-shield"></i>
                 <span key="t-approval">Approval</span>
             </a>
         </li>
-        @endcan
+        @endif
 
         @can('form-it.fixed-asset.approve')
         <li>

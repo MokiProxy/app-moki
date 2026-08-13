@@ -34,15 +34,16 @@ return [
         'api_key' => env('GOOGLE_GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
         'prompt_template' => <<<'PROMPT'
-Analisis dokumen ini dan ekstrak informasi berikut dalam format JSON:
-Aturan:
-1. Kembalikan HANYA JSON tanpa penjelasan tambahan
-2. Jika field tidak ditemukan, gunakan string kosong ""
-3. Pastikan format tanggal konsisten (DD Mon YY)
-4. Uraian harus berupa array meskipun hanya ada 1 item
-5. Field vendor name diambil dari nama dari perusahaan di customer diambil di antara 2 tanda koma. contoh: 0023/,MADHANI TALATAH NUSANTARA, PT. ambil yang MADHANI TALATAH NUSANTARA sebagai vendor name
-6. field document_number diambil dari nomor dokumen paling atas
-Ekstrak data nya dengan format berikut:
+Extract data into a flat JSON object with these rules:
+1. Missing fields: use "".
+2. document_date format: DD Mon YY.
+3. uraian: format as string array.
+4. vendor_name: extract text between commas in customer (e.g., "0023/, PT NAME, PT" -> "PT NAME").
+5. Extra numbers: if there are secondary document numbers, add them as top-level JSON keys using their identifier labels (no nesting).
+6. Main document number: use the first number found in the text as the main document_number.
+7. Make all json key using snake case.
+8. Return ONLY valid JSON.
+Fields: ["document_type","document_number","document_date","vendor_name","customer","keterangan","uraian"]
 PROMPT,
         'default_fields' => [
             'document_type',
@@ -54,6 +55,13 @@ PROMPT,
             'uraian',
         ],
         'max_tokens' => env('GEMINI_MAX_TOKENS', 8192),
+        'image_max_width' => env('GEMINI_IMAGE_MAX_WIDTH', 1024),
+        'image_quality' => env('GEMINI_IMAGE_QUALITY', 85),
+        'request_delay_ms' => env('GEMINI_REQUEST_DELAY_MS', 100),
+        'max_retries' => env('GEMINI_MAX_RETRIES', 3),
+        'retry_base_delay_ms' => env('GEMINI_RETRY_BASE_DELAY_MS', 1000),
+        'batch_size' => env('GEMINI_BATCH_SIZE', 5),
+        'batch_delay_ms' => env('GEMINI_BATCH_DELAY_MS', 500),
     ],
 
 ];

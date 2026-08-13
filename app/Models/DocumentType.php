@@ -12,8 +12,6 @@ class DocumentType extends Model
     protected $fillable = [
         'name',
         'description',
-        'gemini_prompt',
-        'gemini_fields',
         'filename_template',
         'ftp_folder_template',
         'ftp_failed_folder',
@@ -21,7 +19,6 @@ class DocumentType extends Model
     ];
 
     protected $casts = [
-        'gemini_fields' => 'array',
         'vendor_search_enabled' => 'boolean',
     ];
 

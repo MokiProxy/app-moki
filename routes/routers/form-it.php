@@ -74,13 +74,10 @@ Route::prefix("form-it")->name("form-it.")->group(function () {
     // APPROVAL SOFTWARE INSTALLATION (requires approver middleware)
     Route::prefix("approval")->name("approval.")->middleware(['approver'])->group(function () {
         Route::get("/", [ApprovalController::class, "index"])
-            ->name("index")
-            ->middleware('permission:form-it.approval.view');
+            ->name("index");
         Route::get("/{id}", [ApprovalController::class, "show"])
-            ->name("show")
-            ->middleware('permission:form-it.approval.view');
+            ->name("show");
         Route::post("/{id}/process", [ApprovalController::class, "process"])
-            ->name("process")
-            ->middleware('permission:form-it.approval.process');
+            ->name("process");
     });
 });

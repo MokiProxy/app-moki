@@ -107,43 +107,5 @@ $authUserName = auth()->user()->name;
         <span class="text-muted"><i class="fa-regular fa-calendar me-2"></i>{{ date('d F Y') }}</span>
     </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
-
-                    @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
-
-                    <div class="row">
-                        @foreach ($forms as $form)
-                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
-                            <a href="{{ route($form['link']) }}" class="text-decoration-none">
-                                <div class="folder-card h-100 border rounded">
-                                    <div class="card-body text-center">
-                        <div class="folder-icon text-primary-form-it mb-2">
-                            <i class="mdi {{ $form['icon'] ?? 'mdi-file-document-edit' }} fs-1"></i>
-                        </div>
-                                        <h6 class="text-dark fw-semibold">{{ $form["name"] }}</h6>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection

@@ -50,13 +50,6 @@
                             @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Gemini Fields (JSON Array)</label>
-                            <input type="text" name="gemini_fields" class="form-control @error('gemini_fields') is-invalid @enderror" value="{{ old('gemini_fields', $documentType->gemini_fields ? json_encode($documentType->gemini_fields) : '["document_type","document_number","document_date","vendor_name","customer","keterangan","uraian"]') }}" maxlength="1000" placeholder='["document_type","document_number","document_date","vendor_name","customer","keterangan","uraian"]'>
-                            @error('gemini_fields') <div class="invalid-feedback">{{ $message }}</div> @enderror>
-                            <small class="text-muted">Field JSON yang akan diekstrak oleh Gemini API untuk jenis dokumen ini. Format: <code>["field1","field2","field3"]</code>. Jika dikosongkan, akan menggunakan default fields.</small>
-                        </div>
-
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Filename Template</label>
                             <input type="text" name="filename_template" class="form-control @error('filename_template') is-invalid @enderror" value="{{ old('filename_template', $documentType->filename_template) }}" maxlength="255">

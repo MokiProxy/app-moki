@@ -45,7 +45,6 @@
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Nama</th>
                                 <th>Deskripsi</th>
-                                <th>Gemini Fields</th>
                                 <th class="text-center">Vendor Search</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
@@ -56,13 +55,6 @@
                                 <td class="text-center">{{ $documentTypes->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $dt->name }}</td>
                                 <td>{{ $dt->description ?? '-' }}</td>
-                                <td>
-                                    @if($dt->gemini_fields)
-                                        <small class="text-muted">{{ \Illuminate\Support\Str::limit(implode(', ', $dt->gemini_fields), 80) }}</small>
-                                    @else
-                                        <span class="text-muted">- gunakan default -</span>
-                                    @endif
-                                </td>
                                 <td class="text-center">
                                     @if($dt->vendor_search_enabled)
                                         <span class="badge bg-success">Yes</span>
@@ -81,7 +73,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">Belum ada data jenis dokumen.</td>
+                                <td colspan="5" class="text-center text-muted">Belum ada data jenis dokumen.</td>
                             </tr>
                             @endforelse
                         </tbody>

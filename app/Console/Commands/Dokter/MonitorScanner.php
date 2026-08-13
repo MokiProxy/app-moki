@@ -5,11 +5,9 @@ namespace App\Console\Commands\Dokter;
 use App\Jobs\ProcessScanFile;
 use App\Models\DocumentType;
 use App\Services\FileConversionService;
-use App\Services\Ocr\GeminiEngine;
 use App\Services\ScanLogger;
 use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -31,9 +29,9 @@ class MonitorScanner extends Command
 
     protected $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
 
-    protected int $maxRetries = 5;
+    protected int $batchSize = 5;
 
-    protected int $retryInterval = 3;
+    protected int $batchDelayMs = 500;
 
     /**
      * Create a new command instance.
@@ -43,6 +41,8 @@ class MonitorScanner extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->batchSize = config('services.gemini.batch_size', 5);
+        $this->batchDelayMs = config('services.gemini.batch_delay_ms', 500);
     }
 
     /**
@@ -50,25 +50,25 @@ class MonitorScanner extends Command
      */
     public function handle(FileConversionService $converter, ScanLogger $logger): int
     {
-        $documentTypes = DocumentType::all();
-
-        if ($documentTypes->isEmpty()) {
+        if (DocumentType::count() === 0) {
             $this->error('No document types configured. Please create at least one document type.');
 
             return self::FAILURE;
         }
 
-        $ocr = new GeminiEngine();
-
-        $this->processRootFiles($documentTypes, $ocr, $converter, $logger);
-        $this->processSubfolderFiles($documentTypes, $converter, $logger);
+        $this->processRootFiles($converter, $logger);
+        $this->processSubfolderFiles($converter, $logger);
 
         Log::debug('Scanner monitor cycle completed');
 
         return self::SUCCESS;
     }
 
-    protected function processRootFiles($documentTypes, GeminiEngine $ocr, FileConversionService $converter, ScanLogger $logger): void
+    /**
+     * Process files di root folder FTP scanner.
+     * Document type akan dideteksi otomatis oleh ProcessScanFile (single-pass Gemini).
+     */
+    protected function processRootFiles(FileConversionService $converter, ScanLogger $logger): void
     {
         $files = Storage::disk('ftp_scanner')->files();
 
@@ -76,110 +76,93 @@ class MonitorScanner extends Command
             return;
         }
 
-        foreach ($files as $file) {
-            $filename = basename($file);
-            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $batches = array_chunk($files, $this->batchSize);
+        $batchCount = count($batches);
 
-            if (! in_array($extension, $this->allowedExtensions)) {
-                $this->warn("Skipping non-image file: {$file}");
-                Storage::disk('ftp_scanner')->delete($file);
-                $logger->log('file_skipped', 'skipped', [
-                    'filename' => $filename,
-                    'extension' => $extension,
-                    'message' => 'Ekstensi file tidak didukung: ' . $extension,
-                ]);
+        foreach ($batches as $batchIndex => $batch) {
+            Log::debug("Processing batch ".($batchIndex + 1)." of {$batchCount}", [
+                'files_in_batch' => count($batch),
+            ]);
 
-                continue;
+            foreach ($batch as $file) {
+                $this->processRootFile($file, $converter, $logger);
             }
 
-            $content = Storage::disk('ftp_scanner')->get($file);
-
-            $localPath = "scanner/incoming/{$filename}";
-            Storage::disk('local')->put($localPath, $content);
-            Storage::disk('ftp_scanner')->delete($file);
-
-            $fullPath = storage_path("app/private/{$localPath}");
-            $docType = null;
-            $lastAttempt = 0;
-
-            for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
-                $lastAttempt = $attempt;
-                $docType = $this->detectDocumentType($fullPath, $filename, $documentTypes, $ocr, $attempt);
-
-                if ($docType !== null) {
-                    break;
-                }
-
-                if ($attempt < $this->maxRetries) {
-                    $this->warn("Deteksi jenis dokumen gagal (percobaan {$attempt}/{$this->maxRetries}), retry dalam {$this->retryInterval} detik...");
-                    $logger->log('detection_retry', 'warning', [
-                        'filename' => $filename,
-                        'extension' => $extension,
-                        'attempt' => $attempt,
-                        'max_retries' => $this->maxRetries,
-                        'message' => "Percobaan {$attempt}/{$this->maxRetries} gagal, retry dalam {$this->retryInterval} detik",
-                    ]);
-                    sleep($this->retryInterval);
-                }
-            }
-
-            if ($docType === null) {
-                $this->warn("Could not detect document type for: {$filename} after {$this->maxRetries} attempts. Moving to FAILED folder.");
-                $moved = $this->uploadToFailedFolder($filename, $content, $lastAttempt);
-                Storage::disk('local')->delete($localPath);
-                $logger->log('detection_failed', 'failed', [
-                    'filename' => $filename,
-                    'extension' => $extension,
-                    'total_attempts' => $lastAttempt,
-                    'message' => $moved
-                        ? "Deteksi jenis dokumen gagal setelah {$lastAttempt} percobaan, file dipindah ke folder FAILED"
-                        : "Deteksi jenis dokumen gagal setelah {$lastAttempt} percobaan, upload ke folder FAILED gagal",
-                ]);
-
-                continue;
-            }
-
-            $this->info("Auto-detected: {$docType->name} for {$filename}");
-
-            if ($converter->isPdf($fullPath)) {
-                try {
-                    $images = $converter->pdfToImages($fullPath);
-                    Storage::disk('local')->delete($localPath);
-
-                    if (empty($images)) {
-                        $this->warn("Failed to convert PDF: {$filename}");
-                        $logger->log('job_failed', 'failed', [
-                            'filename' => $filename,
-                            'extension' => $extension,
-                            'document_type_id' => $docType->id,
-                            'document_type_name' => $docType->name,
-                            'message' => 'Konversi PDF ke gambar gagal',
-                        ]);
-
-                        continue;
-                    }
-
-                    foreach ($images as $imagePath) {
-                        $imageFilename = basename($imagePath);
-                        $this->info("PDF converted to image: {$imageFilename}");
-                        ProcessScanFile::dispatch($imageFilename, $docType->id);
-                        $this->info("OCR job dispatched for: {$imageFilename} (document type: {$docType->name})");
-                    }
-                } catch (Exception $e) {
-                    $this->warn("PDF local conversion unavailable, processing PDF directly: {$filename}");
-                    ProcessScanFile::dispatch($filename, $docType->id);
-                    $this->info("OCR job dispatched for PDF: {$filename} (document type: {$docType->name})");
-                }
-            } else {
-                ProcessScanFile::dispatch($filename, $docType->id);
-                $this->info("OCR job dispatched for: {$filename} (document type: {$docType->name})");
+            if ($batchIndex < $batchCount - 1 && $this->batchDelayMs > 0) {
+                usleep($this->batchDelayMs * 1000);
             }
         }
     }
 
-    protected function processSubfolderFiles($documentTypes, FileConversionService $converter, ScanLogger $logger): void
+    /**
+     * Process single file dari root folder.
+     * Dispatch ProcessScanFile tanpa documentTypeId — deteksi dilakukan dalam 1 Gemini call.
+     */
+    protected function processRootFile(string $file, FileConversionService $converter, ScanLogger $logger): void
+    {
+        $filename = basename($file);
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        if (! in_array($extension, $this->allowedExtensions)) {
+            $this->warn("Skipping non-image file: {$file}");
+            Storage::disk('ftp_scanner')->delete($file);
+            $logger->log('file_skipped', 'skipped', [
+                'filename' => $filename,
+                'extension' => $extension,
+                'message' => 'Ekstensi file tidak didukung: '.$extension,
+            ]);
+
+            return;
+        }
+
+        $content = Storage::disk('ftp_scanner')->get($file);
+
+        $localPath = "scanner/incoming/{$filename}";
+        Storage::disk('local')->put($localPath, $content);
+        Storage::disk('ftp_scanner')->delete($file);
+
+        $fullPath = storage_path("app/private/{$localPath}");
+
+        if ($converter->isPdf($fullPath)) {
+            try {
+                $images = $converter->pdfToImages($fullPath);
+                Storage::disk('local')->delete($localPath);
+
+                if (empty($images)) {
+                    $this->warn("Failed to convert PDF: {$filename}");
+                    $logger->log('job_failed', 'failed', [
+                        'filename' => $filename,
+                        'extension' => $extension,
+                        'message' => 'Konversi PDF ke gambar gagal',
+                    ]);
+
+                    return;
+                }
+
+                foreach ($images as $imagePath) {
+                    $imageFilename = basename($imagePath);
+                    ProcessScanFile::dispatch($imageFilename);
+                    $this->info("OCR job dispatched for: {$imageFilename}");
+                }
+            } catch (Exception $e) {
+                $this->warn("PDF local conversion unavailable, processing PDF directly: {$filename}");
+                ProcessScanFile::dispatch($filename);
+                $this->info("OCR job dispatched for PDF: {$filename}");
+            }
+        } else {
+            ProcessScanFile::dispatch($filename);
+            $this->info("OCR job dispatched for: {$filename}");
+        }
+    }
+
+    /**
+     * Process files di subfolder FTP scanner.
+     * Document type diketahui dari nama folder, tidak perlu deteksi.
+     */
+    protected function processSubfolderFiles(FileConversionService $converter, ScanLogger $logger): void
     {
         $directories = Storage::disk('ftp_scanner')->directories();
+        $documentTypes = DocumentType::all();
 
         foreach ($directories as $directory) {
             $slug = basename($directory);
@@ -212,7 +195,7 @@ class MonitorScanner extends Command
                 'extension' => $extension,
                 'document_type_id' => $documentType->id,
                 'document_type_name' => $documentType->name,
-                'message' => 'Ekstensi file tidak didukung: ' . $extension,
+                'message' => 'Ekstensi file tidak didukung: '.$extension,
             ]);
 
             return;
@@ -259,108 +242,5 @@ class MonitorScanner extends Command
             ProcessScanFile::dispatch($filename, $documentType->id);
             $this->info("OCR job dispatched for: {$filename} (document type: {$documentType->name})");
         }
-    }
-
-    protected function detectDocumentType(string $filePath, string $filename, $documentTypes, GeminiEngine $ocr, int $attempt = 1): ?DocumentType
-    {
-        $uploadedFile = new UploadedFile($filePath, $filename, mime_content_type($filePath), null, true);
-
-        Log::info("Memulai deteksi jenis dokumen via Gemini (percobaan {$attempt})", [
-            'file' => $filename,
-            'attempt' => $attempt,
-        ]);
-
-        try {
-            $result = $ocr->extractText($uploadedFile);
-        } catch (Exception $e) {
-            $this->warn("OCR failed (percobaan {$attempt}): {$e->getMessage()}");
-
-            return null;
-        }
-
-        if (empty($result['success'])) {
-            Log::warning("OCR tidak menghasilkan teks (percobaan {$attempt})", [
-                'file' => $filename,
-                'attempt' => $attempt,
-            ]);
-
-            return null;
-        }
-
-        $ocrData = $result['ocr_data'] ?? null;
-
-        if ($ocrData === null) {
-            Log::warning("Gemini tidak mengembalikan structured data (percobaan {$attempt})", [
-                'file' => $filename,
-                'attempt' => $attempt,
-            ]);
-
-            return null;
-        }
-
-        $documentTypeName = strtoupper($ocrData['document_type'] ?? '');
-
-        if ($documentTypeName === '') {
-            Log::warning("document_type kosong dari Gemini (percobaan {$attempt})", [
-                'file' => $filename,
-                'attempt' => $attempt,
-            ]);
-
-            return null;
-        }
-
-        $docType = DocumentType::whereRaw('UPPER(name) = ?', [$documentTypeName])->first();
-
-        if ($docType === null) {
-            Log::warning("document_type '{$documentTypeName}' tidak ditemukan di database", [
-                'file' => $filename,
-                'attempt' => $attempt,
-                'available_types' => $documentTypes->pluck('name')->toArray(),
-            ]);
-
-            return null;
-        }
-
-        Log::info('Document type detected via Gemini', [
-            'file' => $filename,
-            'detected_type' => $docType->name,
-            'gemini_document_type' => $documentTypeName,
-        ]);
-
-        return $docType;
-    }
-
-    protected function uploadToFailedFolder(string $filename, string $content, int $totalAttempts = 1): bool
-    {
-        $failedPath = "FAILED/{$filename}";
-        $ftpDisk = Storage::disk('ftp_final');
-        $ftpAdapter = $ftpDisk->getAdapter();
-
-        Log::info("Memindahkan file ke FAILED folder setelah {$totalAttempts} percobaan", [
-            'file' => $filename,
-            'total_attempts' => $totalAttempts,
-        ]);
-
-        for ($attempt = 1; $attempt <= 3; $attempt++) {
-            try {
-                $ftpAdapter->disconnect();
-                $ftpDisk->put($failedPath, $content);
-                $this->info("File dipindah ke FAILED folder: {$failedPath}");
-
-                return true;
-            } catch (Exception $e) {
-                Log::warning("FTP upload attempt {$attempt} failed (FAILED folder)", [
-                    'file' => $filename,
-                    'ftp_path' => $failedPath,
-                    'error' => $e->getMessage(),
-                ]);
-
-                if ($attempt < 3) {
-                    sleep(5);
-                }
-            }
-        }
-
-        return false;
     }
 }

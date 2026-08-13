@@ -31,7 +31,6 @@ class DocumentTypeController extends Controller
     {
         try {
             $data = $request->validated();
-            $data['gemini_fields'] = $this->parseGeminiFields($data['gemini_fields'] ?? null);
 
             $documentType = DocumentType::create($data);
             Storage::disk('ftp_final')->makeDirectory("{$documentType->name}");
@@ -69,7 +68,6 @@ class DocumentTypeController extends Controller
             }
 
             $data = $request->validated();
-            $data['gemini_fields'] = $this->parseGeminiFields($data['gemini_fields'] ?? null);
 
             $documentType->update($data);
 
@@ -98,18 +96,4 @@ class DocumentTypeController extends Controller
         }
     }
 
-    private function parseGeminiFields(?string $value): ?array
-    {
-        if (empty($value)) {
-            return null;
-        }
-
-        $decoded = json_decode($value, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
-            return null;
-        }
-
-        return array_values(array_filter($decoded, fn ($item) => is_string($item) && trim($item) !== ''));
-    }
 }

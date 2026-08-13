@@ -121,10 +121,15 @@ class RolePermissionSeeder extends Seeder
             Permission::firstOrCreate($permission);
         }
 
+        $allPermissions = Permission::all();
+
+        $superAdmin = Role::where('name', 'super-admin')->first();
         $admin = Role::where('name', 'admin')->first();
         $approver = Role::where('name', 'approver')->first();
         $staff = Role::where('name', 'staff')->first();
         $teknisi = Role::where('name', 'teknisi')->first();
+
+        $superAdmin->syncPermissions($allPermissions);
 
         $admin->givePermissionTo([
             // Portal & Menu
