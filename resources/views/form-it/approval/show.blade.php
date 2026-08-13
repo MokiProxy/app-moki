@@ -269,7 +269,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@section('plugin')
 <script>
 function showRejectModal() {
     var rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));

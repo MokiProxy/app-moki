@@ -78,6 +78,10 @@ class ApprovalController extends Controller
 
         $softwareInstallation = SoftwareInstallation::findOrFail($id);
 
+        if (in_array($softwareInstallation->status, ['rejected', 'approved'])) {
+            return back()->with('error', 'Pengajuan ini sudah tidak dapat diproses.');
+        }
+
         $approval = $softwareInstallation->approvals()
             ->where('approver_id', $employeeId)
             ->where('status', 'pending')
@@ -116,6 +120,10 @@ class ApprovalController extends Controller
                     'status' => 'rejected',
                     'notes' => $validated['notes'] ?? null,
                 ]);
+
+                $softwareInstallation->approvals()
+                    ->where('status', 'pending')
+                    ->update(['status' => 'rejected']);
 
                 $softwareInstallation->update([
                     'status' => 'rejected',

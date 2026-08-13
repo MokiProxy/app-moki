@@ -177,6 +177,10 @@ class FormController extends Controller
             'approvals',
         ])->findOrFail($id);
 
+        if ($softwareInstallation->status === 'rejected') {
+            abort(404, 'Pengajuan ini telah ditolak.');
+        }
+
         $pemohon = $softwareInstallation->pemohon;
         $date = $softwareInstallation->created_at->format('d F Y');
         $softwareOptions = $this->softwareOptions;
@@ -302,43 +306,13 @@ class FormController extends Controller
             "approver",
         ])->findOrFail($id);
 
+        if ($borrowing->status === 'rejected') {
+            abort(404, 'Pengajuan ini telah ditolak.');
+        }
+
         $pdf = Pdf::loadView('form-it.templates.fixed-asset', compact('borrowing'))->setPaper('a4', 'portrait');
         $pdf->getDomPDF()->getOptions()->set('isImagickEnabled', false);
 
         return $pdf->stream("fixed-asset-{$id}.pdf");
-
-        $pemohon = $softwareInstallation->pemohon;
-        $date = $softwareInstallation->created_at->format('d F Y');
-        $softwareOptions = $this->softwareOptions;
-        $selectedSoftware = $softwareInstallation->softwares;
-        $keterangan = $softwareInstallation->keterangan;
-
-        $superior1Approval = $softwareInstallation->approvals->where('level', 1)->first();
-        $managerITApproval = $softwareInstallation->approvals->where('level', 2)->first();
-
-        $sign = [
-            'diajukan' => $softwareInstallation->pemohon->name,
-            'diketahui' => $softwareInstallation->superior1,
-            'disetujui' => $softwareInstallation->managerIt,
-            'diajukan_approved' => true,
-            'diketahui_approved' => $superior1Approval?->status === 'approved',
-            'disetujui_approved' => $managerITApproval?->status === 'approved',
-            'diajukan_date' => $softwareInstallation->created_at->format('d M Y'),
-            'diketahui_date' => $superior1Approval?->approved_at?->format('d M Y'),
-            'disetujui_date' => $managerITApproval?->approved_at?->format('d M Y'),
-        ];
-
-        $pdf = Pdf::loadView('form-it.templates.software-installation', compact(
-            'pemohon',
-            'date',
-            'softwareOptions',
-            'selectedSoftware',
-            'keterangan',
-            'sign'
-        ))->setPaper('a4', 'portrait');
-
-        $pdf->getDomPDF()->getOptions()->set('isImagickEnabled', false);
-
-        return $pdf->stream("install-software-{$id}.pdf");
     }
 }
