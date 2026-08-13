@@ -99,15 +99,30 @@ class AuditorFileController extends Controller
             ->get();
 
         foreach ($mergeGroups as $group) {
+            $allowed = false;
+
+            // Cek dari item -> scanLog -> tanggal (relasi 3 hop)
             foreach ($group->items as $item) {
                 if ($item->scanLog && $item->scanLog->tanggal) {
                     $year = $this->extractYearFromTanggal($item->scanLog->tanggal);
 
                     if ($year !== null && in_array($year, $allowedYears)) {
-                        $allowedPaths[] = $group->final_pdf_path;
-                        break; // Satu item cocok sudah cukup untuk group ini
+                        $allowed = true;
+                        break;
                     }
                 }
+            }
+
+            // Fallback: gunakan created_at dari merge group jika relasi gagal
+            if (! $allowed && $group->created_at) {
+                $year = (int) $group->created_at->format('Y');
+                if (in_array($year, $allowedYears)) {
+                    $allowed = true;
+                }
+            }
+
+            if ($allowed) {
+                $allowedPaths[] = $group->final_pdf_path;
             }
         }
 

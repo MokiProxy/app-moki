@@ -21,11 +21,12 @@ class HierarchySeeder extends Seeder
 
         // 2. Seed positions (adjacency list)
         $positions = [
-            ['position_id' => 'POS-CEO', 'superior_id' => null, 'pos_title' => 'CEO'],
-            ['position_id' => 'POS-GMIT', 'superior_id' => 'POS-CEO', 'pos_title' => 'GM IT'],
-            ['position_id' => 'POS-MGRDEV', 'superior_id' => 'POS-GMIT', 'pos_title' => 'Manager Development'],
-            ['position_id' => 'POS-SPVBE', 'superior_id' => 'POS-MGRDEV', 'pos_title' => 'Supervisor Backend'],
-            ['position_id' => 'POS-PRGBE', 'superior_id' => 'POS-SPVBE', 'pos_title' => 'Programmer Backend'],
+            ['position_id' => 'DIR-UTAMA', 'superior_id' => null, 'pos_title' => 'DIREKTUR UTAMA'],
+            ['position_id' => 'DIR-PEMBINA', 'superior_id' => 'DIR-UTAMA', 'pos_title' => 'DIREKTUR PEMBINA'],
+            ['position_id' => 'SR-MANAGER-MSI', 'superior_id' => 'DIR-PEMBINA', 'pos_title' => 'SENIOR MANAGER MSI'],
+            ['position_id' => 'MANAGER-MSI', 'superior_id' => 'SR-MANAGER-MSI', 'pos_title' => 'MANAGER MSI'],
+            ['position_id' => 'ASMEN-INFRA-KEAMANANAN-SISTEM', 'superior_id' => 'MANAGER-MSI', 'pos_title' => 'ASISTEN MANAGER INFRA DAN KEAMANAN SISTEM'],
+            ['position_id' => 'IT-TEKNOLOGI', 'superior_id' => 'ASMEN-INFRA-KEAMANANAN-SISTEM', 'pos_title' => 'IT TEKNOLOGI'],
         ];
 
         foreach ($positions as $pos) {
@@ -37,11 +38,12 @@ class HierarchySeeder extends Seeder
 
         // 3. Seed employees
         $employees = [
-            ['position_id' => 'POS-CEO', 'employee_id' => 'EMP0001', 'nik' => "12182823721", 'nopeg' => '20260001', 'nama' => 'Abimana CEO',  'email' => 'abimana.ceo@tpm-facility.com', 'jabatan0' => 'CEO',                 'kode_satker' => 'HO'],
-            ['position_id' => 'POS-GMIT', 'employee_id' => 'EMP0002', 'nik' => "12182823722", 'nopeg' => '20260002', 'nama' => 'Bayu GMIT', 'email' => 'bayu.gmit@tpm-facility.com', 'jabatan0' => 'GM IT',               'kode_satker' => 'HO'],
-            ['position_id' => 'POS-MGRDEV', 'employee_id' => 'EMP0003', 'nik' => "12182823723", 'nopeg' => '20260003', 'nama' => 'Irsyad MGRDEV', 'email' => 'irsyad.mgrdev@tpm-facility.com', 'jabatan0' => 'Manager Development',  'kode_satker' => 'HO'],
-            ['position_id' => 'POS-SPVBE', 'employee_id' => 'EMP0004', 'nik' => "12182823724", 'nopeg' => '20260004', 'nama' => 'Humam SPVBE', 'email' => 'humam.spvbe@tpm-facility.com', 'jabatan0' => 'Supervisor Backend',   'kode_satker' => 'HO'],
-            ['position_id' => 'POS-PRGBE', 'employee_id' => 'EMP0005', 'nik' => "12182823725", 'nopeg' => '20260005', 'nama' => 'Wahid PGRBE', 'email' => 'wahid.pgrbe@tpm-facility.com', 'jabatan0' => 'Programmer Backend',   'kode_satker' => 'HO'],
+            ['position_id' => 'DIR-UTAMA', 'employee_id' => '2025081', 'nik' => "0595987493811", 'nopeg' => '2025081', 'nama' => 'Agung',  'email' => 'agung@satriabahana.co.id', 'jabatan0' => 'DIREKTUR UTAMA',                 'kode_satker' => 'HO'],
+            ['position_id' => 'DIR-PEMBINA', 'employee_id' => '2025082', 'nik' => "0595987493821", 'nopeg' => '2025082', 'nama' => 'Sahlul', 'email' => 'sahlul@satriabahana.co.id', 'jabatan0' => 'DIREKTUR PEMBINA',               'kode_satker' => 'HO'],
+            ['position_id' => 'SR-MANAGER-MSI', 'employee_id' => '2025083', 'nik' => "0595987493831", 'nopeg' => '2025083', 'nama' => 'Fajriwan', 'email' => 'fajriwan@satriabahana.co.id', 'jabatan0' => 'SENIOR MANAGER MSI',  'kode_satker' => 'HO'],
+            ['position_id' => 'MANAGER-MSI', 'employee_id' => '2025084', 'nik' => "0595987493841", 'nopeg' => '2025084', 'nama' => 'Karmono', 'email' => 'karmono@satriabahana.co.id', 'jabatan0' => 'MANAGER MSI',   'kode_satker' => 'HO'],
+            ['position_id' => 'ASMEN-INFRA-KEAMANANAN-SISTEM', 'employee_id' => '2025085', 'nik' => "0595987493851", 'nopeg' => '2025085', 'nama' => 'Harmoko', 'email' => 'harmoko@satriabahana.co.id', 'jabatan0' => 'ASISTEN MANAGER INFRA DAN KEAMANAN SISTEM',   'kode_satker' => 'HO'],
+            ['position_id' => 'IT-TEKNOLOGI', 'employee_id' => '2025086', 'nik' => "0595987493861", 'nopeg' => '2025086', 'nama' => 'Vita', 'email' => 'vita@satriabahana.co.id', 'jabatan0' => 'IT TEKNOLOGI',   'kode_satker' => 'HO'],
         ];
 
         foreach ($employees as $emp) {

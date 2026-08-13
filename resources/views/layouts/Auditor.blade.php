@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
     <style>
         body { background-color: #f5f6f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar-audit { background: linear-gradient(135deg, #1a237e 0%, #283593 100%); }
+        .navbar-audit { background-color: #2B3142; }
         .badge-year { font-size: 0.75rem; }
         .folder-card { cursor: pointer; transition: all 0.2s ease; border: 1px solid #e9ecef; }
         .folder-card:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12); border-color: #f6c23e; }
@@ -23,7 +23,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-audit">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="{{ route('auditor.access', $link->token) }}">
-                <i class="mdi mdi-shield-check me-1"></i> Audit Access
+                <i class="mdi mdi-shield-check me-1"></i> Auditor Access
             </a>
             <div class="d-flex align-items-center">
                 <span class="text-white me-3">

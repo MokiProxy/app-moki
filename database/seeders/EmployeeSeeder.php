@@ -15,6 +15,14 @@ class EmployeeSeeder extends Seeder
     public function run()
     {
         $employees = [
+            // Employee For SBS Case
+            ["nik" => "0595987493811", "name" => "Agung", "email" => "agung@satriabahana.co.id", "hp" => null, "jabatan" => "DIREKTUR UTAMA", "address" => null],
+            ["nik" => "0595987493821", "name" => "Sahlul", "email" => "sahlul@satriabahana.co.id", "hp" => null, "jabatan" => "DIREKTUR PEMBINA", "address" => null],
+            ["nik" => "0595987493831", "name" => "Fajriwan", "email" => "fajriwan@satriabahana.co.id", "hp" => null, "jabatan" => "SENIOR MANAGER MSI", "address" => null],
+            ["nik" => "0595987493841", "name" => "Karmono", "email" => "karmono@satriabahana.co.id", "hp" => null, "jabatan" => "MANAGER MSI", "address" => null],
+            ["nik" => "0595987493851", "name" => "Harmoko", "email" => "harmoko@satriabahana.co.id", "hp" => null, "jabatan" => "ASISTEN MANAGER INFRA DAN KEAMANAN SISTEM", "address" => null],
+            ["nik" => "0595987493861", "name" => "Vita", "email" => "vita@satriabahana.co.id", "hp" => null, "jabatan" => "IT TEKNOLOGI", "address" => null],
+
             // Employee For Test Hierarchy
             ["nik" => "0595987493881", "name" => "Abimana CEO", "email" => "abimana.ceo@tpm-facility.com", "hp" => null, "jabatan" => "CEO", "address" => null],
             ["nik" => "0595987493882", "name" => "Bayu GMIT", "email" => "bayu.gmit@tpm-facility.com", "hp" => null, "jabatan" => "GMIT", "address" => null],
@@ -106,7 +114,7 @@ class EmployeeSeeder extends Seeder
         ];
 
         foreach ($employees as $index => $data) {
-            $empId = 'EMP' . str_pad($index + 1, 4, '0', STR_PAD_LEFT);
+            $empId = '202508' . $index + 1;
 
             // Menggunakan updateOrCreate agar aman dijalankan berkali-kali tanpa duplikasi data
             Employee::updateOrCreate(

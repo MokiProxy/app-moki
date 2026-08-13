@@ -123,7 +123,22 @@ class PortalController extends Controller
                     'image' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
                     'title' => 'AMS Monitoring',
                     'desc'  => 'Kelola aset perusahaan Anda dengan sistem monitoring yang akurat.'
-                ]
+                ],
+                (object)[
+                    'image' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+                    'title' => 'HELPDESK',
+                    'desc'  => 'Kelola tiket support IT Anda dengan sistem yang efisien.'
+                ],
+                (object)[
+                    'image' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+                    'title' => 'FORM IT',
+                    'desc'  => 'Kelola Formulir digital Anda dengan sistem yang mudah digunakan.'
+                ],
+                (object)[
+                    'image' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+                    'title' => 'DOKTER',
+                    'desc'  => 'Kelola Dokumen Kontroler Anda dengan sistem yang mudah digunakan.'
+                ],
             ]);
         } catch (\Exception $e) {
             // Jika terjadi error (misal table belum dimigrasi), kirim koleksi kosong agar view tidak crash

@@ -133,8 +133,8 @@
             height: 180px;
             position: relative;
             display: flex;
-            align-items: center;
-            padding: 0 40px;
+            align-items: end;
+            padding: 30px;
             color: white;
         }
 
@@ -308,8 +308,8 @@
                             <div class="slider-content" style="background: url('{{ $slider->image }}'); background-size: cover; background-position: center;">
                                 <div class="slider-overlay"></div>
                                 <div class="slider-text text-white">
-                                    <h4 class="fw-bold">{{ $slider->title }}</h4>
-                                    <p>{{ $slider->desc }}</p>
+                                    <h4 class="fw-bold m-0 p-0">{{ $slider->title }}</h4>
+                                    <p class="m-0 p-0">{{ $slider->desc }}</p>
                                 </div>
                             </div>
                         </div>

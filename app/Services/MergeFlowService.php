@@ -185,7 +185,7 @@ class MergeFlowService
     protected function performFinalMerge(DocumentMergeGroup $group, MergeFlow $flow): void
     {
         $ftpDisk = Storage::disk('ftp_final');
-        $items = $group->items()->orderBy('order')->get();
+        $items = $group->items()->with('scanLog')->orderBy('order')->get();
         $tempFiles = [];
         $mergedPath = null;
 
@@ -219,6 +219,34 @@ class MergeFlowService
                 'status' => 2,
                 'final_pdf_path' => $finalPath,
                 'merged_at' => now(),
+            ]);
+
+            // Buat scan log untuk file FINAL
+            $firstItem = $items->first();
+            $firstScanLog = $firstItem?->scanLog;
+            $tanggal = $firstScanLog?->tanggal ?? now()->format('d M y');
+            $fileSize = $ftpDisk->size($finalPath) ?? 0;
+
+            ScanLog::create([
+                'source' => 'merge_flow',
+                'event' => 'merge_final',
+                'status' => 'success',
+                'filename' => $finalFilename,
+                'extension' => 'pdf',
+                'document_type_id' => $firstItem?->document_type_id,
+                'document_type_name' => 'FINAL',
+                'document_number' => $group->root_document_number,
+                'tanggal' => $tanggal,
+                'vendor_name' => $group->vendor_name,
+                'keterangan' => "Merge final dari {$items->count()} dokumen",
+                'ftp_path' => $finalPath,
+                'file_size' => $fileSize,
+                'metadata' => [
+                    'merge_group_id' => $group->id,
+                    'merge_flow_id' => $group->merge_flow_id,
+                    'item_count' => $items->count(),
+                    'item_ids' => $items->pluck('id')->toArray(),
+                ],
             ]);
 
             Log::info('Final merge completed', [
