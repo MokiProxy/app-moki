@@ -23,6 +23,7 @@ use App\Http\Controllers\WhatsappController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\Dokter\AuditorFileController;
 use App\Http\Controllers\Auth\MicrosoftAuthController;
+use App\Http\Controllers\TestingController;
 use Illuminate\Support\Facades\Route;
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,8 @@ use Illuminate\Support\Facades\Route;
 // Route::get('/portal-test', [PortalController::class, 'index'])->name('portal.test');
 Route::get('/portal', [PortalController::class, 'index'])->name('portal.index');
 
+Route::get("/testing", [TestingController::class, "test"])->name("testing.index");
+Route::post("/testing/excel", [TestingController::class, "excel"])->name("testing.excel");
 
 // --- GUEST AREA (Hanya untuk yang belum login) ---
 Route::group(['middleware' => ['guest']], function () {
@@ -56,6 +59,7 @@ Route::group(['middleware' => ['auth']], function () {
     require __DIR__.'/routers/helpdesk.php';
     require __DIR__.'/routers/dokter.php';
     require __DIR__.'/routers/form-it.php';
+    require __DIR__.'/routers/eqtax.php';
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

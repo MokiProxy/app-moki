@@ -56,7 +56,7 @@ class PortalController extends Controller
                 'color' => '#FF8F00',
                 'permission' => 'data-pegawai.menu',
                 'link'  => '#'
-                ],
+            ],
             [
                 'title' => 'FORM IT',
                 'sub'   => 'Digital Request',
@@ -80,13 +80,21 @@ class PortalController extends Controller
                 'color' => '#f6c23e',
                 'permission' => 'dokter.menu',
                 'link'  => route('dokter.index')
-                ],
-                [
-                    'title' => 'MORE',
-                    'sub'   => 'Other Apps',
-                    'icon'  => 'mdi-apps',
-                    'color' => '#858796',
-                    'permission' => 'sop-it.menu',
+            ],
+            [
+                'title' => 'EQTAX',
+                'sub'   => 'EQTAX',
+                'icon'  => 'mdi-percent',
+                'color' => '#276F27',
+                'permission' => 'dokter.menu',
+                'link'  => route('eqtax.index')
+            ],
+            [
+                'title' => 'MORE',
+                'sub'   => 'Other Apps',
+                'icon'  => 'mdi-apps',
+                'color' => '#858796',
+                'permission' => 'sop-it.menu',
                 'link'  => '#'
             ],
         ];
@@ -115,7 +123,7 @@ class PortalController extends Controller
             // Data Dummy jika database kosong/belum ada
             return collect([
                 (object)[
-                    'image' => 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80',
+                    'image' => 'https://extension.harvard.edu/wp-content/uploads/sites/8/2024/07/tech.jpg',
                     'title' => 'Digital Transformation',
                     'desc'  => 'Membangun ekosistem kerja yang lebih efisien dan terintegrasi.'
                 ],
@@ -125,7 +133,7 @@ class PortalController extends Controller
                     'desc'  => 'Kelola aset perusahaan Anda dengan sistem monitoring yang akurat.'
                 ],
                 (object)[
-                    'image' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
+                    'image' => 'https://cdn.prod.website-files.com/5b6df8bb681f89c158b48f6b/5d528588404ce631d4d3a806_pc-technician.jpg',
                     'title' => 'HELPDESK',
                     'desc'  => 'Kelola tiket support IT Anda dengan sistem yang efisien.'
                 ],

@@ -99,7 +99,7 @@
         .dropdown-menu {
             border: none;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 10px;
             margin-top: 10px !important;
         }
@@ -124,13 +124,13 @@
         }
 
         .carousel-inner {
-            border-radius: 12px;
+            border-radius: 8px;
             margin-bottom: 20px;
             overflow: hidden;
         }
 
         .slider-content {
-            height: 180px;
+            height: 250px;
             position: relative;
             display: flex;
             align-items: end;
@@ -144,7 +144,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to right, rgba(0, 0, 0, 0.85), transparent);
+            background-color: #00000090;
             z-index: 1;
         }
 
@@ -155,7 +155,7 @@
 
         .menu-wrapper-box {
             background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 30px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
             border: 1px solid #edf2f7;
@@ -206,7 +206,7 @@
         .icon-circle {
             width: 55px;
             height: 55px;
-            border-radius: 12px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -308,7 +308,7 @@
                             <div class="slider-content" style="background: url('{{ $slider->image }}'); background-size: cover; background-position: center;">
                                 <div class="slider-overlay"></div>
                                 <div class="slider-text text-white">
-                                    <h4 class="fw-bold m-0 p-0">{{ $slider->title }}</h4>
+                                    <h3 class="fw-bold m-0 p-0">{{ $slider->title }}</h3>
                                     <p class="m-0 p-0">{{ $slider->desc }}</p>
                                 </div>
                             </div>
@@ -341,7 +341,7 @@
                             style="--menu-color: {{ $menu['color'] }};">
 
                             <div class="card-body-wrapper">
-                                <div class="icon-circle mx-auto" style="color: {{ $menu['color'] }};">
+                                <div class="icon-circle mx-auto" style="color: {{ $menu['color'] }}; background-color: {{ $menu['color'] . "30" }};">
                                     <i class="mdi {{ $menu['icon'] }}"></i>
                                 </div>
                                 <h6>{{ $menu['title'] }}</h6>

@@ -19,6 +19,9 @@ class RolePermissionSeeder extends Seeder
             'admin',
             "staff",
 
+            // IT Admin
+            'it-admin',
+
             // Helpdesk roles
             'helpdesk-user',
             'helpdesk-technician',
@@ -142,6 +145,9 @@ class RolePermissionSeeder extends Seeder
         $staff = Role::where('name', 'staff')->first();
         $teknisi = Role::where('name', 'teknisi')->first();
 
+        // IT Admin
+        $itAdmin = Role::where('name', 'it-admin')->first();
+
         // Helpdesk
         $helpdeskUser = Role::where('name', 'helpdesk-user')->first();
         $helpdeskTechnician = Role::where('name', 'helpdesk-technician')->first();
@@ -156,6 +162,13 @@ class RolePermissionSeeder extends Seeder
         $dokterAdmin = Role::where('name', 'dokter-admin')->first();
 
         $superAdmin->syncPermissions($allPermissions);
+
+        $itAdmin->givePermissionTo([
+            'it-admin.access',
+            'it-admin.permissions.manage',
+            'it-admin.roles.manage',
+            'it-admin.users.manage',
+        ]);
 
         $helpdeskAdmin->givePermissionTo([
             'helpdesk.menu',
@@ -191,6 +204,29 @@ class RolePermissionSeeder extends Seeder
             'helpdesk.tickets.resolve',
             'helpdesk.tickets.view',
         ]);
+
+        $formItUser->givePermissionTo([
+            'form-it.dashboard',
+            'form-it.fixed-asset.create',
+            'form-it.fixed-asset.view',
+            'form-it.forms.create',
+            'form-it.forms.view',
+            'form-it.menu',
+        ]);
+
+        $formItApprover->givePermissionTo([
+            'form-it.approval.process',
+            'form-it.approval.view',
+            'form-it.dashboard',
+            'form-it.fixed-asset.approve',
+            'form-it.fixed-asset.create',
+            'form-it.fixed-asset.view',
+            'form-it.forms.create',
+            'form-it.forms.view',
+            'form-it.menu',
+        ]);
+
+        $dokterAdmin->givePermissionTo([]);
 
         $admin->givePermissionTo([
             // Portal & Menu
