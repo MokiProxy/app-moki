@@ -65,7 +65,7 @@ class UserSeeder extends Seeder
                 'email'       => 'harmoko@satriabahana.co.id',
                 'password'    => Hash::make('password'),
                 'employee_id' => '2025085',
-                'role'        => 'staff',
+                'role'        => ["helpdesk-admin", "staff"],
             ],
             [
                 'name'        => 'Vita',
@@ -73,7 +73,7 @@ class UserSeeder extends Seeder
                 'email'       => 'vita@satriabahana.co.id',
                 'password'    => Hash::make('password'),
                 'employee_id' => '2025086',
-                'role'        => 'staff',
+                'role'        => ["helpdesk-technician", "staff"],
             ],
         ];
 

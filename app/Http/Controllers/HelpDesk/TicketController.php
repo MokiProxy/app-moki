@@ -32,7 +32,8 @@ class TicketController extends Controller
         $this->adminPhoneNumber = $admin ? $admin->employee->hp : null;
 
         $this->middleware('permission:helpdesk.tickets.create')->only([
-            'create', 'store'
+            'create',
+            'store'
         ]);
 
         $this->middleware('permission:helpdesk.tickets.assign')->only([
@@ -284,7 +285,7 @@ class TicketController extends Controller
 
     public function getTeknisi()
     {
-        $teknisi = User::role('teknisi')
+        $teknisi = User::role('helpdesk-technician')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 

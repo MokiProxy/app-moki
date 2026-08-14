@@ -15,9 +15,22 @@ class RolePermissionSeeder extends Seeder
         $roles = [
             'super-admin',
             'approver',
-            'staff',
             'teknisi',
             'admin',
+            "staff",
+
+            // Helpdesk roles
+            'helpdesk-user',
+            'helpdesk-technician',
+            'helpdesk-admin',
+
+            // Form IT roles
+            "form-it-user",
+            "form-it-approver",
+
+            // Dokter roles
+            'dokter-user',
+            'dokter-admin',
         ];
 
         foreach ($roles as $role) {
@@ -129,85 +142,215 @@ class RolePermissionSeeder extends Seeder
         $staff = Role::where('name', 'staff')->first();
         $teknisi = Role::where('name', 'teknisi')->first();
 
+        // Helpdesk
+        $helpdeskUser = Role::where('name', 'helpdesk-user')->first();
+        $helpdeskTechnician = Role::where('name', 'helpdesk-technician')->first();
+        $helpdeskAdmin = Role::where('name', 'helpdesk-admin')->first();
+
+        // Form IT
+        $formItUser = Role::where('name', 'form-it-user')->first();
+        $formItApprover = Role::where('name', 'form-it-approver')->first();
+
+        // Dokter
+        $dokterUser = Role::where('name', 'dokter-user')->first();
+        $dokterAdmin = Role::where('name', 'dokter-admin')->first();
+
         $superAdmin->syncPermissions($allPermissions);
+
+        $helpdeskAdmin->givePermissionTo([
+            'helpdesk.menu',
+            'helpdesk.dashboard',
+            'helpdesk.reports.export',
+            'helpdesk.reports.view',
+            'helpdesk.technicians.view',
+            'helpdesk.tickets.assign',
+            'helpdesk.tickets.comment',
+            'helpdesk.tickets.confirm',
+            'helpdesk.tickets.view-all',
+        ]);
+
+        $helpdeskUser->givePermissionTo([
+            'helpdesk.menu',
+            'helpdesk.dashboard',
+            'helpdesk.technicians.view',
+            'helpdesk.tickets.comment',
+            'helpdesk.tickets.confirm',
+            'helpdesk.tickets.create',
+            'helpdesk.tickets.delete',
+            'helpdesk.tickets.edit',
+            'helpdesk.tickets.reopen',
+            'helpdesk.tickets.view',
+        ]);
+
+        $helpdeskTechnician->givePermissionTo([
+            'helpdesk.menu',
+            'helpdesk.dashboard',
+            'helpdesk.technicians.view',
+            'helpdesk.tickets.approve',
+            'helpdesk.tickets.comment',
+            'helpdesk.tickets.resolve',
+            'helpdesk.tickets.view',
+        ]);
 
         $admin->givePermissionTo([
             // Portal & Menu
-            'portal.access', 'ams.menu', 'helpdesk.menu', 'data-pegawai.menu', 'form-it.menu', 'sop-it.menu',
+            'portal.access',
+            'ams.menu',
+            'helpdesk.menu',
+            'data-pegawai.menu',
+            'form-it.menu',
+            'sop-it.menu',
             // AMS
-            'ams.dashboard', 'ams.assets.view', 'ams.assets.create', 'ams.assets.edit', 'ams.assets.delete', 'ams.assets.import',
-            'ams.transactions.view', 'ams.transactions.create', 'ams.transactions.delete', 'ams.transactions.approve', 'ams.transactions.export-pdf',
-            'ams.employees.view', 'ams.employees.manage', 'ams.employees.import',
-            'ams.master-data.view', 'ams.master-data.manage',
-            'ams.assignment.view', 'ams.assignment.manage',
-            'ams.monitoring.view', 'ams.whatsapp-settings.manage',
-            'ams.settings.reset-password', 'ams.settings.approve',
+            'ams.dashboard',
+            'ams.assets.view',
+            'ams.assets.create',
+            'ams.assets.edit',
+            'ams.assets.delete',
+            'ams.assets.import',
+            'ams.transactions.view',
+            'ams.transactions.create',
+            'ams.transactions.delete',
+            'ams.transactions.approve',
+            'ams.transactions.export-pdf',
+            'ams.employees.view',
+            'ams.employees.manage',
+            'ams.employees.import',
+            'ams.master-data.view',
+            'ams.master-data.manage',
+            'ams.assignment.view',
+            'ams.assignment.manage',
+            'ams.monitoring.view',
+            'ams.whatsapp-settings.manage',
+            'ams.settings.reset-password',
+            'ams.settings.approve',
             // Helpdesk
-            'helpdesk.dashboard', 'helpdesk.tickets.view', 'helpdesk.tickets.view-all', 'helpdesk.tickets.create',
-            'helpdesk.tickets.edit', 'helpdesk.tickets.delete', 'helpdesk.tickets.assign',
-            'helpdesk.tickets.confirm', 'helpdesk.tickets.reopen', 'helpdesk.tickets.comment',
-            'helpdesk.ticket-categories.manage', 'helpdesk.ticket-priorities.manage',
-            'helpdesk.technicians.view', 'helpdesk.reports.view', 'helpdesk.reports.export',
+            'helpdesk.dashboard',
+            'helpdesk.tickets.view',
+            'helpdesk.tickets.view-all',
+            'helpdesk.tickets.create',
+            'helpdesk.tickets.edit',
+            'helpdesk.tickets.delete',
+            'helpdesk.tickets.assign',
+            'helpdesk.tickets.confirm',
+            'helpdesk.tickets.reopen',
+            'helpdesk.tickets.comment',
+            'helpdesk.ticket-categories.manage',
+            'helpdesk.ticket-priorities.manage',
+            'helpdesk.technicians.view',
+            'helpdesk.reports.view',
+            'helpdesk.reports.export',
             // IT Admin
-            'it-admin.access', 'it-admin.users.manage', 'it-admin.roles.manage', 'it-admin.permissions.manage',
+            'it-admin.access',
+            'it-admin.users.manage',
+            'it-admin.roles.manage',
+            'it-admin.permissions.manage',
             // Dokter
-            'dokter.menu', 'dokter.dashboard',
-            'dokter.vendors.view', 'dokter.vendors.create', 'dokter.vendors.edit', 'dokter.vendors.delete',
-            'dokter.document-types.view', 'dokter.document-types.create', 'dokter.document-types.edit', 'dokter.document-types.delete',
-            'dokter.file-managements.view', 'dokter.file-managements.download', 'dokter.file-managements.validate',
-            'dokter.log-file.view', 'dokter.log-file.export',
+            'dokter.menu',
+            'dokter.dashboard',
+            'dokter.vendors.view',
+            'dokter.vendors.create',
+            'dokter.vendors.edit',
+            'dokter.vendors.delete',
+            'dokter.document-types.view',
+            'dokter.document-types.create',
+            'dokter.document-types.edit',
+            'dokter.document-types.delete',
+            'dokter.file-managements.view',
+            'dokter.file-managements.download',
+            'dokter.file-managements.validate',
+            'dokter.log-file.view',
+            'dokter.log-file.export',
             'dokter.auditor-access.manage',
             // Form IT
-            'form-it.dashboard', 'form-it.forms.view', 'form-it.forms.create',
-            'form-it.approval.view', 'form-it.approval.process',
+            'form-it.dashboard',
+            'form-it.forms.view',
+            'form-it.forms.create',
+            'form-it.approval.view',
+            'form-it.approval.process',
             // Form IT - Fixed Asset
-            'form-it.fixed-asset.view', 'form-it.fixed-asset.create', 'form-it.fixed-asset.approve',
+            'form-it.fixed-asset.view',
+            'form-it.fixed-asset.create',
+            'form-it.fixed-asset.approve',
         ]);
 
         $approver->givePermissionTo([
-            'portal.access', 'ams.menu', 'data-pegawai.menu', 'form-it.menu',
-            'ams.dashboard', 'ams.assets.view',
-            'ams.transactions.view', 'ams.transactions.approve', 'ams.transactions.export-pdf',
+            'portal.access',
+            'ams.menu',
+            'data-pegawai.menu',
+            'form-it.menu',
+            'ams.dashboard',
+            'ams.assets.view',
+            'ams.transactions.view',
+            'ams.transactions.approve',
+            'ams.transactions.export-pdf',
             'ams.employees.view',
             'ams.master-data.view',
             'ams.assignment.view',
             'ams.monitoring.view',
-            'ams.settings.reset-password', 'ams.settings.approve',
-            'helpdesk.dashboard', 'helpdesk.tickets.view', 'helpdesk.tickets.view-all',
-            'helpdesk.technicians.view', 'helpdesk.reports.view',
+            'ams.settings.reset-password',
+            'ams.settings.approve',
+            'helpdesk.dashboard',
+            'helpdesk.tickets.view',
+            'helpdesk.tickets.view-all',
+            'helpdesk.technicians.view',
+            'helpdesk.reports.view',
             // Form IT
-            'form-it.dashboard', 'form-it.forms.view',
-            'form-it.approval.view', 'form-it.approval.process',
+            'form-it.dashboard',
+            'form-it.forms.view',
+            'form-it.approval.view',
+            'form-it.approval.process',
             // Form IT - Fixed Asset
-            'form-it.fixed-asset.view', 'form-it.fixed-asset.approve',
+            'form-it.fixed-asset.view',
+            'form-it.fixed-asset.approve',
         ]);
 
         $staff->givePermissionTo([
-            'portal.access', 'ams.menu', 'helpdesk.menu', 'form-it.menu',
-            'ams.dashboard', 'ams.assets.view',
-            'ams.transactions.view', 'ams.transactions.create', 'ams.transactions.export-pdf',
+            'portal.access',
+            'ams.menu',
+            'helpdesk.menu',
+            'form-it.menu',
+            'ams.dashboard',
+            'ams.assets.view',
+            'ams.transactions.view',
+            'ams.transactions.create',
+            'ams.transactions.export-pdf',
             'ams.employees.view',
             'ams.master-data.view',
             'ams.assignment.view',
             'ams.monitoring.view',
             'ams.settings.reset-password',
-            'helpdesk.dashboard', 'helpdesk.tickets.view', 'helpdesk.tickets.create',
-            'helpdesk.tickets.edit', 'helpdesk.tickets.delete',
-            'helpdesk.tickets.confirm', 'helpdesk.tickets.reopen', 'helpdesk.tickets.comment',
+            'helpdesk.dashboard',
+            'helpdesk.tickets.view',
+            'helpdesk.tickets.create',
+            'helpdesk.tickets.edit',
+            'helpdesk.tickets.delete',
+            'helpdesk.tickets.confirm',
+            'helpdesk.tickets.reopen',
+            'helpdesk.tickets.comment',
             // Dokter
-            'dokter.menu', 'dokter.dashboard',
-            'dokter.file-managements.view', 'dokter.file-managements.download', 'dokter.file-managements.validate',
+            'dokter.menu',
+            'dokter.dashboard',
+            'dokter.file-managements.view',
+            'dokter.file-managements.download',
+            'dokter.file-managements.validate',
             // Form IT
-            'form-it.dashboard', 'form-it.forms.view', 'form-it.forms.create',
+            'form-it.dashboard',
+            'form-it.forms.view',
+            'form-it.forms.create',
             // Form IT - Fixed Asset
-            'form-it.fixed-asset.view', 'form-it.fixed-asset.create',
+            'form-it.fixed-asset.view',
+            'form-it.fixed-asset.create',
         ]);
 
         $teknisi->givePermissionTo([
-            'portal.access', 'helpdesk.menu',
+            'portal.access',
+            'helpdesk.menu',
             'ams.settings.reset-password',
-            'helpdesk.dashboard', 'helpdesk.tickets.view', 'helpdesk.tickets.comment',
-            'helpdesk.tickets.resolve', 'helpdesk.tickets.approve',
+            'helpdesk.dashboard',
+            'helpdesk.tickets.view',
+            'helpdesk.tickets.comment',
+            'helpdesk.tickets.resolve',
+            'helpdesk.tickets.approve',
             'helpdesk.technicians.view',
         ]);
     }

@@ -1,11 +1,13 @@
 @php
 $authUserRoleId = auth()->user()->getRoleNames()->first();
+$authUserRole = auth()->user()->roles->pluck('name')->first();
 
-if($authUserRoleId == 'super-admin' || $authUserRoleId == 'admin') {
 $roleColor = "danger";
-} else if ($authUserRoleId == 'staff') {
+if($authUserRole == "super-admin" || $authUserRole == "admin" || $authUserRole == "helpdesk-admin") {
+$roleColor = "danger";
+} else if ($authUserRole == "helpdesk-user") {
 $roleColor = "success";
-} else if ($authUserRoleId == 'teknisi') {
+} else if ($authUserRole == "helpdesk-technician") {
 $roleColor = "primary";
 }
 @endphp
@@ -54,10 +56,6 @@ $roleColor = "primary";
 
         @can('helpdesk.reports.view')
         <li><a href="{{ route('helpdesk.reports.index') }}"><i class='bx bx-file'></i>Laporan</a></li>
-        @endcan
-
-        @can('helpdesk.technicians.view')
-        <li><a href="{{ route('helpdesk.tickets.teknisi') }}"><i class='bx bx-user-check'></i>Teknisi</a></li>
         @endcan
 
         <li>
