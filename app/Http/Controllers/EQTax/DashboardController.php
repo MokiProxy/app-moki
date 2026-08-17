@@ -3,18 +3,42 @@
 namespace App\Http\Controllers\EQTax;
 
 use App\Http\Controllers\Controller;
+use App\Models\EQTAXCoretaxSPT;
+use App\Models\EQTAXGL;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        return view('eqtax.dashboard.index');
+        $totalSpt = EQTAXCoretaxSPT::count();
+        $totalGl = EQTAXGL::count();
+        $totalPpnSpt = EQTAXCoretaxSPT::sum('ppn');
+        $totalPpnGl = EQTAXGL::sum('ppn');
+        $totalDppSpt = EQTAXCoretaxSPT::sum('dpp');
+        $totalDppGl = EQTAXGL::sum('dpp');
+        $selisihPpn = $totalPpnSpt - $totalPpnGl;
+
+        $entitySummary = EQTAXGL::select('entity', DB::raw('COUNT(*) as count'), DB::raw('SUM(ppn) as total_ppn'))
+            ->groupBy('entity')
+            ->get();
+
+        $recentSpt = EQTAXCoretaxSPT::orderBy('created_at', 'desc')->limit(5)->get();
+        $recentGl = EQTAXGL::orderBy('created_at', 'desc')->limit(5)->get();
+
+        return view('eqtax.dashboard.index', compact(
+            'totalSpt',
+            'totalGl',
+            'totalPpnSpt',
+            'totalPpnGl',
+            'totalDppSpt',
+            'totalDppGl',
+            'selisihPpn',
+            'entitySummary',
+            'recentSpt',
+            'recentGl'
+        ));
     }
 
     /**

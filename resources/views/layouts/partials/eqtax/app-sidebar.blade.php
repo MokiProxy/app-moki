@@ -17,22 +17,22 @@ $roleColor = "primary-it-admin";
 
         <li>
             <a href="{{ route('eqtax.spt.coretax.index') }}" class="waves-effect">
-                <i class="bx bx-file"></i>
-                <span key="t-dashboard">SPT Coretax</span>
+                <i class="bx bx-file-blank"></i>
+                <span key="t-spt">SPT Coretax</span>
             </a>
         </li>
 
         <li>
             <a href="{{ route('eqtax.gl.index') }}" class="waves-effect">
-                <i class="bx bx-file"></i>
-                <span key="t-dashboard">General Ledger</span>
+                <i class="bx bx-book"></i>
+                <span key="t-gl">General Ledger</span>
             </a>
         </li>
 
         <li>
             <a href="{{ route('eqtax.equalization.index') }}" class="waves-effect">
-                <i class="bx bx-file"></i>
-                <span key="t-dashboard">Ekualisasi Pajak</span>
+                <i class="bx bx-balanced"></i>
+                <span key="t-equalization">Ekualisasi Pajak</span>
             </a>
         </li>
 

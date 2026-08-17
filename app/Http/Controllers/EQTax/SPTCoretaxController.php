@@ -4,15 +4,48 @@ namespace App\Http\Controllers\EQTax;
 
 use App\Http\Controllers\Controller;
 use App\Imports\EQTaxImport;
+use App\Models\EQTAXCoretaxSPT;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SPTCoretaxController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $pageName = "SPT Coretax";
-        return view("eqtax.spt.coretax.index", compact("pageName"));
+
+        $query = EQTAXCoretaxSPT::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('no_faktur_pajak', 'like', "%{$search}%")
+                  ->orWhere('nama_penjual', 'like', "%{$search}%")
+                  ->orWhere('npwp_penjual', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('entity')) {
+            $query->where('entity', $request->input('entity'));
+        }
+
+        if ($request->filled('masa_pajak')) {
+            $query->where('masa_pajak', $request->input('masa_pajak'));
+        }
+
+        if ($request->filled('tahun')) {
+            $query->where('tahun', $request->input('tahun'));
+        }
+
+        $sptData = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
+        $totalRecords = EQTAXCoretaxSPT::count();
+        $totalPpn = EQTAXCoretaxSPT::sum('ppn');
+        $totalDpp = EQTAXCoretaxSPT::sum('dpp');
+        $entities = EQTAXCoretaxSPT::select('entity')->distinct()->whereNotNull('entity')->orderBy('entity')->pluck('entity');
+        $masaPajakList = EQTAXCoretaxSPT::select('masa_pajak')->distinct()->orderBy('masa_pajak')->pluck('masa_pajak');
+        $tahunList = EQTAXCoretaxSPT::select('tahun')->distinct()->orderBy('tahun', 'desc')->pluck('tahun');
+
+        return view("eqtax.spt.coretax.index", compact("pageName", "sptData", "totalRecords", "totalPpn", "totalDpp", "entities", "masaPajakList", "tahunList"));
     }
 
     public function import(Request $request)
@@ -26,6 +59,6 @@ class SPTCoretaxController extends Controller
         if ($excel) {
             return redirect()->route("eqtax.spt.coretax.index")->with("success", "Import SPT Coretax Berhasil");
         } else
-            return redirect()->route("eqtax.spt.coretax.index")->with("error", "Import SPT Coretax Berhasil");
+            return redirect()->route("eqtax.spt.coretax.index")->with("error", "Import SPT Coretax Gagal");
     }
 }

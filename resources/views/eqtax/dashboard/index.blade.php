@@ -37,6 +37,7 @@ $authUserName = auth()->user()->name;
         color: white;
         position: relative;
         overflow: hidden;
+        border-radius: 12px;
     }
 
     .stat-card:hover {
@@ -67,7 +68,7 @@ $authUserName = auth()->user()->name;
         position: absolute;
         right: -10px;
         bottom: -10px;
-        font-size: 5rem;
+        font-size: 4rem;
         opacity: 0.15;
         transform: rotate(-15deg);
     }
@@ -80,26 +81,30 @@ $authUserName = auth()->user()->name;
         border: none;
     }
 
-    .role-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
+    .entity-badge {
+        background: #e0e7ff;
+        color: #3730a3;
+        padding: 4px 8px;
+        border-radius: 4px;
         font-size: 0.75rem;
         font-weight: 600;
-        text-transform: capitalize;
     }
 
-    .progress-bar-custom {
-        height: 8px;
-        border-radius: 9999px;
-        background-color: #e2e8f0;
-        overflow: hidden;
+    .summary-card {
+        border-left: 4px solid;
+        padding-left: 16px;
     }
 
-    .progress-bar-custom .fill {
-        height: 100%;
-        border-radius: 9999px;
-        transition: width 0.6s ease;
+    .summary-card.spt {
+        border-color: #4f46e5;
+    }
+
+    .summary-card.gl {
+        border-color: #f59e0b;
+    }
+
+    .summary-card.selisih {
+        border-color: #10b981;
     }
 </style>
 @endsection
@@ -109,9 +114,192 @@ $authUserName = auth()->user()->name;
     <div class="d-flex align-items-start justify-content-between mb-4">
         <div>
             <h1 class="fw-bold text-dark mb-0">Halo, {{ explode(" ", $authUserName)[0] }}!</h1>
-            <p>Selamat datang di EQTax</p>
+            <p>Selamat datang di EQTax - Aplikasi Restitusi Pajak</p>
         </div>
         <span class="text-muted"><i class="fa-regular fa-calendar me-2"></i>{{ date('d F Y') }}</span>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card bg-indigo-grad">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white mb-1">Total SPT Pajak</h6>
+                            <h3 class="text-white mb-0">{{ number_format($totalSpt) }}</h3>
+                            <small class="text-white-50">Faktur Pajak</small>
+                        </div>
+                        <div class="icon-overlay">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-amber-grad">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white mb-1">Total GL</h6>
+                            <h3 class="text-white mb-0">{{ number_format($totalGl) }}</h3>
+                            <small class="text-white-50">Baris Data</small>
+                        </div>
+                        <div class="icon-overlay">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-emerald-grad">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white mb-1">PPN SPT</h6>
+                            <h4 class="text-white mb-0">Rp {{ number_format($totalPpnSpt, 0, ',', '.') }}</h4>
+                        </div>
+                        <div class="icon-overlay">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card {{ $selisihPpn >= 0 ? 'bg-info-grad' : 'bg-danger-grad' }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white mb-1">Selisih PPN</h6>
+                            <h4 class="text-white mb-0">Rp {{ number_format($selisihPpn, 0, ',', '.') }}</h4>
+                            <small class="text-white-50">Kandidat Restitusi</small>
+                        </div>
+                        <div class="icon-overlay">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Ringkasan per Entity</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Entity</th>
+                                    <th class="text-end">Jumlah Records</th>
+                                    <th class="text-end">Total PPN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($entitySummary as $entity)
+                                <tr>
+                                    <td><span class="entity-badge">{{ $entity->entity ?? 'Unknown' }}</span></td>
+                                    <td class="text-end">{{ number_format($entity->count) }}</td>
+                                    <td class="text-end">Rp {{ number_format($entity->total_ppn, 0, ',', '.') }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Belum ada data GL</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Aksi Cepat</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('eqtax.spt.coretax.index') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-upload me-2"></i> Import SPT Pajak
+                        </a>
+                        <a href="{{ route('eqtax.gl.index') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-upload me-2"></i> Import General Ledger
+                        </a>
+                        <a href="{{ route('eqtax.equalization.index') }}" class="btn btn-outline-success">
+                            <i class="fas fa-balance-scale me-2"></i> Proses Ekualisasi
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Data SPT Terbaru</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>No Faktur Pajak</th>
+                                    <th>Nama Penjual</th>
+                                    <th class="text-end">PPN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentSpt as $spt)
+                                <tr>
+                                    <td class="fw-bold">{{ Str::limit($spt->no_faktur_pajak, 20) }}</td>
+                                    <td>{{ Str::limit($spt->nama_penjual, 20) }}</td>
+                                    <td class="text-end">Rp {{ number_format($spt->ppn, 0, ',', '.') }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Belum ada data</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Data GL Terbaru</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>No Faktur Pajak</th>
+                                    <th>Nama Supplier</th>
+                                    <th class="text-end">PPN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentGl as $gl)
+                                <tr>
+                                    <td class="fw-bold">{{ Str::limit($gl->no_faktur_pajak, 20) }}</td>
+                                    <td>{{ Str::limit($gl->nama_supplier, 20) }}</td>
+                                    <td class="text-end">Rp {{ number_format($gl->ppn, 0, ',', '.') }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Belum ada data</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
