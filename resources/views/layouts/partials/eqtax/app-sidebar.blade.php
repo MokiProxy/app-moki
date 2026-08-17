@@ -23,6 +23,20 @@ $roleColor = "primary-it-admin";
         </li>
 
         <li>
+            <a href="{{ route('eqtax.gl.index') }}" class="waves-effect">
+                <i class="bx bx-file"></i>
+                <span key="t-dashboard">General Ledger</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="{{ route('eqtax.equalization.index') }}" class="waves-effect">
+                <i class="bx bx-file"></i>
+                <span key="t-dashboard">Ekualisasi Pajak</span>
+            </a>
+        </li>
+
+        <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">
                 <i class="bx bx-grid-alt text-{{ $roleColor }}"></i>
                 <span key="t-back-portal" class="fw-bold">Back to Portal</span>

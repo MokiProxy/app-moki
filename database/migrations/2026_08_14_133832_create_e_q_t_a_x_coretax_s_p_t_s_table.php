@@ -17,7 +17,7 @@ class CreateEQTAXCoretaxSPTSTable extends Migration
             $table->id();
             $table->string("npwp_penjual")->nullable();
             $table->string("nama_penjual")->nullable();
-            $table->string("no_faktur_pajak")->unique()->nullable();
+            $table->string("no_faktur_pajak")->nullable();
             $table->timestamp("tgl_faktur_pajak")->nullable();
             $table->string("masa_pajak")->nullable();
             $table->string("tahun")->nullable();

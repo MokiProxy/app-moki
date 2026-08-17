@@ -9,13 +9,13 @@ $roleColor = "primary-it-admin";
             <div class="navbar-brand-box bg-dark-primary text-start">
                 <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
                     <span class="logo-sm">
-                        <i class="mdi mdi-cog fs-1 m-0 p-0"></i>
+                        <i class="mdi mdi-percent fs-4 rounded m-0 p-0 bg-primary-it-admin text-white p-2"></i>
                     </span>
                     <span class="logo-lg mt-4">
                         <div class="flex">
                             <h3 class="text-white mt-4 fw-bold d-flex gap-2 align-items-center">
                                 <div class="bg-primary-it-admin p-1 rounded d-flex justify-content-center align-items-center">
-                                    <i class="mdi mdi-cog"></i>
+                                    <i class="mdi mdi-percent"></i>
                                 </div>
                                 <div class="d-flex justify-center flex-column">
                                     <div>
