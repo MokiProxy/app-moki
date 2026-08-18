@@ -25,6 +25,7 @@ Route::prefix("eqtax")->name("eqtax.")->group(function () {
     Route::prefix('equalization')->name('equalization.')->group(function () {
         Route::get("/", [EqualizationController::class, "index"])->name("index");
         Route::post("/process", [EqualizationController::class, "equalization"])->name("process");
+        Route::post("/reprocess", [EqualizationController::class, "reprocess"])->name("reprocess");
         Route::get("/export", [EqualizationController::class, "export"])->name("export");
     });
 });

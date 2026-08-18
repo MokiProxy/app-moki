@@ -59,13 +59,6 @@ $authUserName = auth()->user()->name;
         transform: rotate(-15deg);
     }
 
-    .table thead th {
-        background-color: #f8fafc;
-        color: #64748b;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        border: none;
-    }
 
     .filter-form {
         background: #f8fafc;
@@ -90,51 +83,7 @@ $authUserName = auth()->user()->name;
             </div>
 
             <div class="card-body">
-                <form action="{{ route('eqtax.spt.coretax.index') }}" method="GET" class="filter-form">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label for="search" class="form-label fw-bold">Cari</label>
-                            <input type="text" name="search" id="search" class="form-control" placeholder="No Faktur / Nama Penjual / NPWP" value="{{ request('search') }}">
-                        </div>
-                        <div class="col-md-2">
-                            <label for="entity" class="form-label fw-bold">Entity</label>
-                            <select name="entity" id="entity" class="form-select">
-                                <option value="">-- Semua --</option>
-                                @foreach($entities as $ent)
-                                <option value="{{ $ent }}" {{ request('entity') == $ent ? 'selected' : '' }}>{{ $ent }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="masa_pajak" class="form-label fw-bold">Masa Pajak</label>
-                            <select name="masa_pajak" id="masa_pajak" class="form-select">
-                                <option value="">-- Semua --</option>
-                                @foreach($masaPajakList as $mp)
-                                <option value="{{ $mp }}" {{ request('masa_pajak') == $mp ? 'selected' : '' }}>{{ $mp }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="tahun" class="form-label fw-bold">Tahun</label>
-                            <select name="tahun" id="tahun" class="form-select">
-                                <option value="">-- Semua --</option>
-                                @foreach($tahunList as $th)
-                                <option value="{{ $th }}" {{ request('tahun') == $th ? 'selected' : '' }}>{{ $th }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary flex-grow-1">
-                                <i class="mdi mdi-magnify me-1"></i> Filter
-                            </button>
-                            <a href="{{ route('eqtax.spt.coretax.index') }}" class="btn btn-secondary">
-                                <i class="mdi mdi-refresh"></i>
-                            </a>
-                        </div>
-                    </div>
-                </form>
-
-                <div class="row g-3 mb-4">
+                <div class="row g-3 mb-4 d-flex align-items-center">
                     <div class="col-md-3">
                         <div class="card stat-card bg-indigo-grad">
                             <div class="card-body">
@@ -184,16 +133,13 @@ $authUserName = auth()->user()->name;
                         <div class="card stat-card bg-indigo-grad">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-1">Import Data</h6>
-                                        <form action="{{ route('eqtax.spt.coretax.import') }}" id="file-form" enctype="multipart/form-data" method="POST">
-                                            @csrf
-                                            <input type="file" name="file" id="file" hidden>
-                                            <label for="file" class="btn btn-light btn-sm mt-2 cursor-pointer">
-                                                <i class="fas fa-upload me-1"></i> Upload File SPT
-                                            </label>
-                                        </form>
-                                    </div>
+                                    <form action="{{ route('eqtax.spt.coretax.import') }}" id="file-form" enctype="multipart/form-data" method="POST" class="w-100 d-flex justify-content-center align-items-center h-100">
+                                        @csrf
+                                        <input type="file" name="file" id="file" hidden>
+                                        <label for="file" class="m-0 p-0 cursor-pointer">
+                                            <i class="fas fa-upload me-1"></i> Upload File SPT
+                                        </label>
+                                    </form>
                                     <div class="icon-overlay">
                                         <i class="fas fa-file-import"></i>
                                     </div>
@@ -203,10 +149,54 @@ $authUserName = auth()->user()->name;
                     </div>
                 </div>
 
+                <form action="{{ route('eqtax.spt.coretax.index') }}" method="GET" class="filter-form">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label fw-bold">Cari</label>
+                            <input type="text" name="search" id="search" class="form-control" placeholder="No Faktur / Nama Penjual / NPWP" value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="entity" class="form-label fw-bold">Entity</label>
+                            <select name="entity" id="entity" class="form-select">
+                                <option value="">-- Semua --</option>
+                                @foreach($entities as $ent)
+                                <option value="{{ $ent }}" {{ request('entity') == $ent ? 'selected' : '' }}>{{ $ent }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="masa_pajak" class="form-label fw-bold">Masa Pajak</label>
+                            <select name="masa_pajak" id="masa_pajak" class="form-select">
+                                <option value="">-- Semua --</option>
+                                @foreach($masaPajakList as $mp)
+                                <option value="{{ $mp }}" {{ request('masa_pajak') == $mp ? 'selected' : '' }}>{{ $mp }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="tahun" class="form-label fw-bold">Tahun</label>
+                            <select name="tahun" id="tahun" class="form-select">
+                                <option value="">-- Semua --</option>
+                                @foreach($tahunList as $th)
+                                <option value="{{ $th }}" {{ request('tahun') == $th ? 'selected' : '' }}>{{ $th }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="mdi mdi-magnify me-1"></i> Filter
+                            </button>
+                            <a href="{{ route('eqtax.spt.coretax.index') }}" class="btn btn-secondary">
+                                <i class="mdi mdi-refresh"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle w-100" id="spt-table">
                         <thead class="table-dark">
-                            <tr>
+                            <tr class="align-middle">
                                 <th>No</th>
                                 <th>No Faktur Pajak</th>
                                 <th>Nama Penjual</th>
@@ -258,7 +248,7 @@ $authUserName = auth()->user()->name;
     const uploadFileForm = document.getElementById('file-form')
     const uploadFile = document.getElementById('file')
     uploadFile.addEventListener("change", () => {
-        if(uploadFile.files.length > 0) {
+        if (uploadFile.files.length > 0) {
             uploadFileForm.submit()
         }
     })

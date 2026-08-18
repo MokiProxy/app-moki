@@ -59,14 +59,6 @@ $authUserName = auth()->user()->name;
         transform: rotate(-15deg);
     }
 
-    .table thead th {
-        background-color: #f8fafc;
-        color: #64748b;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        border: none;
-    }
-
     .entity-badge {
         background: #e0e7ff;
         color: #3730a3;
@@ -232,7 +224,7 @@ $authUserName = auth()->user()->name;
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle w-100" id="gl-table">
                         <thead class="table-dark">
-                            <tr>
+                            <tr class="align-middle">
                                 <th>No</th>
                                 <th>Entity</th>
                                 <th>No Supplier</th>

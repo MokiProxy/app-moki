@@ -29,9 +29,33 @@ class EQTaxImport implements ToModel, WithHeadingRow
             "perekam" => $row['perekam'],
             "referensi" => $row['referensi'],
             "no_sp2d" => $row['nomor_sp2d'],
-            "valid" => $row['valid'],
-            "dilaporkan" => $row['dilaporkan'],
-            "dilaporkan_oleh_penjual" => $row['dilaporkan_oleh_penjual'],
+            "valid" => $this->parseBoolean($row['valid']),
+            "dilaporkan" => $this->parseBoolean($row['dilaporkan']),
+            "dilaporkan_oleh_penjual" => $this->parseBoolean($row['dilaporkan_oleh_penjual']),
         ]);
+    }
+
+    private function parseBoolean($value): ?bool
+    {
+        if (is_null($value) || $value === '') {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        $cleaned = strtoupper(trim((string) $value));
+        $cleaned = str_replace(['=TRUE()', '=FALSE()', '=TRUE', '=FALSE', '()'], '', $cleaned);
+
+        if ($cleaned === 'TRUE' || $cleaned === '1') {
+            return true;
+        }
+
+        if ($cleaned === 'FALSE' || $cleaned === '0') {
+            return false;
+        }
+
+        return null;
     }
 }

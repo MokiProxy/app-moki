@@ -64,14 +64,6 @@ $authUserName = auth()->user()->name;
         transform: rotate(-15deg);
     }
 
-    .table thead th {
-        background-color: #f8fafc;
-        color: #64748b;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        border: none;
-    }
-
     .status-match {
         background-color: #d1fae5;
         color: #065f46;
@@ -147,8 +139,19 @@ $authUserName = auth()->user()->name;
                 <div class="d-flex align-items-center">
                     <h5 class="mb-0 card-title flex-grow-1">{{ $pageName }}</h5>
                     @if(isset($results) && $results->count() > 0)
+                    @if(isset($fromDatabase) && $fromDatabase)
+                    <form action="{{ route('eqtax.equalization.reprocess') }}" method="POST" class="d-inline me-2">
+                        @csrf
+                        <input type="hidden" name="masa_pajak" value="{{ $summary['masa_pajak'] }}">
+                        <input type="hidden" name="tahun" value="{{ $summary['tahun'] }}">
+                        <input type="hidden" name="entity" value="{{ $summary['entity'] !== 'Semua' ? $summary['entity'] : '' }}">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-sync me-1"></i> Proses Ulang
+                        </button>
+                    </form>
+                    @endif
                     <a href="{{ route('eqtax.equalization.export', ['masa_pajak' => $summary['masa_pajak'], 'tahun' => $summary['tahun'], 'entity' => $summary['entity'] !== 'Semua' ? $summary['entity'] : '']) }}" class="btn btn-success me-2">
-                        <i class="mdi mdi-file-excel me-1"></i> Export CSV
+                        <i class="mdi mdi-file-excel me-1"></i> Export Excel
                     </a>
                     @endif
                 </div>
@@ -198,6 +201,16 @@ $authUserName = auth()->user()->name;
                         </div>
                     </div>
                 </form>
+
+                @if(isset($fromDatabase) && $fromDatabase)
+                <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                    <i class="fas fa-database me-2"></i>
+                    <div>
+                        Menampilkan data tersimpan dari periode <strong>{{ $summary['masa_pajak'] }} {{ $summary['tahun'] }}</strong>.
+                        Data terakhir diproses pada {{ $results->first()->updated_at ? $results->first()->updated_at->format('d M Y H:i') : '-' }}.
+                    </div>
+                </div>
+                @endif
 
                 @if(isset($summary))
                 <div class="row g-3 mb-4">
@@ -337,7 +350,7 @@ $authUserName = auth()->user()->name;
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle w-100" id="equalization-table">
                         <thead class="table-dark">
-                            <tr>
+                            <tr class="align-middle">
                                 <th>No</th>
                                 <th>No Faktur Pajak</th>
                                 <th>Nama Penjual</th>

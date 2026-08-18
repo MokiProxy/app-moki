@@ -31,7 +31,7 @@ $roleColor = "primary-it-admin";
 
         <li>
             <a href="{{ route('eqtax.equalization.index') }}" class="waves-effect">
-                <i class="bx bx-balanced"></i>
+                <i class="bx bx-cog"></i>
                 <span key="t-equalization">Ekualisasi Pajak</span>
             </a>
         </li>
