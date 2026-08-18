@@ -18,6 +18,7 @@ class EQTAXCoretaxSPT extends Model
         "tgl_faktur_pajak",
         "masa_pajak",
         "tahun",
+        "entity",
         "masa_pajak_pengkreditan",
         "tahun_pajak_pengkreditan",
         "status_faktur",

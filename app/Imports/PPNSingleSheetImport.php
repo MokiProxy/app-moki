@@ -11,6 +11,12 @@ class PPNSingleSheetImport implements ToCollection, WithTitle
     protected string $sheetName;
     protected PPNSheetImport $parent;
 
+    protected array $entityMap = [
+        'PPNMO' => 'TJMO',
+        'PPNHO' => 'SBHO',
+        'PPNPLTR' => 'PLTR',
+    ];
+
     public function __construct(string $sheetName, PPNSheetImport $parent)
     {
         $this->sheetName = $sheetName;
@@ -24,6 +30,8 @@ class PPNSingleSheetImport implements ToCollection, WithTitle
 
     public function collection(Collection $rows)
     {
+        $entity = $this->entityMap[$this->sheetName] ?? $this->sheetName;
+
         foreach ($rows as $row) {
             $supplierNo = trim((string) ($this->sheetName == "PPNMO" ? $row[1] : $row[0]  ?? ''));
 
@@ -34,6 +42,7 @@ class PPNSingleSheetImport implements ToCollection, WithTitle
 
             $this->parent->result[] = [
                 'sheet'         => $this->sheetName,
+                'entity'        => $entity,
                 'no_supplier'   => $supplierNo,
                 'nama_supplier' => trim((string) ($this->sheetName == "PPNMO" ? $row[2] : $row[1] ?? '')),
                 'jurnal_date'   => $this->sheetName == "PPNMO" ? $row[4] : $row[3] ?? null,

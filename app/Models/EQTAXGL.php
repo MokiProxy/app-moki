@@ -13,6 +13,7 @@ class EQTAXGL extends Model
 
     protected $fillable = [
         "sheet",
+        "entity",
         "no_supplier",
         "nama_supplier",
         "jurnal_date",
