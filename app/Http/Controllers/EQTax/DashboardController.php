@@ -29,6 +29,7 @@ class DashboardController extends Controller
         $filterMonthTo = $request->input('month_to');
         $filterYear = $request->input('year');
         $filterEntity = $request->input('entity');
+        $filterStatus = $request->input('status');
 
         // Build equalization query with filters
         $equalizationQuery = EQTAXEqualizationResult::query();
@@ -56,12 +57,31 @@ class DashboardController extends Controller
             $equalizationQuery->where('entity', $filterEntity);
         }
 
+        // Filter by status
+        if ($filterStatus) {
+            $equalizationQuery->where('status', $filterStatus);
+        }
+
         // Hitung selisih berdasarkan data yang difilter
         $filteredResults = $equalizationQuery->get();
         $selisihKurangBayar = $filteredResults->where('selisih_ppn', '>', 0)->sum('selisih_ppn');
         $selisihLebihBayar = $filteredResults->where('selisih_ppn', '<', 0)->sum('selisih_ppn');
         $countKurangBayar = $filteredResults->where('selisih_ppn', '>', 0)->count();
         $countLebihBayar = $filteredResults->where('selisih_ppn', '<', 0)->count();
+
+        // Data untuk chart trend selisih per periode
+        $chartData = $filteredResults->groupBy('period')->map(function ($items) {
+            $kurangBayar = $items->where('selisih_ppn', '>', 0)->sum('selisih_ppn');
+            $lebihBayar = abs($items->where('selisih_ppn', '<', 0)->sum('selisih_ppn'));
+            return [
+                'kurang_bayar' => $kurangBayar,
+                'lebih_bayar' => $lebihBayar,
+            ];
+        })->sortKeys();
+
+        $chartLabels = $chartData->keys()->toArray();
+        $chartKurangBayar = $chartData->pluck('kurang_bayar')->toArray();
+        $chartLebihBayar = $chartData->pluck('lebih_bayar')->toArray();
 
         $recentEqualization = $equalizationQuery->orderByDesc('period')->orderByDesc('selisih_ppn')->paginate(20)->appends($request->query());
 
@@ -92,6 +112,9 @@ class DashboardController extends Controller
             'selisihLebihBayar',
             'countKurangBayar',
             'countLebihBayar',
+            'chartLabels',
+            'chartKurangBayar',
+            'chartLebihBayar',
             'entitySummary',
             'recentEqualization',
             'years',
@@ -100,7 +123,8 @@ class DashboardController extends Controller
             'filterYear',
             'filterMonthFrom',
             'filterMonthTo',
-            'filterEntity'
+            'filterEntity',
+            'filterStatus'
         ));
     }
 

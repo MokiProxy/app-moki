@@ -373,8 +373,8 @@ $authUserName = auth()->user()->name;
                                 <td class="text-end">Rp {{ number_format($dt->dpp_gl, 0, ',', '.') }}</td>
                                 <td class="text-end">Rp {{ number_format($dt->ppn_spt, 0, ',', '.') }}</td>
                                 <td class="text-end">Rp {{ number_format($dt->ppn_gl, 0, ',', '.') }}</td>
-                                <td class="text-end {{ $dt->selisih_ppn > 0 ? 'selisih-positive' : ($dt->selisih_ppn < 0 ? 'selisih-negative' : 'selisih-zero') }}">
-                                    Rp {{ number_format($dt->selisih_ppn, 0, ',', '.') }}
+                                <td class="text-end {{ $dt->selisih_ppn > 0 ? 'selisih-negative' : ($dt->selisih_ppn < 0 ? 'selisih-positive' : 'selisih-zero') }}">
+                                    Rp {{ number_format(abs($dt->selisih_ppn), 0, ',', '.') }}
                                 </td>
                                 <td>
                                     @if($dt->status == 'MATCH')

@@ -186,7 +186,7 @@ $authUserName = auth()->user()->name;
         <span class="text-muted"><i class="fa-regular fa-calendar me-2"></i>{{ date('d F Y') }}</span>
     </div>
 
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-2">
         <div class="col-md-3">
             <div class="card stat-card bg-indigo-grad">
                 <div class="card-body">
@@ -311,12 +311,21 @@ $authUserName = auth()->user()->name;
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">
+                            <label for="status_filter" class="form-label fw-bold">Status</label>
+                            <select name="status" id="status_filter" class="form-select">
+                                <option value="">-- Semua Status --</option>
+                                <option value="MATCH" {{ ($filterStatus == 'MATCH') ? 'selected' : '' }}>Match</option>
+                                <option value="SPT_ONLY" {{ ($filterStatus == 'SPT_ONLY') ? 'selected' : '' }}>SPT Only</option>
+                                <option value="GL_ONLY" {{ ($filterStatus == 'GL_ONLY') ? 'selected' : '' }}>GL Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center">
                                 <i class="fas fa-filter me-1"></i> Filter
                             </button>
                         </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('eqtax.index') }}" class="btn btn-outline-secondary w-100">
+                        <div class="col-md-1">
+                            <a href="{{ route('eqtax.index') }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
                                 <i class="fas fa-undo me-1"></i> Reset
                             </a>
                         </div>
@@ -327,7 +336,7 @@ $authUserName = auth()->user()->name;
                     <table class="table table-hover table-bordered align-middle w-100" id="equalization-table">
                         <thead class="table-dark">
                             <tr class="align-middle">
-                                <th>Period</th>
+                                <th>Periode</th>
                                 <th>No Faktur Pajak</th>
                                 <th>Nama Penjual</th>
                                 <th>DPP SPT</th>
@@ -379,4 +388,117 @@ $authUserName = auth()->user()->name;
         </div>
     </div>
 </div>
+@endsection
+
+@section('plugin')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('selisihChart').getContext('2d');
+
+        const labels = @json($chartLabels);
+        const kurangBayar = @json($chartKurangBayar);
+        const lebihBayar = @json($chartLebihBayar);
+
+        const selisihChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Kurang Bayar',
+                        data: kurangBayar,
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                    },
+                    {
+                        label: 'Lebih Bayar (Restitusi)',
+                        data: lebihBayar,
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: { size: 13, weight: '600' },
+                        bodyFont: { size: 12 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                let value = context.parsed.y;
+                                return context.dataset.label + ': Rp ' + value.toLocaleString('id-ID');
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: { size: 11 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: { size: 11 },
+                            callback: function(value) {
+                                if (value >= 1000000000) {
+                                    return 'Rp ' + (value / 1000000000).toFixed(1) + ' M';
+                                } else if (value >= 1000000) {
+                                    return 'Rp ' + (value / 1000000).toFixed(1) + ' JT';
+                                } else if (value >= 1000) {
+                                    return 'Rp ' + (value / 1000).toFixed(0) + ' RB';
+                                }
+                                return 'Rp ' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 @endsection
