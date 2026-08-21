@@ -10,6 +10,9 @@ Route::prefix("eqtax")->name("eqtax.")->group(function () {
     Route::get("/", [DashboardController::class, 'index'])
         ->name("index");
 
+    Route::get('/dashboard/filter-selisih', [DashboardController::class, 'getFilteredData'])
+        ->name('dashboard.filter-selisih');
+
     Route::prefix("spt")->name("spt.")->group(function () {
         Route::prefix("coretax")->name("coretax.")->group(function () {
             Route::get("/", [SPTCoretaxController::class, "index"])->name("index");
