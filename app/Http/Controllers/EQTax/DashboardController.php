@@ -69,6 +69,14 @@ class DashboardController extends Controller
         $countKurangBayar = $filteredResults->where('selisih_ppn', '>', 0)->count();
         $countLebihBayar = $filteredResults->where('selisih_ppn', '<', 0)->count();
 
+        // Hitung total data berdasarkan status
+        $statusSummary = [
+            'MATCH' => $filteredResults->where('status', 'MATCH')->count(),
+            'GL_ONLY' => $filteredResults->where('status', 'GL_ONLY')->count(),
+            'SPT_ONLY' => $filteredResults->where('status', 'SPT_ONLY')->count(),
+            'TO_BE_CHECK' => $filteredResults->where('status', 'TO_BE_CHECK')->count(),
+        ];
+
         // Data untuk chart trend selisih per periode
         $chartData = $filteredResults->groupBy('period')->map(function ($items) {
             $kurangBayar = $items->where('selisih_ppn', '>', 0)->sum('selisih_ppn');
@@ -112,6 +120,7 @@ class DashboardController extends Controller
             'selisihLebihBayar',
             'countKurangBayar',
             'countLebihBayar',
+            'statusSummary',
             'chartLabels',
             'chartKurangBayar',
             'chartLebihBayar',
@@ -126,6 +135,58 @@ class DashboardController extends Controller
             'filterEntity',
             'filterStatus'
         ));
+    }
+
+    public function getFilteredData(Request $request)
+    {
+        $type = $request->input('type');
+        $filterYear = $request->input('year');
+        $filterMonthFrom = $request->input('month_from');
+        $filterMonthTo = $request->input('month_to');
+        $filterEntity = $request->input('entity');
+        $filterStatus = $request->input('status');
+
+        $query = EQTAXEqualizationResult::query();
+
+        if ($type === 'kurang_bayar') {
+            $query->where('selisih_ppn', '>', 0);
+        } elseif ($type === 'lebih_bayar') {
+            $query->where('selisih_ppn', '<', 0);
+        }
+
+        if ($filterYear) {
+            $query->where('period', 'like', "{$filterYear}%");
+        }
+
+        if ($filterMonthFrom && $filterMonthTo) {
+            $periodFrom = $filterYear ? "{$filterYear}-{$filterMonthFrom}" : $filterMonthFrom;
+            $periodTo = $filterYear ? "{$filterYear}-{$filterMonthTo}" : $filterMonthTo;
+            $query->whereBetween('period', [$periodFrom, $periodTo]);
+        } elseif ($filterMonthFrom) {
+            $periodFrom = $filterYear ? "{$filterYear}-{$filterMonthFrom}" : $filterMonthFrom;
+            $query->where('period', '>=', $periodFrom);
+        } elseif ($filterMonthTo) {
+            $periodTo = $filterYear ? "{$filterYear}-{$filterMonthTo}" : $filterMonthTo;
+            $query->where('period', '<=', $periodTo);
+        }
+
+        if ($filterEntity) {
+            $query->where('entity', $filterEntity);
+        }
+
+        if ($filterStatus) {
+            $query->where('status', $filterStatus);
+        }
+
+        $results = $query->orderByDesc('period')
+                         ->orderByDesc('selisih_ppn')
+                         ->paginate(20)
+                         ->appends($request->query());
+
+        return response()->json([
+            'success' => true,
+            'data' => $results
+        ]);
     }
 
     /**

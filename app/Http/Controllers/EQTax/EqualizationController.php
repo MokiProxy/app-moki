@@ -76,20 +76,22 @@ class EqualizationController extends Controller
             ->select(
                 DB::raw("TRIM(no_faktur_pajak) AS no_faktur_pajak"),
                 'entity',
+                'nama_supplier',
                 DB::raw("SUM(dpp) AS dpp_gl"),
                 DB::raw("SUM(ppn) AS ppn_gl"),
                 DB::raw("COUNT(*) AS jumlah_item")
             )
-            ->where('jurnal_date', 'like', "{$this->getJurnalDatePrefix($masaPajak, $tahun)}%")
+            ->where('jurnal_date', 'like', "{$this->getJurnalDatePrefix($masaPajak,$tahun)}%")
             ->when($entity, function ($query) use ($entity) {
                 $query->where('entity', $entity);
             })
-            ->groupBy(DB::raw("TRIM(no_faktur_pajak)"), 'entity')
+            ->groupBy(DB::raw("TRIM(no_faktur_pajak)"), 'entity', 'nama_supplier')
             ->get();
 
         $glTotal = $gl_agg->groupBy('no_faktur_pajak')->map(function ($items) {
             return (object) [
                 'no_faktur_pajak' => $items->first()->no_faktur_pajak,
+                'nama_supplier' => $items->first()->nama_supplier,
                 'dpp_gl_total' => $items->sum('dpp_gl'),
                 'ppn_gl_total' => $items->sum('ppn_gl'),
                 'entities' => $items->pluck('entity')->implode(', '),
@@ -98,16 +100,16 @@ class EqualizationController extends Controller
         })->keyBy('no_faktur_pajak');
 
         $sptData = EQTAXCoretaxSPT::select(
-                DB::raw("TRIM(no_faktur_pajak) AS no_faktur_pajak"),
-                'nama_penjual',
-                'npwp_penjual',
-                'tgl_faktur_pajak',
-                'dpp AS dpp_spt',
-                'ppn AS ppn_spt',
-                'masa_pajak',
-                'tahun',
-                'status_faktur'
-            )
+            DB::raw("TRIM(no_faktur_pajak) AS no_faktur_pajak"),
+            'nama_penjual',
+            'npwp_penjual',
+            'tgl_faktur_pajak',
+            'dpp AS dpp_spt',
+            'ppn AS ppn_spt',
+            'masa_pajak',
+            'tahun',
+            'status_faktur'
+        )
             ->where('masa_pajak', $masaPajak)
             ->where('tahun', $tahun)
             ->get()
@@ -127,7 +129,7 @@ class EqualizationController extends Controller
             $selisih = $ppnSpt - $ppnGl;
 
             if ($spt && $gl) {
-                $status = 'MATCH';
+                $status = $selisih != 0 ? "TO_BE_CHECK" : "MATCH";
             } elseif ($spt && !$gl) {
                 $status = 'SPT_ONLY';
             } else {
@@ -136,7 +138,7 @@ class EqualizationController extends Controller
 
             $results->push((object) [
                 'no_faktur_pajak' => $fp,
-                'nama_penjual' => $spt ? $spt->nama_penjual : ($gl ? $gl->entities : '-'),
+                'nama_penjual' => $spt ? $spt->nama_penjual : ($gl ? $gl->nama_supplier : '-'),
                 'npwp_penjual' => $spt ? $spt->npwp_penjual : '-',
                 'tgl_faktur_pajak' => $spt ? $spt->tgl_faktur_pajak : '-',
                 'dpp_spt' => $dppSpt,
@@ -205,7 +207,7 @@ class EqualizationController extends Controller
                 DB::raw("SUM(ppn) AS ppn_gl"),
                 DB::raw("COUNT(*) AS jumlah_item")
             )
-            ->where('jurnal_date', 'like', "{$this->getJurnalDatePrefix($masaPajak, $tahun)}%")
+            ->where('jurnal_date', 'like', "{$this->getJurnalDatePrefix($masaPajak,$tahun)}%")
             ->when($entity, function ($query) use ($entity) {
                 $query->where('entity', $entity);
             })
@@ -222,14 +224,14 @@ class EqualizationController extends Controller
         })->keyBy('no_faktur_pajak');
 
         $sptData = EQTAXCoretaxSPT::select(
-                DB::raw("TRIM(no_faktur_pajak) AS no_faktur_pajak"),
-                'nama_penjual',
-                'npwp_penjual',
-                'dpp AS dpp_spt',
-                'ppn AS ppn_spt',
-                'masa_pajak',
-                'tahun'
-            )
+            DB::raw("TRIM(no_faktur_pajak) AS no_faktur_pajak"),
+            'nama_penjual',
+            'npwp_penjual',
+            'dpp AS dpp_spt',
+            'ppn AS ppn_spt',
+            'masa_pajak',
+            'tahun'
+        )
             ->where('masa_pajak', $masaPajak)
             ->where('tahun', $tahun)
             ->get()

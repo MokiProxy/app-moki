@@ -7,7 +7,7 @@ $roleColor = "primary-it-admin";
     <div class="navbar-header">
         <div class="d-flex">
             <div class="navbar-brand-box bg-dark-primary text-start">
-                <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
+                <a href="{{ route('eqtax.index') }}" class="logo logo-light text-decoration-none">
                     <span class="logo-sm">
                         <i class="mdi mdi-percent fs-4 rounded m-0 p-0 bg-primary-it-admin text-white p-2"></i>
                     </span>
@@ -21,7 +21,7 @@ $roleColor = "primary-it-admin";
                                     <div>
                                         <span class="text-{{ $roleColor }} m-0 p-0">EQ</span>Tax
                                     </div>
-                                    <p class="fs-6 m-0 p-0 fw-normal">Aplikasi Restitusi Pajak</p>
+                                    <p class="fs-6 m-0 p-0 fw-normal">Aplikasi Ekualisasi Pajak</p>
                                 </div>
                             </h3>
                         </div>
