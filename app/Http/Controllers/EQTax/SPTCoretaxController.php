@@ -61,4 +61,40 @@ class SPTCoretaxController extends Controller
         } else
             return redirect()->route("eqtax.spt.coretax.index")->with("error", "Import SPT Coretax Gagal");
     }
+
+    public function updateField(Request $request)
+    {
+        $record = EQTAXCoretaxSPT::findOrFail($request->input('id'));
+
+        $allowedFields = (new EQTAXCoretaxSPT)->getFillable();
+        $field = $request->input('field');
+
+        if (!in_array($field, $allowedFields)) {
+            return response()->json(['success' => false, 'message' => 'Field tidak diizinkan'], 422);
+        }
+
+        $value = $request->input('value');
+
+        $record->update([$field => $value]);
+
+        return response()->json([
+            'success'         => true,
+            'message'         => strtoupper($field) . ' berhasil diupdate',
+            'formatted_value' => $this->formatFieldValue($field, $value),
+        ]);
+    }
+
+    private function formatFieldValue(string $field, $value): string
+    {
+        $booleanFields = ['valid', 'dilaporkan', 'dilaporkan_oleh_penjual'];
+        $numberFields = ['harga_jual', 'dpp', 'ppn', 'ppnbm'];
+
+        if (in_array($field, $booleanFields)) {
+            return $value ? 'Yes' : 'No';
+        }
+        if (in_array($field, $numberFields)) {
+            return 'Rp ' . number_format((float) $value, 0, ',', '.');
+        }
+        return (string) $value;
+    }
 }

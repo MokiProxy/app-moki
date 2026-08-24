@@ -44,34 +44,6 @@ class EqualizationController extends Controller
         $entity = $request->input('entity');
         $period = EQTAXEqualizationResult::toPeriod($masaPajak, $tahun);
 
-        // Cek apakah data hasil ekualisasi sudah tersimpan
-        $existingQuery = EQTAXEqualizationResult::where('period', $period);
-        if ($entity) {
-            $existingQuery->where('entity', $entity);
-        }
-
-        $fromDatabase = false;
-        if ($existingQuery->exists()) {
-            $results = $existingQuery->orderByDesc('selisih_ppn')->get();
-            $summary = $this->buildSummary($results, $masaPajak, $tahun, $entity);
-            $fromDatabase = true;
-
-            $pageName = "Ekualisasi Pajak";
-            $distinctPeriods = EQTAXCoretaxSPT::select('masa_pajak', 'tahun')
-                ->distinct()
-                ->orderBy('tahun', 'desc')
-                ->orderBy('masa_pajak', 'desc')
-                ->get();
-
-            $distinctEntities = EQTAXGL::select('entity')
-                ->distinct()
-                ->whereNotNull('entity')
-                ->orderBy('entity')
-                ->get();
-
-            return view('eqtax.equalization.index', compact('pageName', 'results', 'summary', 'distinctPeriods', 'distinctEntities', 'fromDatabase'));
-        }
-
         $gl_agg = DB::table('eqtax_gl')
             ->select(
                 DB::raw("TRIM(no_faktur_pajak) AS no_faktur_pajak"),
@@ -185,7 +157,7 @@ class EqualizationController extends Controller
             ->orderBy('entity')
             ->get();
 
-        return view('eqtax.equalization.index', compact('pageName', 'results', 'summary', 'distinctPeriods', 'distinctEntities', 'fromDatabase'));
+        return view('eqtax.equalization.index', compact('pageName', 'results', 'summary', 'distinctPeriods', 'distinctEntities'));
     }
 
     public function export(Request $request)
@@ -280,30 +252,6 @@ class EqualizationController extends Controller
         return Excel::download(new EqualizationExport($exportData, $summary), $fileName);
     }
 
-    public function reprocess(Request $request)
-    {
-        $request->validate([
-            'masa_pajak' => 'required|string',
-            'tahun' => 'required|string',
-        ]);
-
-        $masaPajak = $request->input('masa_pajak');
-        $tahun = $request->input('tahun');
-        $entity = $request->input('entity');
-        $period = EQTAXEqualizationResult::toPeriod($masaPajak, $tahun);
-
-        // Hapus data lama
-        EQTAXEqualizationResult::where('period', $period)
-            ->when($entity, fn($q) => $q->where('entity', $entity))
-            ->delete();
-
-        return redirect()->route('eqtax.equalization.process', [
-            'masa_pajak' => $masaPajak,
-            'tahun' => $tahun,
-            'entity' => $entity,
-        ]);
-    }
-
     private function saveResults($results, string $period, ?string $entity): void
     {
         // Hapus hasil lama untuk periode + entity yang sama
@@ -332,23 +280,6 @@ class EqualizationController extends Controller
         foreach ($chunks as $chunk) {
             EQTAXEqualizationResult::insert($chunk->toArray());
         }
-    }
-
-    private function buildSummary($results, string $masaPajak, string $tahun, ?string $entity): array
-    {
-        return [
-            'total_spt' => $results->where('status', '!=', 'GL_ONLY')->count(),
-            'total_gl' => $results->where('status', '!=', 'SPT_ONLY')->count(),
-            'total_ppn_spt' => $results->sum('ppn_spt'),
-            'total_ppn_gl' => $results->sum('ppn_gl'),
-            'total_selisih' => $results->sum('selisih_ppn'),
-            'count_match' => $results->where('status', 'MATCH')->count(),
-            'count_spt_only' => $results->where('status', 'SPT_ONLY')->count(),
-            'count_gl_only' => $results->where('status', 'GL_ONLY')->count(),
-            'masa_pajak' => $masaPajak,
-            'tahun' => $tahun,
-            'entity' => $entity ?? 'Semua',
-        ];
     }
 
     private function getJurnalDatePrefix(string $masaPajak, string $tahun): string

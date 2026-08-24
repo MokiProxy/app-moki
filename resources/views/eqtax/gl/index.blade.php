@@ -74,6 +74,55 @@ $authUserName = auth()->user()->name;
         padding: 16px;
         margin-bottom: 20px;
     }
+
+    .editable {
+        cursor: pointer;
+        position: relative;
+        transition: background-color 0.15s;
+    }
+
+    .editable:hover {
+        background-color: #e0e7ff !important;
+    }
+
+    .editable:hover::after {
+        content: '\f044';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.6rem;
+        color: #6366f1;
+        opacity: 0.6;
+    }
+
+    .inline-edit-input {
+        width: 100%;
+        padding: 2px 6px;
+        border: 2px solid #6366f1;
+        border-radius: 4px;
+        font-size: inherit;
+        text-align: right;
+        background: white;
+        outline: none;
+    }
+
+    .inline-edit-input.text-start {
+        text-align: left;
+    }
+
+    .inline-edit-input:focus {
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    #toastContainer {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
 </style>
 @endsection
 
@@ -226,13 +275,16 @@ $authUserName = auth()->user()->name;
                         <thead class="table-dark">
                             <tr class="align-middle">
                                 <th>No</th>
+                                <th>Sheet</th>
                                 <th>Entity</th>
                                 <th>No Supplier</th>
                                 <th>Nama Supplier</th>
                                 <th>No Faktur Pajak</th>
                                 <th>Jurnal Date</th>
                                 <th>Jurnal No</th>
+                                <th>Invoice Date</th>
                                 <th>Invoice No</th>
+                                <th>Invoice Item</th>
                                 <th>DPP</th>
                                 <th>PPN</th>
                                 <th>Keterangan</th>
@@ -240,22 +292,25 @@ $authUserName = auth()->user()->name;
                         </thead>
                         <tbody>
                             @forelse($glData as $key => $dt)
-                            <tr>
+                            <tr data-id="{{ $dt->id }}">
                                 <td>{{ ($glData->currentPage() - 1) * $glData->perPage() + $key + 1 }}</td>
-                                <td><span class="entity-badge">{{ $dt->entity ?? $dt->sheet }}</span></td>
-                                <td>{{ $dt->no_supplier }}</td>
-                                <td>{{ $dt->nama_supplier }}</td>
-                                <td class="fw-bold">{{ $dt->no_faktur_pajak }}</td>
-                                <td>{{ $dt->jurnal_date }}</td>
-                                <td>{{ $dt->jurnal_no }}</td>
-                                <td>{{ $dt->invoice_no }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->dpp, 0, ',', '.') }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->ppn, 0, ',', '.') }}</td>
-                                <td>{{ Str::limit($dt->keterangan, 30) }}</td>
+                                <td class="editable text-start" data-field="sheet" data-type="text" data-value="{{ $dt->sheet }}">{{ $dt->sheet }}</td>
+                                <td class="editable text-start" data-field="entity" data-type="text" data-value="{{ $dt->entity }}">{{ $dt->entity }}</td>
+                                <td class="editable text-start" data-field="no_supplier" data-type="text" data-value="{{ $dt->no_supplier }}">{{ $dt->no_supplier }}</td>
+                                <td class="editable text-start" data-field="nama_supplier" data-type="text" data-value="{{ $dt->nama_supplier }}">{{ $dt->nama_supplier }}</td>
+                                <td class="editable text-start fw-bold" data-field="no_faktur_pajak" data-type="text" data-value="{{ $dt->no_faktur_pajak }}">{{ $dt->no_faktur_pajak }}</td>
+                                <td class="editable text-start" data-field="jurnal_date" data-type="text" data-value="{{ $dt->jurnal_date }}">{{ $dt->jurnal_date }}</td>
+                                <td class="editable text-start" data-field="jurnal_no" data-type="text" data-value="{{ $dt->jurnal_no }}">{{ $dt->jurnal_no }}</td>
+                                <td class="editable text-start" data-field="invoice_date" data-type="text" data-value="{{ $dt->invoice_date }}">{{ $dt->invoice_date }}</td>
+                                <td class="editable text-start" data-field="invoice_no" data-type="text" data-value="{{ $dt->invoice_no }}">{{ $dt->invoice_no }}</td>
+                                <td class="editable text-start" data-field="invoice_item" data-type="text" data-value="{{ $dt->invoice_item }}">{{ $dt->invoice_item }}</td>
+                                <td class="text-end editable" data-field="dpp" data-type="number" data-value="{{ $dt->dpp }}">Rp {{ number_format($dt->dpp, 0, ',', '.') }}</td>
+                                <td class="text-end editable" data-field="ppn" data-type="number" data-value="{{ $dt->ppn }}">Rp {{ number_format($dt->ppn, 0, ',', '.') }}</td>
+                                <td class="editable text-start" data-field="keterangan" data-type="text" data-value="{{ $dt->keterangan }}">{{ Str::limit($dt->keterangan, 30) }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="11" class="text-center text-muted">Belum ada data. Silakan import file GL terlebih dahulu.</td>
+                                <td colspan="14" class="text-center text-muted">Belum ada data. Silakan import file GL terlebih dahulu.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -272,6 +327,7 @@ $authUserName = auth()->user()->name;
 @endsection
 
 @section('plugin')
+<div id="toastContainer"></div>
 <script>
     const uploadFileForm = document.getElementById('file-form')
     const uploadFile = document.getElementById('file')
@@ -280,5 +336,101 @@ $authUserName = auth()->user()->name;
             uploadFileForm.submit()
         }
     })
+
+    function showToast(type, message) {
+        const icon = type === 'success' ? 'fa-check-circle text-success' : 'fa-exclamation-circle text-danger';
+        const $toast = $(`<div class="toast show" role="alert"><div class="toast-body d-flex align-items-center"><i class="fas ${icon} me-2"></i>${message}</div></div>`);
+        $('#toastContainer').append($toast);
+        setTimeout(() => $toast.fadeOut(300, () => $toast.remove()), 3000);
+    }
+
+    function createEditInput($cell, currentValue, fieldType) {
+        const isText = fieldType === 'text';
+        const inputClass = 'inline-edit-input' + (isText ? ' text-start' : '');
+
+        if (fieldType === 'date') {
+            return $(`<input type="date" class="${inputClass}" value="${currentValue || ''}">`);
+        }
+        if (fieldType === 'number') {
+            return $(`<input type="number" class="${inputClass}" value="${currentValue}" min="0" step="any">`);
+        }
+        return $(`<input type="text" class="${inputClass}" value="${currentValue || ''}">`);
+    }
+
+    $(document).on('dblclick', '.editable', function() {
+        const $cell = $(this);
+        if ($cell.find('input').length > 0) return;
+
+        const currentValue = $cell.data('value');
+        const field = $cell.data('field');
+        const fieldType = $cell.data('type') || 'text';
+        const id = $cell.closest('tr').data('id');
+        const originalHtml = $cell.html();
+
+        const $input = createEditInput($cell, currentValue, fieldType);
+        $cell.html($input);
+        $input.focus();
+        if (fieldType !== 'date') $input.select();
+
+        $input.on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveInlineEdit($cell, id, field, fieldType, $(this).val(), originalHtml);
+            }
+            if (e.key === 'Escape') {
+                $cell.html(originalHtml);
+            }
+        });
+
+        $input.on('blur', function() {
+            setTimeout(() => {
+                if ($cell.find('input').length > 0) {
+                    saveInlineEdit($cell, id, field, fieldType, $(this).val(), originalHtml);
+                }
+            }, 200);
+        });
+    });
+
+    function saveInlineEdit($cell, id, field, fieldType, newValue, originalHtml) {
+        if (newValue === '' || newValue === null || newValue === undefined) {
+            $cell.html(originalHtml);
+            return;
+        }
+
+        if (fieldType === 'number' && (isNaN(newValue) || parseFloat(newValue) < 0)) {
+            showToast('error', 'Nilai tidak valid');
+            $cell.html(originalHtml);
+            return;
+        }
+
+        $cell.html('<i class="fas fa-spinner fa-spin"></i>');
+
+        let sendValue = newValue;
+        if (fieldType === 'number') {
+            sendValue = parseFloat(newValue);
+        }
+
+        $.ajax({
+            url: '{{ route("eqtax.gl.update-field") }}',
+            type: 'POST',
+            data: JSON.stringify({ id: id, field: field, value: sendValue }),
+            contentType: 'application/json',
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function(response) {
+                if (response.success) {
+                    $cell.html(response.formatted_value);
+                    $cell.data('value', newValue);
+                    showToast('success', response.message);
+                } else {
+                    $cell.html(originalHtml);
+                    showToast('error', response.message);
+                }
+            },
+            error: function(xhr) {
+                $cell.html(originalHtml);
+                showToast('error', xhr.responseJSON?.message || 'Gagal menyimpan');
+            }
+        });
+    }
 </script>
 @endsection
