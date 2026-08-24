@@ -77,4 +77,36 @@ class GLController extends Controller
 
         return redirect()->route("eqtax.gl.index")->with("success", "Import GL Berhasil");
     }
+
+    public function updateField(Request $request)
+    {
+        $record = EQTAXGL::findOrFail($request->input('id'));
+
+        $allowedFields = (new EQTAXGL)->getFillable();
+        $field = $request->input('field');
+
+        if (!in_array($field, $allowedFields)) {
+            return response()->json(['success' => false, 'message' => 'Field tidak diizinkan'], 422);
+        }
+
+        $value = $request->input('value');
+
+        $record->update([$field => $value]);
+
+        return response()->json([
+            'success'         => true,
+            'message'         => strtoupper($field) . ' berhasil diupdate',
+            'formatted_value' => $this->formatFieldValue($field, $value),
+        ]);
+    }
+
+    private function formatFieldValue(string $field, $value): string
+    {
+        $numberFields = ['dpp', 'ppn'];
+
+        if (in_array($field, $numberFields)) {
+            return 'Rp ' . number_format((float) $value, 0, ',', '.');
+        }
+        return (string) $value;
+    }
 }
