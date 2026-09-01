@@ -103,7 +103,9 @@
                 @csrf
                 <input type="hidden" name="role_id" id="perm_role_id">
                 <div class="modal-body">
-                    <div class="row" id="permissions_container">
+                    <ul class="nav nav-tabs" id="permissions_tabs" role="tablist">
+                    </ul>
+                    <div class="tab-content p-3" id="permissions_tab_content" style="max-height: 420px; overflow-y: auto;">
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -224,33 +226,78 @@
             $.get("{{ url('it-admin/roles/permissions') }}/" + id, function(res) {
                 if (res.success) {
                     $('#perm_role_name').text(res.role.name);
-                    var html = '';
                     var groups = {};
+                    var order = [];
                     res.permissions.forEach(function(p) {
                         var group = p.name.split('.')[0] || 'general';
-                        if (!groups[group]) groups[group] = [];
+                        if (!groups[group]) {
+                            groups[group] = [];
+                            order.push(group);
+                        }
                         groups[group].push(p);
                     });
 
-                    for (var group in groups) {
-                        html += '<div class="col-md-6 mb-3">';
-                        html += '<div class="card"><div class="card-header py-2">';
-                        html += '<strong class="text-uppercase small">' + group + '</strong>';
-                        html += '</div><div class="card-body py-2">';
+                    var tabHtml = '';
+                    var contentHtml = '';
+                    order.forEach(function(group, idx) {
+                        var active = idx === 0 ? ' active' : '';
+                        var selected = idx === 0 ? ' show active' : '';
+                        var tabId = 'tab_' + group;
+
+                        tabHtml += '<li class="nav-item">';
+                        tabHtml += '<a class="nav-link' + active + '" id="' + tabId + '-tab" data-bs-toggle="tab" href="#' + tabId + '" role="tab" aria-controls="' + tabId + '" aria-selected="' + (idx === 0) + '">';
+                        tabHtml += '<span class="text-uppercase small">' + group + '</span>';
+                        tabHtml += '<span class="badge text-bg-primary ms-1" id="' + tabId + '-count"></span>';
+                        tabHtml += '</a></li>';
+
+                        contentHtml += '<div class="tab-pane fade' + selected + '" id="' + tabId + '" role="tabpanel" aria-labelledby="' + tabId + '-tab">';
+                        contentHtml += '<div class="d-flex justify-content-between align-items-center mb-2">';
+                        contentHtml += '<strong class="text-uppercase small">' + group + '</strong>';
+                        contentHtml += '<button type="button" class="btn btn-sm btn-outline-success btn-select-all" data-group-tab="' + tabId + '">';
+                        contentHtml += '<i class="mdi mdi-check-all me-1"></i> Pilih Semua';
+                        contentHtml += '</button>';
+                        contentHtml += '</div>';
+                        contentHtml += '<div class="row">';
                         groups[group].forEach(function(p) {
                             var checked = res.role_permission_names.includes(p.name) ? 'checked' : '';
-                            html += '<div class="form-check mb-1">';
-                            html += '<input class="form-check-input permission-check" type="checkbox" ';
-                            html += 'name="permissions[]" value="' + p.name + '" id="perm_' + p.name.replace(/\./g, '_') + '" ' + checked + '>';
-                            html += '<label class="form-check-label small" for="perm_' + p.name.replace(/\./g, '_') + '">';
-                            html += p.name + '</label></div>';
+                            contentHtml += '<div class="col-md-6">';
+                            contentHtml += '<div class="form-check mb-1">';
+                            contentHtml += '<input class="form-check-input permission-check" type="checkbox" ';
+                            contentHtml += 'name="permissions[]" value="' + p.name + '" id="perm_' + p.name.replace(/\./g, '_') + '" ' + checked + '>';
+                            contentHtml += '<label class="form-check-label small" for="perm_' + p.name.replace(/\./g, '_') + '">';
+                            contentHtml += p.name + '</label></div></div>';
                         });
-                        html += '</div></div></div>';
-                    }
-                    $('#permissions_container').html(html);
+                        contentHtml += '</div></div>';
+                    });
+
+                    $('#permissions_tabs').html(tabHtml);
+                    $('#permissions_tab_content').html(contentHtml);
+
+                    order.forEach(function(group) {
+                        var tabId = 'tab_' + group;
+                        var count = $('#permissions_tab_content #' + tabId + ' .permission-check:checked').length;
+                        $('#' + tabId + '-count').text(count);
+                    });
+
                     permModal.show();
                 }
             });
+        });
+
+        $(document).on('click', '.btn-select-all', function() {
+            var tabId = $(this).data('group-tab');
+            var $tab = $('#permissions_tab_content #' + tabId);
+            var checkboxes = $tab.find('.permission-check');
+            var allChecked = checkboxes.length > 0 && checkboxes.filter(':checked').length === checkboxes.length;
+            checkboxes.prop('checked', !allChecked);
+            var count = checkboxes.filter(':checked').length;
+            $('#' + tabId + '-count').text(count);
+        });
+
+        $(document).on('change', '.permission-check', function() {
+            var tabId = $(this).closest('.tab-pane').attr('id');
+            var count = $('#permissions_tab_content #' + tabId + ' .permission-check:checked').length;
+            $('#' + tabId + '-count').text(count);
         });
 
         $('#formPermissions').on('submit', function(e) {
