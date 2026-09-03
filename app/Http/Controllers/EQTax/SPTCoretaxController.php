@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\EQTax;
 
 use App\Http\Controllers\Controller;
-use App\Imports\EQTaxImport;
+use App\Imports\SPTSheetImport;
 use App\Models\EQTAXCoretaxSPT;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SPTCoretaxController extends Controller
@@ -14,7 +15,20 @@ class SPTCoretaxController extends Controller
     {
         $pageName = "SPT Coretax";
 
-        $query = EQTAXCoretaxSPT::query();
+        $tabs = [
+            'PK'  => 'PK',
+            'PM'  => 'PM',
+            'PMS' => 'PMS',
+        ];
+
+        $activeTab = $request->input('tab');
+        if (!array_key_exists($activeTab, $tabs)) {
+            $activeTab = 'PK';
+        }
+
+        $entity = $tabs[$activeTab];
+
+        $query = EQTAXCoretaxSPT::query()->where('entity', 'like', $entity . '%');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -23,10 +37,6 @@ class SPTCoretaxController extends Controller
                   ->orWhere('nama_penjual', 'like', "%{$search}%")
                   ->orWhere('npwp_penjual', 'like', "%{$search}%");
             });
-        }
-
-        if ($request->filled('entity')) {
-            $query->where('entity', $request->input('entity'));
         }
 
         if ($request->filled('masa_pajak')) {
@@ -38,14 +48,14 @@ class SPTCoretaxController extends Controller
         }
 
         $sptData = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
-        $totalRecords = EQTAXCoretaxSPT::count();
-        $totalPpn = EQTAXCoretaxSPT::sum('ppn');
-        $totalDpp = EQTAXCoretaxSPT::sum('dpp');
-        $entities = EQTAXCoretaxSPT::select('entity')->distinct()->whereNotNull('entity')->orderBy('entity')->pluck('entity');
-        $masaPajakList = EQTAXCoretaxSPT::select('masa_pajak')->distinct()->orderBy('masa_pajak')->pluck('masa_pajak');
-        $tahunList = EQTAXCoretaxSPT::select('tahun')->distinct()->orderBy('tahun', 'desc')->pluck('tahun');
 
-        return view("eqtax.spt.coretax.index", compact("pageName", "sptData", "totalRecords", "totalPpn", "totalDpp", "entities", "masaPajakList", "tahunList"));
+        $totalRecords = EQTAXCoretaxSPT::where('entity', 'like', $entity . '%')->count();
+        $totalPpn = EQTAXCoretaxSPT::where('entity', 'like', $entity . '%')->sum('ppn');
+        $totalDpp = EQTAXCoretaxSPT::where('entity', 'like', $entity . '%')->sum('dpp');
+        $masaPajakList = EQTAXCoretaxSPT::where('entity', 'like', $entity . '%')->select('masa_pajak')->distinct()->orderBy('masa_pajak')->pluck('masa_pajak');
+        $tahunList = EQTAXCoretaxSPT::where('entity', 'like', $entity . '%')->select('tahun')->distinct()->orderBy('tahun', 'desc')->pluck('tahun');
+
+        return view("eqtax.spt.coretax.index", compact("pageName", "sptData", "totalRecords", "totalPpn", "totalDpp", "activeTab", "tabs", "masaPajakList", "tahunList"));
     }
 
     public function import(Request $request)
@@ -54,12 +64,28 @@ class SPTCoretaxController extends Controller
             'file' => 'required|mimes:xlsx,xls,csv'
         ]);
 
-        $excel = Excel::import(new EQTaxImport, $request->file('file'));
+        $import = new SPTSheetImport($request->file('file'));
+        Excel::import($import, $request->file('file'));
+        if (empty($import->result)) {
+            return redirect()->route("eqtax.spt.coretax.index")->with("error", "Import SPT Coretax Gagal, Data Kosong");
+        }
 
-        if ($excel) {
-            return redirect()->route("eqtax.spt.coretax.index")->with("success", "Import SPT Coretax Berhasil");
-        } else
-            return redirect()->route("eqtax.spt.coretax.index")->with("error", "Import SPT Coretax Gagal");
+        DB::transaction(function () use ($import) {
+            foreach ($import->result as $record) {
+                $key = !empty($record['no_faktur_pajak'])
+                    ? ['entity' => $record['entity'], 'no_faktur_pajak' => $record['no_faktur_pajak']]
+                    : null;
+
+                if ($key) {
+                    EQTAXCoretaxSPT::updateOrCreate($key, $record);
+                } else {
+                    EQTAXCoretaxSPT::create($record);
+                }
+            }
+        });
+
+        $imported = count($import->result);
+        return redirect()->route("eqtax.spt.coretax.index")->with("success", "Import SPT Coretax Berhasil: {$imported} record diproses");
     }
 
     public function updateField(Request $request)

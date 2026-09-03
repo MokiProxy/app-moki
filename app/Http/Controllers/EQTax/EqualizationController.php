@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EQTAXCoretaxSPT;
 use App\Models\EQTAXEqualizationResult;
 use App\Models\EQTAXGL;
+use App\Models\EQTAXTBData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -142,7 +143,19 @@ class EqualizationController extends Controller
             'masa_pajak' => $masaPajak,
             'tahun' => $tahun,
             'entity' => $entity ?? 'Semua',
+            'period' => $period,
         ];
+
+        // Load data TB untuk periode ini
+        $tbData = EQTAXTBData::where('period', $period)
+            ->when($entity, fn($q) => $q->where('entity', $entity))
+            ->first();
+
+        $ppn_tb = $tbData->ppn_tb ?? null;
+
+        $summary['ppn_tb'] = $ppn_tb;
+        $summary['selisih_tb_vs_spt'] = $ppn_tb !== null ? $ppn_tb - $summary['total_ppn_spt'] : null;
+        $summary['selisih_tb_vs_gl'] = $ppn_tb !== null ? $ppn_tb - $summary['total_ppn_gl'] : null;
 
         $pageName = "Ekualisasi Pajak";
         $distinctPeriods = EQTAXCoretaxSPT::select('masa_pajak', 'tahun')
@@ -250,6 +263,33 @@ class EqualizationController extends Controller
         $fileName = "ekualisasi_pajak_{$masaPajak}_{$tahun}" . ($entity ? "_{$entity}" : "") . ".xlsx";
 
         return Excel::download(new EqualizationExport($exportData, $summary), $fileName);
+    }
+
+    public function saveTB(Request $request)
+    {
+        $validated = $request->validate([
+            'period'  => 'required|string',
+            'entity'  => 'nullable|string',
+            'ppn_tb'  => 'required|numeric',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        // Upsert: jika sudah ada untuk periode+entity, update; jika belum, insert
+        EQTAXTBData::updateOrCreate(
+            [
+                'period' => $validated['period'],
+                'entity' => $validated['entity'] ?? null,
+            ],
+            [
+                'ppn_tb' => $validated['ppn_tb'],
+                'keterangan' => $validated['keterangan'] ?? null,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data TB berhasil disimpan',
+        ]);
     }
 
     private function saveResults($results, string $period, ?string $entity): void

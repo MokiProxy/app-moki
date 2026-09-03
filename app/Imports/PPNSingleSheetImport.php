@@ -30,6 +30,7 @@ class PPNSingleSheetImport implements ToCollection, WithTitle
 
     public function collection(Collection $rows)
     {
+        return dd($rows);
         $entity = $this->entityMap[$this->sheetName] ?? $this->sheetName;
 
         foreach ($rows as $row) {

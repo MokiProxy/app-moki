@@ -212,22 +212,25 @@ $authUserName = auth()->user()->name;
                     </div>
                 </div>
 
+                <ul class="nav nav-tabs mb-3" id="spt-tabs" role="tablist">
+                    @foreach($tabs as $key => $label)
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {{ $activeTab === $key ? 'active fw-bold' : '' }}"
+                           href="{{ route('eqtax.spt.coretax.index', array_merge(request()->except(['tab', 'page']), ['tab' => $key])) }}">
+                            <i class="fas fa-file-invoice me-1"></i>{{ $label }}
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+
                 <form action="{{ route('eqtax.spt.coretax.index') }}" method="GET" class="filter-form">
+                    <input type="hidden" name="tab" value="{{ $activeTab }}">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
                             <label for="search" class="form-label fw-bold">Cari</label>
-                            <input type="text" name="search" id="search" class="form-control" placeholder="No Faktur / Nama Penjual / NPWP" value="{{ request('search') }}">
+                            <input type="text" name="search" id="search" class="form-control" placeholder="No Faktur / Nama / NPWP" value="{{ request('search') }}">
                         </div>
-                        <div class="col-md-2">
-                            <label for="entity" class="form-label fw-bold">Entity</label>
-                            <select name="entity" id="entity" class="form-select">
-                                <option value="">-- Semua --</option>
-                                @foreach($entities as $ent)
-                                <option value="{{ $ent }}" {{ request('entity') == $ent ? 'selected' : '' }}>{{ $ent }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label for="masa_pajak" class="form-label fw-bold">Masa Pajak</label>
                             <select name="masa_pajak" id="masa_pajak" class="form-select">
                                 <option value="">-- Semua --</option>
@@ -236,7 +239,7 @@ $authUserName = auth()->user()->name;
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label for="tahun" class="form-label fw-bold">Tahun</label>
                             <select name="tahun" id="tahun" class="form-select">
                                 <option value="">-- Semua --</option>
@@ -249,64 +252,116 @@ $authUserName = auth()->user()->name;
                             <button type="submit" class="btn btn-primary flex-grow-1">
                                 <i class="mdi mdi-magnify me-1"></i> Filter
                             </button>
-                            <a href="{{ route('eqtax.spt.coretax.index') }}" class="btn btn-secondary">
+                            <a href="{{ route('eqtax.spt.coretax.index', ['tab' => $activeTab]) }}" class="btn btn-secondary">
                                 <i class="mdi mdi-refresh"></i>
                             </a>
                         </div>
                     </div>
                 </form>
 
+                @php
+                $columns = match ($activeTab) {
+                    'PM' => [
+                        ['field' => 'no_faktur_pajak', 'label' => 'No Faktur Pajak', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'nama_penjual', 'label' => 'Nama Pembeli', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'npwp_penjual', 'label' => 'NPWP Pembeli', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'tgl_faktur_pajak', 'label' => 'Tanggal FP', 'type' => 'date', 'align' => 'text-start'],
+                        ['field' => 'masa_pajak', 'label' => 'Masa Pajak', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'tahun', 'label' => 'Tahun', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'kode_transaksi', 'label' => 'Kode Transaksi', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'status_faktur', 'label' => 'Status Faktur', 'type' => 'badge', 'align' => 'text-start'],
+                        ['field' => 'esign_status', 'label' => 'ESign Status', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'harga_jual', 'label' => 'Harga Jual', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'dpp', 'label' => 'DPP', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'ppn', 'label' => 'PPN', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'ppnbm', 'label' => 'PPNBM', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'perekam', 'label' => 'Perekam', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'referensi', 'label' => 'Referensi', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'metode_input', 'label' => 'Metode Input', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'dilaporkan_oleh_penjual', 'label' => 'Dilaporkan oleh Penjual', 'type' => 'boolean', 'align' => 'text-start'],
+                        ['field' => 'is_show_clear_name', 'label' => 'IsShowClearName', 'type' => 'boolean', 'align' => 'text-start'],
+                        ['field' => 'uraian', 'label' => 'Uraian', 'type' => 'text', 'align' => 'text-start'],
+                    ],
+                    'PMS' => [
+                        ['field' => 'no_faktur_pajak', 'label' => 'Nomor Dokumen', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'npwp_penjual', 'label' => 'NPWP Penjual', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'nama_penjual', 'label' => 'Nama Penjual', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'tgl_faktur_pajak', 'label' => 'Tanggal Dokumen', 'type' => 'date', 'align' => 'text-start'],
+                        ['field' => 'masa_pajak', 'label' => 'Masa Pajak', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'tahun', 'label' => 'Tahun', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'masa_pajak_pengkreditan', 'label' => 'Masa Pengkreditan', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'tahun_pajak_pengkreditan', 'label' => 'Tahun Pengkreditan', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'harga_jual', 'label' => 'Nilai Tagihan', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'dpp', 'label' => 'DPP', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'ppn', 'label' => 'PPN', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'ppnbm', 'label' => 'PPNBM', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'status_faktur', 'label' => 'Status', 'type' => 'badge', 'align' => 'text-start'],
+                        ['field' => 'perekam', 'label' => 'Perekam', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'keterangan', 'label' => 'Keterangan', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'jenis_transaksi', 'label' => 'Jenis Transaksi', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'dibuat_oleh', 'label' => 'Dibuat Oleh', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'is_show_clear_name', 'label' => 'IsShowClearName', 'type' => 'boolean', 'align' => 'text-start'],
+                    ],
+                    default => [
+                        ['field' => 'no_faktur_pajak', 'label' => 'No Faktur Pajak', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'nama_penjual', 'label' => 'Nama Penjual', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'npwp_penjual', 'label' => 'NPWP', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'tgl_faktur_pajak', 'label' => 'Tanggal FP', 'type' => 'date', 'align' => 'text-start'],
+                        ['field' => 'masa_pajak', 'label' => 'Masa Pajak', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'tahun', 'label' => 'Tahun', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'masa_pajak_pengkreditan', 'label' => 'Masa Pengkreditan', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'tahun_pajak_pengkreditan', 'label' => 'Tahun Pengkreditan', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'status_faktur', 'label' => 'Status Faktur', 'type' => 'badge', 'align' => 'text-start'],
+                        ['field' => 'harga_jual', 'label' => 'Harga Jual', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'dpp', 'label' => 'DPP', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'ppn', 'label' => 'PPN', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'ppnbm', 'label' => 'PPNBM', 'type' => 'number', 'align' => 'text-end'],
+                        ['field' => 'penandatangan', 'label' => 'Penandatangan', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'referensi', 'label' => 'Referensi', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'no_sp2d', 'label' => 'No SP2D', 'type' => 'text', 'align' => 'text-start'],
+                    ],
+                };
+                @endphp
+
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle w-100" id="spt-table">
                         <thead class="table-dark">
                             <tr class="align-middle">
                                 <th>No</th>
-                                <th>No Faktur Pajak</th>
-                                <th>Nama Penjual</th>
-                                <th>NPWP</th>
-                                <th>Tanggal FP</th>
-                                <th>Masa Pajak</th>
-                                <th>Tahun</th>
-                                <th>Entity</th>
-                                <th>Masa Pengkreditan</th>
-                                <th>Tahun Pengkreditan</th>
-                                <th>Status Faktur</th>
-                                <th>Harga Jual</th>
-                                <th>DPP</th>
-                                <th>PPN</th>
-                                <th>PPNBM</th>
-                                <th>Perekam</th>
-                                <th>Referensi</th>
-                                <th>No SP2D</th>
+                                @foreach($columns as $col)
+                                <th>{{ $col['label'] }}</th>
+                                @endforeach
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($sptData as $key => $dt)
                             <tr data-id="{{ $dt->id }}">
                                 <td>{{ ($sptData->currentPage() - 1) * $sptData->perPage() + $key + 1 }}</td>
-                                <td class="editable text-start" data-field="no_faktur_pajak" data-type="text" data-value="{{ $dt->no_faktur_pajak }}">{{ $dt->no_faktur_pajak }}</td>
-                                <td class="editable text-start" data-field="nama_penjual" data-type="text" data-value="{{ $dt->nama_penjual }}">{{ $dt->nama_penjual }}</td>
-                                <td class="editable text-start" data-field="npwp_penjual" data-type="text" data-value="{{ $dt->npwp_penjual }}">{{ $dt->npwp_penjual }}</td>
-                                <td class="editable text-start" data-field="tgl_faktur_pajak" data-type="date" data-value="{{ $dt->tgl_faktur_pajak ? \Carbon\Carbon::parse($dt->tgl_faktur_pajak)->format('Y-m-d') : '' }}">{{ $dt->tgl_faktur_pajak ? \Carbon\Carbon::parse($dt->tgl_faktur_pajak)->format('d/m/Y') : '-' }}</td>
-                                <td class="editable text-start" data-field="masa_pajak" data-type="text" data-value="{{ $dt->masa_pajak }}">{{ $dt->masa_pajak }}</td>
-                                <td class="editable text-start" data-field="tahun" data-type="text" data-value="{{ $dt->tahun }}">{{ $dt->tahun }}</td>
-                                <td class="editable text-start" data-field="entity" data-type="text" data-value="{{ $dt->entity }}">{{ $dt->entity }}</td>
-                                <td class="editable text-start" data-field="masa_pajak_pengkreditan" data-type="text" data-value="{{ $dt->masa_pajak_pengkreditan }}">{{ $dt->masa_pajak_pengkreditan }}</td>
-                                <td class="editable text-start" data-field="tahun_pajak_pengkreditan" data-type="text" data-value="{{ $dt->tahun_pajak_pengkreditan }}">{{ $dt->tahun_pajak_pengkreditan }}</td>
-                                <td class="editable text-start" data-field="status_faktur" data-type="text" data-value="{{ $dt->status_faktur }}">
-                                    <span class="badge {{ $dt->status_faktur == 'CREDITED' ? 'bg-success' : 'bg-warning' }}">{{ $dt->status_faktur }}</span>
+                                @foreach($columns as $col)
+                                @php
+                                    $field = $col['field'];
+                                    $value = $dt->{$field};
+                                @endphp
+                                @if($col['type'] === 'number')
+                                <td class="text-end editable" data-field="{{ $field }}" data-type="number" data-value="{{ $value }}">Rp {{ number_format($value, 0, ',', '.') }}</td>
+                                @elseif($col['type'] === 'date')
+                                <td class="editable text-start" data-field="{{ $field }}" data-type="date" data-value="{{ $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : '' }}">{{ $value ? \Carbon\Carbon::parse($value)->format('d/m/Y') : '-' }}</td>
+                                @elseif($col['type'] === 'boolean')
+                                <td class="editable text-start" data-field="{{ $field }}" data-type="boolean" data-value="{{ $value }}">
+                                    @if(is_null($value)) - @else {{ $value ? 'Yes' : 'No' }} @endif
                                 </td>
-                                <td class="text-end editable" data-field="harga_jual" data-type="number" data-value="{{ $dt->harga_jual }}">Rp {{ number_format($dt->harga_jual, 0, ',', '.') }}</td>
-                                <td class="text-end editable" data-field="dpp" data-type="number" data-value="{{ $dt->dpp }}">Rp {{ number_format($dt->dpp, 0, ',', '.') }}</td>
-                                <td class="text-end editable" data-field="ppn" data-type="number" data-value="{{ $dt->ppn }}">Rp {{ number_format($dt->ppn, 0, ',', '.') }}</td>
-                                <td class="text-end editable" data-field="ppnbm" data-type="number" data-value="{{ $dt->ppnbm }}">Rp {{ number_format($dt->ppnbm, 0, ',', '.') }}</td>
-                                <td class="editable text-start" data-field="perekam" data-type="text" data-value="{{ $dt->perekam }}">{{ $dt->perekam }}</td>
-                                <td class="editable text-start" data-field="referensi" data-type="text" data-value="{{ $dt->referensi }}">{{ $dt->referensi }}</td>
-                                <td class="editable text-start" data-field="no_sp2d" data-type="text" data-value="{{ $dt->no_sp2d }}">{{ $dt->no_sp2d }}</td>
+                                @elseif($col['type'] === 'badge')
+                                <td class="editable text-start" data-field="{{ $field }}" data-type="text" data-value="{{ $value }}">
+                                    <span class="badge {{ $value == 'CREDITED' ? 'bg-success' : 'bg-warning' }}">{{ $value ?? "-" }}</span>
+                                </td>
+                                @else
+                                <td class="editable text-start" data-field="{{ $field }}" data-type="text" data-value="{{ $value }}">{{ $value ?? "-" }}</td>
+                                @endif
+                                @endforeach
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="18" class="text-center text-muted">Belum ada data. Silakan import file SPT terlebih dahulu.</td>
+                                <td colspan="{{ count($columns) + 1 }}" class="text-center text-muted">Belum ada data untuk tab {{ $activeTab }}. Silakan import file SPT terlebih dahulu.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -349,6 +404,13 @@ $authUserName = auth()->user()->name;
         }
         if (fieldType === 'number') {
             return $(`<input type="number" class="${inputClass}" value="${currentValue}" min="0" step="any">`);
+        }
+        if (fieldType === 'boolean') {
+            const selected = currentValue === true || currentValue === '1' || currentValue === 'TRUE' ? '1' : '0';
+            return $(`<select class="inline-edit-select">
+                <option value="1" ${selected === '1' ? 'selected' : ''}>Yes</option>
+                <option value="0" ${selected === '0' ? 'selected' : ''}>No</option>
+            </select>`);
         }
         return $(`<input type="text" class="${inputClass}" value="${currentValue || ''}">`);
     }
@@ -405,6 +467,10 @@ $authUserName = auth()->user()->name;
         if (newValue === '' || newValue === null || newValue === undefined) {
             $cell.html(originalHtml);
             return;
+        }
+
+        if (fieldType === 'boolean') {
+            newValue = newValue === '1' || newValue === 'true' || newValue === true ? true : false;
         }
 
         if (fieldType === 'number' && (isNaN(newValue) || parseFloat(newValue) < 0)) {

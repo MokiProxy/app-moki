@@ -31,5 +31,6 @@ Route::prefix("eqtax")->name("eqtax.")->group(function () {
         Route::get("/", [EqualizationController::class, "index"])->name("index");
         Route::post("/process", [EqualizationController::class, "equalization"])->name("process");
         Route::get("/export", [EqualizationController::class, "export"])->name("export");
+        Route::post("/save-tb", [EqualizationController::class, "saveTB"])->name("save-tb");
     });
 });
