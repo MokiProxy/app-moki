@@ -13,7 +13,6 @@ class EQTAXEqualizationResult extends Model
 
     protected $fillable = [
         "period",
-        "entity",
         "no_faktur_pajak",
         "nama_penjual",
         "dpp_spt",
@@ -28,11 +27,6 @@ class EQTAXEqualizationResult extends Model
     public function scopePeriod($query, $period)
     {
         return $query->where('period', $period);
-    }
-
-    public function scopeEntity($query, $entity)
-    {
-        return $query->where('entity', $entity);
     }
 
     public function scopeStatus($query, $status)

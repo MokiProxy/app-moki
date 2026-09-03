@@ -7,7 +7,6 @@ use App\Models\EQTAXCoretaxSPT;
 use App\Models\EQTAXEqualizationResult;
 use App\Models\EQTAXGL;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -20,19 +19,26 @@ class DashboardController extends Controller
         $totalDppSpt = EQTAXCoretaxSPT::sum('dpp');
         $totalDppGl = EQTAXGL::sum('dpp');
 
-        $entitySummary = EQTAXGL::select('entity', DB::raw('COUNT(*) as count'), DB::raw('SUM(ppn) as total_ppn'))
-            ->groupBy('entity')
-            ->get();
-
         // Filter parameters
         $filterMonthFrom = $request->input('month_from');
         $filterMonthTo = $request->input('month_to');
         $filterYear = $request->input('year');
-        $filterEntity = $request->input('entity');
         $filterStatus = $request->input('status');
+        $filterSearch = $request->input('search');
 
         // Build equalization query with filters
         $equalizationQuery = EQTAXEqualizationResult::query();
+
+        // Filter by search keyword (no faktur, nama penjual, periode, status)
+        if ($filterSearch) {
+            $searchTerm = '%' . trim($filterSearch) . '%';
+            $equalizationQuery->where(function ($q) use ($searchTerm) {
+                $q->where('no_faktur_pajak', 'like', $searchTerm)
+                    ->orWhere('nama_penjual', 'like', $searchTerm)
+                    ->orWhere('period', 'like', $searchTerm)
+                    ->orWhere('status', 'like', $searchTerm);
+            });
+        }
 
         // Filter by year (period format: YYYY-MM)
         if ($filterYear) {
@@ -50,11 +56,6 @@ class DashboardController extends Controller
         } elseif ($filterMonthTo) {
             $periodTo = $filterYear ? "{$filterYear}-{$filterMonthTo}" : $filterMonthTo;
             $equalizationQuery->where('period', '<=', $periodTo);
-        }
-
-        // Filter by entity
-        if ($filterEntity) {
-            $equalizationQuery->where('entity', $filterEntity);
         }
 
         // Filter by status
@@ -99,12 +100,6 @@ class DashboardController extends Controller
             ->orderBy('period', 'desc')
             ->pluck('period');
 
-        $distinctEntities = EQTAXEqualizationResult::select('entity')
-            ->distinct()
-            ->whereNotNull('entity')
-            ->orderBy('entity')
-            ->pluck('entity');
-
         // Extract unique years and months from periods
         $years = $distinctPeriods->map(fn($p) => substr($p, 0, 4))->unique()->values();
         $months = $distinctPeriods->map(fn($p) => substr($p, 5, 2))->unique()->sort()->values();
@@ -124,16 +119,14 @@ class DashboardController extends Controller
             'chartLabels',
             'chartKurangBayar',
             'chartLebihBayar',
-            'entitySummary',
             'recentEqualization',
             'years',
             'months',
-            'distinctEntities',
             'filterYear',
             'filterMonthFrom',
             'filterMonthTo',
-            'filterEntity',
-            'filterStatus'
+            'filterStatus',
+            'filterSearch'
         ));
     }
 
@@ -143,8 +136,8 @@ class DashboardController extends Controller
         $filterYear = $request->input('year');
         $filterMonthFrom = $request->input('month_from');
         $filterMonthTo = $request->input('month_to');
-        $filterEntity = $request->input('entity');
         $filterStatus = $request->input('status');
+        $search = $request->input('search');
 
         $query = EQTAXEqualizationResult::query();
 
@@ -152,6 +145,16 @@ class DashboardController extends Controller
             $query->where('selisih_ppn', '>', 0);
         } elseif ($type === 'lebih_bayar') {
             $query->where('selisih_ppn', '<', 0);
+        }
+
+        if ($search) {
+            $searchTerm = '%' . trim($search) . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('no_faktur_pajak', 'like', $searchTerm)
+                    ->orWhere('nama_penjual', 'like', $searchTerm)
+                    ->orWhere('period', 'like', $searchTerm)
+                    ->orWhere('status', 'like', $searchTerm);
+            });
         }
 
         if ($filterYear) {
@@ -168,10 +171,6 @@ class DashboardController extends Controller
         } elseif ($filterMonthTo) {
             $periodTo = $filterYear ? "{$filterYear}-{$filterMonthTo}" : $filterMonthTo;
             $query->where('period', '<=', $periodTo);
-        }
-
-        if ($filterEntity) {
-            $query->where('entity', $filterEntity);
         }
 
         if ($filterStatus) {

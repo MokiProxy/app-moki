@@ -361,7 +361,7 @@ $authUserName = auth()->user()->name;
             <div class="card-body">
                 <form action="{{ route('eqtax.index') }}" method="GET" class="filter-form">
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <label for="year" class="form-label fw-bold">Tahun</label>
                             <select name="year" id="year" class="form-select">
                                 <option value="">-- Semua Tahun --</option>
@@ -372,7 +372,7 @@ $authUserName = auth()->user()->name;
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label for="month_from" class="form-label fw-bold">Bulan Dari</label>
                             <select name="month_from" id="month_from" class="form-select">
                                 <option value="">-- Semua --</option>
@@ -391,7 +391,7 @@ $authUserName = auth()->user()->name;
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label for="month_to" class="form-label fw-bold">Sampai Bulan</label>
                             <select name="month_to" id="month_to" class="form-select">
                                 <option value="">-- Semua --</option>
@@ -402,18 +402,7 @@ $authUserName = auth()->user()->name;
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label for="entity" class="form-label fw-bold">Entity</label>
-                            <select name="entity" id="entity" class="form-select">
-                                <option value="">-- Semua Entity --</option>
-                                @foreach($distinctEntities as $ent)
-                                <option value="{{ $ent }}" {{ ($filterEntity == $ent) ? 'selected' : '' }}>
-                                    {{ $ent }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label for="status_filter" class="form-label fw-bold">Status</label>
                             <select name="status" id="status_filter" class="form-select">
                                 <option value="">-- Semua Status --</option>
@@ -440,9 +429,24 @@ $authUserName = auth()->user()->name;
                     <h5 class="fw-bold mb-0" id="table-title">
                         <i class="fas fa-table me-2"></i>Data Ekualisasi Terbaru
                     </h5>
-                    <button class="btn btn-sm btn-outline-secondary d-none" id="btn-reset-widget" onclick="resetWidgetFilter()">
-                        <i class="fas fa-times me-1"></i>Tampilkan Semua
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="input-group" style="width: 300px;">
+                            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text"
+                                   class="form-control"
+                                   id="search-input"
+                                   name="search"
+                                   value="{{ $filterSearch ?? '' }}"
+                                   placeholder="Cari No Faktur / Nama Penjual / Periode / Status..."
+                                   aria-label="Cari data">
+                            <button class="btn btn-outline-secondary" type="button" id="btn-clear-search" title="Bersihkan pencarian" onclick="clearSearch()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary d-none" id="btn-reset-widget" onclick="resetWidgetFilter()">
+                            <i class="fas fa-times me-1"></i>Tampilkan Semua
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -458,7 +462,6 @@ $authUserName = auth()->user()->name;
                                 <th>PPN GL</th>
                                 <th>Selisih PPN</th>
                                 <th>Status</th>
-                                <th>Entity</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -485,11 +488,10 @@ $authUserName = auth()->user()->name;
                                     <span class="status-gl-only">GL Only</span>
                                     @endif
                                 </td>
-                                <td>{{ $dt->entity }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="10" class="text-center text-muted">Tidak ada data untuk filter yang dipilih.</td>
+                                <td colspan="9" class="text-center text-muted">Tidak ada data untuk filter yang dipilih.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -541,8 +543,8 @@ $authUserName = auth()->user()->name;
         const yearSelect = document.querySelector('select[name="year"]');
         const monthFromSelect = document.querySelector('select[name="month_from"]');
         const monthToSelect = document.querySelector('select[name="month_to"]');
-        const entitySelect = document.querySelector('select[name="entity"]');
         const statusSelect = document.querySelector('select[name="status"]');
+        const searchInput = document.getElementById('search-input');
 
         const params = new URLSearchParams({
             type: type,
@@ -550,8 +552,8 @@ $authUserName = auth()->user()->name;
             year: yearSelect ? yearSelect.value : '',
             month_from: monthFromSelect ? monthFromSelect.value : '',
             month_to: monthToSelect ? monthToSelect.value : '',
-            entity: entitySelect ? entitySelect.value : '',
-            status: statusSelect ? statusSelect.value : ''
+            status: statusSelect ? statusSelect.value : '',
+            search: searchInput ? searchInput.value.trim() : ''
         });
 
         const url = `{{ route('eqtax.dashboard.filter-selisih') }}?${params.toString()}`;
@@ -559,7 +561,7 @@ $authUserName = auth()->user()->name;
         const tbody = document.querySelector('#equalization-table tbody');
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" class="text-center py-4">
+                <td colspan="9" class="text-center py-4">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
@@ -582,7 +584,7 @@ $authUserName = auth()->user()->name;
                 console.error('Error:', error);
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="text-center text-danger py-4">
+                        <td colspan="9" class="text-center text-danger py-4">
                             <i class="fas fa-exclamation-triangle me-2"></i>Gagal memuat data. Silakan coba lagi.
                         </td>
                     </tr>
@@ -596,7 +598,7 @@ $authUserName = auth()->user()->name;
         if (data.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="text-center text-muted py-4">
+                    <td colspan="9" class="text-center text-muted py-4">
                         <i class="fas fa-inbox me-2"></i>Tidak ada data untuk filter yang dipilih.
                     </td>
                 </tr>
@@ -634,7 +636,6 @@ $authUserName = auth()->user()->name;
                     <td class="text-end">Rp ${numberFormat(dt.ppn_gl)}</td>
                     <td class="text-end ${selisihClass}">Rp ${numberFormat(Math.abs(dt.selisih_ppn))}</td>
                     <td class="text-center">${statusBadge}</td>
-                    <td>${dt.entity}</td>
                 </tr>
             `;
         }).join('');
@@ -677,6 +678,78 @@ $authUserName = auth()->user()->name;
     function numberFormat(num) {
         return new Intl.NumberFormat('id-ID').format(num);
     }
+
+    function applySearch() {
+        const searchInput = document.getElementById('search-input');
+        const search = searchInput ? searchInput.value.trim() : '';
+
+        // Jika widget aktif, jalankan pencarian via AJAX
+        if (activeWidgetType) {
+            loadFilteredData(activeWidgetType, 1);
+            return;
+        }
+
+        // Jika tidak ada widget, navigasi server-side dengan mempertahankan filter lain
+        const yearSelect = document.querySelector('select[name="year"]');
+        const monthFromSelect = document.querySelector('select[name="month_from"]');
+        const monthToSelect = document.querySelector('select[name="month_to"]');
+        const statusSelect = document.querySelector('select[name="status"]');
+
+        const params = new URLSearchParams();
+        if (yearSelect && yearSelect.value) params.set('year', yearSelect.value);
+        if (monthFromSelect && monthFromSelect.value) params.set('month_from', monthFromSelect.value);
+        if (monthToSelect && monthToSelect.value) params.set('month_to', monthToSelect.value);
+        if (statusSelect && statusSelect.value) params.set('status', statusSelect.value);
+        if (search) params.set('search', search);
+
+        const qs = params.toString();
+        window.location.href = '{{ route("eqtax.index") }}' + (qs ? '?' + qs : '');
+    }
+
+    function clearSearch() {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) searchInput.value = '';
+
+        if (activeWidgetType) {
+            loadFilteredData(activeWidgetType, 1);
+            return;
+        }
+
+        const yearSelect = document.querySelector('select[name="year"]');
+        const monthFromSelect = document.querySelector('select[name="month_from"]');
+        const monthToSelect = document.querySelector('select[name="month_to"]');
+        const statusSelect = document.querySelector('select[name="status"]');
+
+        const params = new URLSearchParams();
+        if (yearSelect && yearSelect.value) params.set('year', yearSelect.value);
+        if (monthFromSelect && monthFromSelect.value) params.set('month_from', monthFromSelect.value);
+        if (monthToSelect && monthToSelect.value) params.set('month_to', monthToSelect.value);
+        if (statusSelect && statusSelect.value) params.set('status', statusSelect.value);
+
+        const qs = params.toString();
+        window.location.href = '{{ route("eqtax.index") }}' + (qs ? '?' + qs : '');
+    }
+
+    document.getElementById('search-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            applySearch();
+        }
+    });
+
+    // Sertakan nilai pencarian saat form filter disubmit
+    document.querySelector('.filter-form').addEventListener('submit', function(e) {
+        let hiddenSearch = this.querySelector('input[name="search"]');
+        if (!hiddenSearch) {
+            hiddenSearch = document.createElement('input');
+            hiddenSearch.type = 'hidden';
+            hiddenSearch.name = 'search';
+            this.appendChild(hiddenSearch);
+        }
+        const searchInput = document.getElementById('search-input');
+        hiddenSearch.value = searchInput ? searchInput.value.trim() : '';
+    });
 
     function resetWidgetFilter() {
         activeWidgetType = null;

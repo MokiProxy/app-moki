@@ -147,15 +147,6 @@ $authUserName = auth()->user()->name;
                             <input type="text" name="search" id="search" class="form-control" placeholder="No Faktur / Nama Supplier / Jurnal No" value="{{ request('search') }}">
                         </div>
                         <div class="col-md-2">
-                            <label for="entity" class="form-label fw-bold">Entity</label>
-                            <select name="entity" id="entity" class="form-select">
-                                <option value="">-- Semua --</option>
-                                @foreach($entities as $ent)
-                                <option value="{{ $ent }}" {{ request('entity') == $ent ? 'selected' : '' }}>{{ $ent }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
                             <label for="sheet" class="form-label fw-bold">Sheet</label>
                             <select name="sheet" id="sheet" class="form-select">
                                 <option value="">-- Semua --</option>
@@ -229,24 +220,6 @@ $authUserName = auth()->user()->name;
                             </div>
                         </div>
                     </div>
-                    @foreach($entitySummary as $entity)
-                    <div class="col-md-2">
-                        <div class="card stat-card bg-indigo-grad">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-1">{{ $entity->entity ?? 'Unknown' }}</h6>
-                                        <h6 class="text-white mb-0">{{ number_format($entity->count) }} records</h6>
-                                        <small class="text-white-50">PPN: Rp {{ number_format($entity->total_ppn, 0, ',', '.') }}</small>
-                                    </div>
-                                    <div class="icon-overlay">
-                                        <i class="fas fa-building"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
                     <div class="col-md-2">
                         <div class="card stat-card bg-emerald-grad">
                             <div class="card-body">
@@ -276,7 +249,6 @@ $authUserName = auth()->user()->name;
                             <tr class="align-middle">
                                 <th>No</th>
                                 <th>Sheet</th>
-                                <th>Entity</th>
                                 <th>No Supplier</th>
                                 <th>Nama Supplier</th>
                                 <th>No Faktur Pajak</th>
@@ -295,7 +267,6 @@ $authUserName = auth()->user()->name;
                             <tr data-id="{{ $dt->id }}">
                                 <td>{{ ($glData->currentPage() - 1) * $glData->perPage() + $key + 1 }}</td>
                                 <td class="editable text-start" data-field="sheet" data-type="text" data-value="{{ $dt->sheet }}">{{ $dt->sheet }}</td>
-                                <td class="editable text-start" data-field="entity" data-type="text" data-value="{{ $dt->entity }}">{{ $dt->entity }}</td>
                                 <td class="editable text-start" data-field="no_supplier" data-type="text" data-value="{{ $dt->no_supplier }}">{{ $dt->no_supplier }}</td>
                                 <td class="editable text-start" data-field="nama_supplier" data-type="text" data-value="{{ $dt->nama_supplier }}">{{ $dt->nama_supplier }}</td>
                                 <td class="editable text-start fw-bold" data-field="no_faktur_pajak" data-type="text" data-value="{{ $dt->no_faktur_pajak }}">{{ $dt->no_faktur_pajak }}</td>
@@ -310,7 +281,7 @@ $authUserName = auth()->user()->name;
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="14" class="text-center text-muted">Belum ada data. Silakan import file GL terlebih dahulu.</td>
+                                <td colspan="13" class="text-center text-muted">Belum ada data. Silakan import file GL terlebih dahulu.</td>
                             </tr>
                             @endforelse
                         </tbody>

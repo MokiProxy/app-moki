@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\EQTAXCoretaxSPT;
 use App\Models\EQTAXEqualizationResult;
 use App\Models\EQTAXGL;
-use App\Models\EQTAXTBData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -24,13 +23,7 @@ class EqualizationController extends Controller
             ->orderBy('masa_pajak', 'desc')
             ->get();
 
-        $distinctEntities = EQTAXGL::select('entity')
-            ->distinct()
-            ->whereNotNull('entity')
-            ->orderBy('entity')
-            ->get();
-
-        return view('eqtax.equalization.index', compact('pageName', 'distinctPeriods', 'distinctEntities'));
+        return view('eqtax.equalization.index', compact('pageName', 'distinctPeriods'));
     }
 
     public function equalization(Request $request)
@@ -42,23 +35,18 @@ class EqualizationController extends Controller
 
         $masaPajak = $request->input('masa_pajak');
         $tahun = $request->input('tahun');
-        $entity = $request->input('entity');
         $period = EQTAXEqualizationResult::toPeriod($masaPajak, $tahun);
 
         $gl_agg = DB::table('eqtax_gl')
             ->select(
                 DB::raw("TRIM(no_faktur_pajak) AS no_faktur_pajak"),
-                'entity',
                 'nama_supplier',
                 DB::raw("SUM(dpp) AS dpp_gl"),
                 DB::raw("SUM(ppn) AS ppn_gl"),
                 DB::raw("COUNT(*) AS jumlah_item")
             )
             ->where('jurnal_date', 'like', "{$this->getJurnalDatePrefix($masaPajak,$tahun)}%")
-            ->when($entity, function ($query) use ($entity) {
-                $query->where('entity', $entity);
-            })
-            ->groupBy(DB::raw("TRIM(no_faktur_pajak)"), 'entity', 'nama_supplier')
+            ->groupBy(DB::raw("TRIM(no_faktur_pajak)"), 'nama_supplier')
             ->get();
 
         $glTotal = $gl_agg->groupBy('no_faktur_pajak')->map(function ($items) {
@@ -67,7 +55,6 @@ class EqualizationController extends Controller
                 'nama_supplier' => $items->first()->nama_supplier,
                 'dpp_gl_total' => $items->sum('dpp_gl'),
                 'ppn_gl_total' => $items->sum('ppn_gl'),
-                'entities' => $items->pluck('entity')->implode(', '),
                 'jumlah_item' => $items->sum('jumlah_item'),
             ];
         })->keyBy('no_faktur_pajak');
@@ -120,7 +107,6 @@ class EqualizationController extends Controller
                 'ppn_gl' => $ppnGl,
                 'selisih_ppn' => $selisih,
                 'status' => $status,
-                'entities' => $gl ? $gl->entities : '-',
                 'jumlah_item_gl' => $gl ? $gl->jumlah_item : 0,
                 'status_faktur' => $spt ? $spt->status_faktur : '-',
             ]);
@@ -129,7 +115,7 @@ class EqualizationController extends Controller
         $results = $results->sortByDesc('selisih_ppn')->values();
 
         // Simpan hasil ekualisasi ke database
-        $this->saveResults($results, $period, $entity);
+        $this->saveResults($results, $period);
 
         $summary = [
             'total_spt' => $sptData->count(),
@@ -142,20 +128,8 @@ class EqualizationController extends Controller
             'count_gl_only' => $results->where('status', 'GL_ONLY')->count(),
             'masa_pajak' => $masaPajak,
             'tahun' => $tahun,
-            'entity' => $entity ?? 'Semua',
             'period' => $period,
         ];
-
-        // Load data TB untuk periode ini
-        $tbData = EQTAXTBData::where('period', $period)
-            ->when($entity, fn($q) => $q->where('entity', $entity))
-            ->first();
-
-        $ppn_tb = $tbData->ppn_tb ?? null;
-
-        $summary['ppn_tb'] = $ppn_tb;
-        $summary['selisih_tb_vs_spt'] = $ppn_tb !== null ? $ppn_tb - $summary['total_ppn_spt'] : null;
-        $summary['selisih_tb_vs_gl'] = $ppn_tb !== null ? $ppn_tb - $summary['total_ppn_gl'] : null;
 
         $pageName = "Ekualisasi Pajak";
         $distinctPeriods = EQTAXCoretaxSPT::select('masa_pajak', 'tahun')
@@ -164,13 +138,7 @@ class EqualizationController extends Controller
             ->orderBy('masa_pajak', 'desc')
             ->get();
 
-        $distinctEntities = EQTAXGL::select('entity')
-            ->distinct()
-            ->whereNotNull('entity')
-            ->orderBy('entity')
-            ->get();
-
-        return view('eqtax.equalization.index', compact('pageName', 'results', 'summary', 'distinctPeriods', 'distinctEntities'));
+        return view('eqtax.equalization.index', compact('pageName', 'results', 'summary', 'distinctPeriods'));
     }
 
     public function export(Request $request)
@@ -182,21 +150,16 @@ class EqualizationController extends Controller
 
         $masaPajak = $request->input('masa_pajak');
         $tahun = $request->input('tahun');
-        $entity = $request->input('entity');
 
         $gl_agg = DB::table('eqtax_gl')
             ->select(
                 DB::raw("TRIM(no_faktur_pajak) AS no_faktur_pajak"),
-                'entity',
                 DB::raw("SUM(dpp) AS dpp_gl"),
                 DB::raw("SUM(ppn) AS ppn_gl"),
                 DB::raw("COUNT(*) AS jumlah_item")
             )
             ->where('jurnal_date', 'like', "{$this->getJurnalDatePrefix($masaPajak,$tahun)}%")
-            ->when($entity, function ($query) use ($entity) {
-                $query->where('entity', $entity);
-            })
-            ->groupBy(DB::raw("TRIM(no_faktur_pajak)"), 'entity')
+            ->groupBy(DB::raw("TRIM(no_faktur_pajak)"))
             ->get();
 
         $glTotal = $gl_agg->groupBy('no_faktur_pajak')->map(function ($items) {
@@ -204,7 +167,6 @@ class EqualizationController extends Controller
                 'no_faktur_pajak' => $items->first()->no_faktur_pajak,
                 'dpp_gl_total' => $items->sum('dpp_gl'),
                 'ppn_gl_total' => $items->sum('ppn_gl'),
-                'entities' => $items->pluck('entity')->implode(', '),
             ];
         })->keyBy('no_faktur_pajak');
 
@@ -250,59 +212,27 @@ class EqualizationController extends Controller
                 'ppn_gl' => $ppnGl,
                 'selisih_ppn' => $ppnSpt - $ppnGl,
                 'status' => $status,
-                'entities' => $gl ? $gl->entities : '-',
             ]);
         }
 
         $summary = [
             'masa_pajak' => $masaPajak,
             'tahun' => $tahun,
-            'entity' => $entity ?? 'Semua',
         ];
 
-        $fileName = "ekualisasi_pajak_{$masaPajak}_{$tahun}" . ($entity ? "_{$entity}" : "") . ".xlsx";
+        $fileName = "ekualisasi_pajak_{$masaPajak}_{$tahun}.xlsx";
 
         return Excel::download(new EqualizationExport($exportData, $summary), $fileName);
     }
 
-    public function saveTB(Request $request)
+    private function saveResults($results, string $period): void
     {
-        $validated = $request->validate([
-            'period'  => 'required|string',
-            'entity'  => 'nullable|string',
-            'ppn_tb'  => 'required|numeric',
-            'keterangan' => 'nullable|string',
-        ]);
-
-        // Upsert: jika sudah ada untuk periode+entity, update; jika belum, insert
-        EQTAXTBData::updateOrCreate(
-            [
-                'period' => $validated['period'],
-                'entity' => $validated['entity'] ?? null,
-            ],
-            [
-                'ppn_tb' => $validated['ppn_tb'],
-                'keterangan' => $validated['keterangan'] ?? null,
-            ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Data TB berhasil disimpan',
-        ]);
-    }
-
-    private function saveResults($results, string $period, ?string $entity): void
-    {
-        // Hapus hasil lama untuk periode + entity yang sama
-        EQTAXEqualizationResult::where('period', $period)
-            ->when($entity, fn($q) => $q->where('entity', $entity))
-            ->delete();
+        // Hapus hasil lama untuk periode yang sama
+        EQTAXEqualizationResult::where('period', $period)->delete();
 
         // Insert batch
         $records = $results->map(fn($r) => [
             'period' => $period,
-            'entity' => $r->entities ?? $entity,
             'no_faktur_pajak' => $r->no_faktur_pajak,
             'nama_penjual' => $r->nama_penjual,
             'dpp_spt' => $r->dpp_spt,

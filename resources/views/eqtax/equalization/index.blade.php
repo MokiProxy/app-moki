@@ -55,10 +55,6 @@ $authUserName = auth()->user()->name;
         background: var(--danger-grad);
     }
 
-    .bg-purple-grad {
-        background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-    }
-
     .icon-overlay {
         position: absolute;
         right: -10px;
@@ -144,7 +140,7 @@ $authUserName = auth()->user()->name;
                 <div class="d-flex align-items-center">
                     <h5 class="mb-0 card-title flex-grow-1">{{ $pageName }}</h5>
                     @if(isset($summary) && isset($results) && $results->count() > 0)
-                    <a href="{{ route('eqtax.equalization.export', ['masa_pajak' => $summary['masa_pajak'], 'tahun' => $summary['tahun'], 'entity' => $summary['entity'] !== 'Semua' ? $summary['entity'] : '']) }}" class="btn btn-success me-2">
+                    <a href="{{ route('eqtax.equalization.export', ['masa_pajak' => $summary['masa_pajak'], 'tahun' => $summary['tahun']]) }}" class="btn btn-success me-2">
                         <i class="mdi mdi-file-excel me-1"></i> Export Excel
                     </a>
                     @endif
@@ -155,7 +151,7 @@ $authUserName = auth()->user()->name;
                 <form action="{{ route('eqtax.equalization.process') }}" method="POST" class="filter-form">
                     @csrf
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="masa_pajak" class="form-label fw-bold">Masa Pajak</label>
                             <select name="masa_pajak" id="masa_pajak" class="form-select" required>
                                 <option value="">-- Pilih Masa Pajak --</option>
@@ -166,7 +162,7 @@ $authUserName = auth()->user()->name;
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="tahun" class="form-label fw-bold">Tahun</label>
                             <select name="tahun" id="tahun" class="form-select" required>
                                 <option value="">-- Pilih Tahun --</option>
@@ -177,18 +173,7 @@ $authUserName = auth()->user()->name;
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label for="entity" class="form-label fw-bold">Entity (Opsional)</label>
-                            <select name="entity" id="entity" class="form-select">
-                                <option value="">-- Semua Entity --</option>
-                                @foreach($distinctEntities as $ent)
-                                <option value="{{ $ent->entity }}" {{ (isset($summary) && $summary['entity'] == $ent->entity) ? 'selected' : '' }}>
-                                    {{ $ent->entity }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-4 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="mdi mdi-cog me-1"></i> Proses Ekualisasi
                             </button>
@@ -197,33 +182,6 @@ $authUserName = auth()->user()->name;
                 </form>
 
                 @if(isset($summary))
-                <div class="card mb-4 border-primary">
-                    <div class="card-body">
-                        <div class="row align-items-center g-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">PPN Trial Balance (TB)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="number" class="form-control" id="ppn_tb_input"
-                                           value="{{ $summary['ppn_tb'] ?? '' }}"
-                                           placeholder="Masukkan total PPN dari TB">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Keterangan</label>
-                                <input type="text" class="form-control" id="tb_keterangan"
-                                       placeholder="Catatan (opsional)">
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-primary w-100" id="btn-save-tb"
-                                        onclick="saveTB()">
-                                    <i class="fas fa-save me-1"></i> Simpan TB
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
                         <div class="card stat-card bg-indigo-grad">
@@ -292,7 +250,7 @@ $authUserName = auth()->user()->name;
                 </div>
 
                 <div class="row g-3 mb-4">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card stat-card bg-amber-grad">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -308,7 +266,7 @@ $authUserName = auth()->user()->name;
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card stat-card bg-red-grad">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -324,7 +282,7 @@ $authUserName = auth()->user()->name;
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card stat-card bg-info-grad">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -337,103 +295,6 @@ $authUserName = auth()->user()->name;
                                     </div>
                                 </div>
                                 <small class="text-white-50">Tahun {{ $summary['tahun'] }}</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card bg-indigo-grad">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-1">Entity</h6>
-                                        <h4 class="text-white mb-0" style="font-size: 1.1rem;">{{ $summary['entity'] }}</h4>
-                                    </div>
-                                    <div class="icon-overlay">
-                                        <i class="fas fa-building"></i>
-                                    </div>
-                                </div>
-                                <small class="text-white-50">Filter yang dipilih</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3">
-                        <div class="card stat-card bg-purple-grad">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-1">PPN Trial Balance</h6>
-                                        <h4 class="text-white mb-0">
-                                            @if($summary['ppn_tb'] !== null)
-                                                Rp {{ number_format($summary['ppn_tb'], 0, ',', '.') }}
-                                            @else
-                                                -
-                                            @endif
-                                        </h4>
-                                    </div>
-                                    <div class="icon-overlay">
-                                        <i class="fas fa-balance-scale-left"></i>
-                                    </div>
-                                </div>
-                                <small class="text-white-50">Data dari TB (input manual)</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card {{ ($summary['selisih_tb_vs_spt'] ?? 0) >= 0 ? 'bg-emerald-grad' : 'bg-red-grad' }}">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-1">Selisih TB vs SPT</h6>
-                                        <h4 class="text-white mb-0">
-                                            @if($summary['selisih_tb_vs_spt'] !== null)
-                                                Rp {{ number_format(abs($summary['selisih_tb_vs_spt']), 0, ',', '.') }}
-                                            @else
-                                                -
-                                            @endif
-                                        </h4>
-                                    </div>
-                                    <div class="icon-overlay">
-                                        <i class="fas fa-not-equal"></i>
-                                    </div>
-                                </div>
-                                <small class="text-white-50">
-                                    @if($summary['selisih_tb_vs_spt'] !== null)
-                                        TB {{ $summary['selisih_tb_vs_spt'] >= 0 ? 'lebih besar' : 'lebih kecil' }} dari SPT
-                                    @else
-                                        Input TB terlebih dahulu
-                                    @endif
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card {{ ($summary['selisih_tb_vs_gl'] ?? 0) >= 0 ? 'bg-emerald-grad' : 'bg-red-grad' }}">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white mb-1">Selisih TB vs GL</h6>
-                                        <h4 class="text-white mb-0">
-                                            @if($summary['selisih_tb_vs_gl'] !== null)
-                                                Rp {{ number_format(abs($summary['selisih_tb_vs_gl']), 0, ',', '.') }}
-                                            @else
-                                                -
-                                            @endif
-                                        </h4>
-                                    </div>
-                                    <div class="icon-overlay">
-                                        <i class="fas fa-not-equal"></i>
-                                    </div>
-                                </div>
-                                <small class="text-white-50">
-                                    @if($summary['selisih_tb_vs_gl'] !== null)
-                                        TB {{ $summary['selisih_tb_vs_gl'] >= 0 ? 'lebih besar' : 'lebih kecil' }} dari GL
-                                    @else
-                                        Input TB terlebih dahulu
-                                    @endif
-                                </small>
                             </div>
                         </div>
                     </div>
@@ -452,7 +313,6 @@ $authUserName = auth()->user()->name;
                                 <th>PPN GL</th>
                                 <th>Selisih PPN</th>
                                 <th>Status</th>
-                                <th>Entity</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -477,11 +337,10 @@ $authUserName = auth()->user()->name;
                                         <span class="status-gl-only">GL Only</span>
                                     @endif
                                 </td>
-                                <td>{{ $dt->entities }}</td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="10" class="text-center text-muted">Belum ada data. Silakan proses ekualisasi terlebih dahulu.</td>
+                                <td colspan="9" class="text-center text-muted">Belum ada data. Silakan proses ekualisasi terlebih dahulu.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -515,24 +374,5 @@ $authUserName = auth()->user()->name;
             }
         });
     });
-
-    function showToast(type, message) {
-        const icon = type === 'success' ? 'fa-check-circle text-success' : 'fa-exclamation-circle text-danger';
-        const $toast = $(`<div class="toast show" role="alert"><div class="toast-body d-flex align-items-center"><i class="fas ${icon} me-2"></i>${message}</div></div>`);
-        $('#toastContainer').append($toast);
-        setTimeout(() => $toast.fadeOut(300, () => $toast.remove()), 3000);
-    }
-
-    function saveTB() {
-        const ppnTb = $('#ppn_tb_input').val();
-        const keterangan = $('#tb_keterangan').val();
-
-        if (ppnTb === '' || isNaN(ppnTb)) {
-            showToast('error', 'Masukkan angka PPN TB yang valid');
-            return;
-        }
-
-
-    }
 </script>
 @endsection

@@ -4,6 +4,7 @@ use App\Http\Controllers\EQTax\DashboardController;
 use App\Http\Controllers\EQTax\EqualizationController;
 use App\Http\Controllers\EQTax\GLController;
 use App\Http\Controllers\EQTax\SPTCoretaxController;
+use App\Http\Controllers\EQTax\TBController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix("eqtax")->name("eqtax.")->group(function () {
@@ -31,6 +32,11 @@ Route::prefix("eqtax")->name("eqtax.")->group(function () {
         Route::get("/", [EqualizationController::class, "index"])->name("index");
         Route::post("/process", [EqualizationController::class, "equalization"])->name("process");
         Route::get("/export", [EqualizationController::class, "export"])->name("export");
-        Route::post("/save-tb", [EqualizationController::class, "saveTB"])->name("save-tb");
+    });
+
+    Route::prefix('tb')->name('tb.')->group(function () {
+        Route::get("/", [TBController::class, "index"])->name("index");
+        Route::post("/process", [TBController::class, "process"])->name("process");
+        Route::post("/save", [TBController::class, "save"])->name("save");
     });
 });

@@ -1,348 +1,164 @@
-# Planning: Implementasi Input TB (Trial Balance) pada Modul EQTax
+# Planning: Implementasi Pencocokkan TB (Trial Balance) — Menu Terpisah
 
 ## Overview
 
-User ingin menambahkan fitur input **TB (Trial Balance / Neraca Saldo)** berupa **satu angka total PPN** yang diinput manual oleh user. Angka ini kemudian dibandingkan dengan total PPN SPT dan total PPN GL yang sudah ada di sistem.
+Fitur pencocokkan TB (Trial Balance / Neraca Saldo) dijadikan **menu tersendiri** agar tidak bercampur dengan halaman Ekualisasi Pajak. User input angka total PPN dari TB, lalu sistem membandingkannya dengan total PPN SPT dan total PPN GL.
 
-**Pendekatan**: Input manual satu angka → simpan di tabel terpisah → tampilkan perbandingan di halaman ekualisasi.
-
----
-
-## 1. Apa itu TB (Trial Balance)?
-
-**Trial Balance** atau **Neraca Saldo** adalah laporan akuntansi yang berisi daftar seluruh akun dalam buku besar beserta saldo akhirnya pada periode tertentu. Dalam konteks PPN, yang relevan adalah saldo akun **PPN Masukan** dan **PPN Keluaran** di TB.
-
-### Konteks dalam Ekualisasi Pajak
-
-```
-SPT PPN (laporan ke DJP)     →  Total PPN dari faktur pajak
-GL (buku besar detail)        →  Total PPN dari jurnal accounting
-TB (neraca saldo)             →  Total PPN dari saldo akun ( REFERENSI )
-```
-
-TB berfungsi sebagai **angka referensi** dari laporan keuangan perusahaan. Jika TB tidak cocok dengan SPT atau GL, berarti ada selisih yang perlu dijelaskan.
+**Pendekatan**: Menu sidebar baru → halaman khusus TB → input manual → tampilkan perbandingan.
 
 ---
 
-## 2. Arsitektur Saat Ini
+## 1. Arsitektur
 
 ```
-eqtax_coretax_spt (SPT) ──┐
-                           ├──→ EqualizationController ──→ eqtax_equalization_results
-eqtax_gl (GL) ────────────┘
+Sidebar:
+  ├── Dashboard
+  ├── SPT Coretax
+  ├── General Ledger
+  ├── Ekualisasi Pajak        (SPT vs GL — tanpa input TB)
+  ├── Pencocokkan TB           ← MENU BARU
+  └── Back to Portal
 ```
 
-### Setelah Implementasi TB
+### Flow User
 
 ```
-eqtax_coretax_spt (SPT) ──┐
-                           ├──→ EqualizationController ──→ eqtax_equalization_results
-eqtax_gl (GL) ────────────┘
-                                                        ←── eqtax_tb_data (input manual)
+1. User buka menu "Pencocokkan TB"
+2. Pilih periode (masa_pajak + tahun)
+3. Klik "Proses Pencocokkan"
+4. Sistem load: Total PPN SPT + Total PPN GL + input user PPN TB
+5. User input angka PPN TB → klik "Simpan TB"
+6. Tabel pencocokkan muncul:
+   - Total PPN SPT:     Rp 1.000.000.000
+   - Total PPN GL:      Rp   950.000.000
+   - PPN Trial Balance:  Rp   980.000.000
+   - Selisih TB vs SPT:  Rp   20.000.000
+   - Selisih TB vs GL:   Rp   30.000.000
+7. User bisa update angka TB kapan saja
 ```
-
-TB **bukan di-join** ke equalization per faktur pajak. TB hanya dibandingkan di **level total (summary)**.
 
 ---
 
-## 3. Database Changes
+## 2. Database
 
-### 3.1 Tabel Baru: `eqtax_tb_data`
+Tabel `eqtax_tb_data` (sudah ada):
 
 ```php
 Schema::create('eqtax_tb_data', function (Blueprint $table) {
     $table->id();
     $table->string('period')->nullable();        // format "2026-02"
-    $table->string('entity')->nullable();        // SBHO, TJMO, PLTR (opsional)
-    $table->double('ppn_tb')->nullable();        // total PPN dari TB (angka user input)
-    $table->text('keterangan')->nullable();      // catatan opsional
+    $table->double('ppn_tb')->nullable();        // total PPN dari TB
+    $table->text('keterangan')->nullable();
     $table->timestamps();
-
     $table->index('period');
-    $table->index('entity');
 });
 ```
 
-### 3.2 Model Baru: `EQTAXTBData`
+---
+
+## 3. Routes
 
 ```php
-namespace App\Models;
+// routes/routers/eqtax.php
 
-use Illuminate\Database\Eloquent\Model;
-
-class EQTAXTBData extends Model
-{
-    protected $table = 'eqtax_tb_data';
-
-    protected $fillable = ['period', 'entity', 'ppn_tb', 'keterangan'];
-
-    public function scopePeriod($query, $period) {
-        return $query->where('period', $period);
-    }
-
-    public function scopeEntity($query, $entity) {
-        return $query->where('entity', $entity);
-    }
-}
+Route::prefix('tb')->name('tb.')->group(function () {
+    Route::get("/", [TBController::class, "index"])->name("index");
+    Route::post("/process", [TBController::class, "process"])->name("process");
+    Route::post("/save", [TBController::class, "save"])->name("save");
+});
 ```
+
+Route `save-tb` di equalization sudah dihapus.
 
 ---
 
-## 4. Routes Baru
+## 4. Controller: `TBController`
 
-```php
-// routes/routers/eqtax.php — tambahkan di prefix('equalization')
+**File**: `app/Http/Controllers/EQTax/TBController.php`
 
-Route::post('/save-tb', [EqualizationController::class, 'saveTB'])
-    ->name('equalization.save-tb');
-```
-
-Tidak perlu route GET terpisah — data TB di-load bersamaan saat ekualisasi diproses.
-
----
-
-## 5. Controller Changes
-
-### 5.1 `EqualizationController::equalization()` — Load data TB
-
-Tambahkan di method `equalization()`, setelah build `$summary`:
-
-```php
-// Load data TB untuk periode ini
-$tbData = \App\Models\EQTAXTBData::where('period', $period)
-    ->when($entity, fn($q) => $q->where('entity', $entity))
-    ->first();
-
-$ppn_tb = $tbData->ppn_tb ?? null;
-
-// Tambahkan ke summary
-$summary['ppn_tb'] = $ppn_tb;
-$summary['selisih_tb_vs_spt'] = $ppn_tb !== null ? $ppn_tb - $summary['total_ppn_spt'] : null;
-$summary['selisih_tb_vs_gl'] = $ppn_tb !== null ? $ppn_tb - $summary['total_ppn_gl'] : null;
-```
-
-### 5.2 `EqualizationController::saveTB()` — Simpan data TB
-
-```php
-public function saveTB(Request $request)
-{
-    $validated = $request->validate([
-        'period'  => 'required|string',
-        'entity'  => 'nullable|string',
-        'ppn_tb'  => 'required|numeric',
-        'keterangan' => 'nullable|string',
-    ]);
-
-    // Upsert: jika sudah ada untuk periode+entity, update; jika belum, insert
-    \App\Models\EQTAXTBData::updateOrCreate(
-        [
-            'period' => $validated['period'],
-            'entity' => $validated['entity'] ?? null,
-        ],
-        [
-            'ppn_tb' => $validated['ppn_tb'],
-            'keterangan' => $validated['keterangan'] ?? null,
-        ]
-    );
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Data TB berhasil disimpan',
-    ]);
-}
-```
+| Method | Fungsi |
+|--------|--------|
+| `index()` | Load distinct periods, render view |
+| `process()` | Hitung total PPN SPT & GL, load TB, hitung selisih, return view |
+| `save()` | Upsert data TB ke `eqtax_tb_data` |
+| `getJurnalDatePrefix()` | Helper map bulan Indonesia ke numeric prefix |
 
 ---
 
-## 6. View Changes
+## 5. View: `eqtax/tb/index.blade.php`
 
-### 6.1 Equalization View (`eqtax/equalization/index.blade.php`)
+**File**: `resources/views/eqtax/tb/index.blade.php`
 
-#### A. Tambah Input Field TB
+Struktur halaman:
+- Info box penjelasan Trial Balance
+- Filter form: Masa Pajak + Tahun + Tombol "Proses Pencocokkan"
+- Input card: PPN TB (input angka) + Keterangan + Tombol "Simpan TB"
+- 3 stat card: Total PPN SPT, Total PPN GL, PPN Trial Balance
+- 2 stat card: Selisih TB vs SPT, Selisih TB vs GL
+- 1 stat card: Masa Pajak
 
-Di bawah form Proses Ekualisasi, tambahkan **card kecil** untuk input TB:
+---
+
+## 6. Sidebar
+
+**File**: `resources/views/layouts/partials/eqtax/app-sidebar.blade.php`
+
+Menu baru ditambahkan setelah "Ekualisasi Pajak":
 
 ```html
-@if(isset($summary))
-<div class="card mb-4 border-primary">
-    <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-md-4">
-                <label class="form-label fw-bold">PPN Trial Balance (TB)</label>
-                <div class="input-group">
-                    <span class="input-group-text">Rp</span>
-                    <input type="number" class="form-control" id="ppn_tb_input"
-                           value="{{ $summary['ppn_tb'] ?? '' }}"
-                           placeholder="Masukkan total PPN dari TB">
-                </div>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-bold">Keterangan</label>
-                <input type="text" class="form-control" id="tb_keterangan"
-                       placeholder="Catatan (opsional)">
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="button" class="btn btn-primary" id="btn-save-tb"
-                        onclick="saveTB()">
-                    <i class="fas fa-save me-1"></i> Simpan TB
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
-```
-
-#### B. Tambah Stat Card TB
-
-Di baris stat cards pertama (Total PPN SPT, Total PPN GL, Total Selisih), tambahkan **2 card baru**:
-
-```html
-{{-- Card PPN TB --}}
-<div class="col-md-3">
-    <div class="card stat-card bg-purple-grad">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="text-white mb-1">PPN Trial Balance</h6>
-                    <h4 class="text-white mb-0">
-                        @if($summary['ppn_tb'] !== null)
-                            Rp {{ number_format($summary['ppn_tb'], 0, ',', '.') }}
-                        @else
-                            -
-                        @endif
-                    </h4>
-                </div>
-                <div class="icon-overlay">
-                    <i class="fas fa-balance-scale-left"></i>
-                </div>
-            </div>
-            <small class="text-white-50">Data dari TB (input manual)</small>
-        </div>
-    </div>
-</div>
-
-{{-- Card Selisih TB vs SPT --}}
-<div class="col-md-3">
-    <div class="card stat-card {{ ($summary['selisih_tb_vs_spt'] ?? 0) >= 0 ? 'bg-emerald-grad' : 'bg-red-grad' }}">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="text-white mb-1">Selisih TB vs SPT</h6>
-                    <h4 class="text-white mb-0">
-                        @if($summary['selisih_tb_vs_spt'] !== null)
-                            Rp {{ number_format(abs($summary['selisih_tb_vs_spt']), 0, ',', '.') }}
-                        @else
-                            -
-                        @endif
-                    </h4>
-                </div>
-                <div class="icon-overlay">
-                    <i class="fas fa-not-equal"></i>
-                </div>
-            </div>
-            <small class="text-white-50">
-                @if($summary['selisih_tb_vs_spt'] !== null)
-                    TB {{ $summary['selisih_tb_vs_spt'] >= 0 ? 'lebih besar' : 'lebih kecil' }} dari SPT
-                @else
-                    Input TB terlebih dahulu
-                @endif
-            </small>
-        </div>
-    </div>
-</div>
-```
-
-#### C. Tambah JavaScript `saveTB()`
-
-```javascript
-function saveTB() {
-    const ppnTb = $('#ppn_tb_input').val();
-    const keterangan = $('#tb_keterangan').val();
-
-    if (ppnTb === '' || isNaN(ppnTb)) {
-        showToast('error', 'Masukkan angka PPN TB yang valid');
-        return;
-    }
-
-    $.ajax({
-        url: '{{ route("eqtax.equalization.save-tb") }}',
-        type: 'POST',
-        data: JSON.stringify({
-            period: '{{ $summary["masa_pajak"] }}-{{ $summary["tahun"] }}',
-            entity: '{{ $summary["entity"] !== "Semua" ? $summary["entity"] : "" }}',
-            ppn_tb: parseFloat(ppnTb),
-            keterangan: keterangan
-        }),
-        contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-            if (response.success) {
-                showToast('success', response.message);
-                location.reload();
-            }
-        },
-        error: function(xhr) {
-            showToast('error', xhr.responseJSON?.message || 'Gagal menyimpan');
-        }
-    });
-}
+<li>
+    <a href="{{ route('eqtax.tb.index') }}" class="waves-effect">
+        <i class="bx bx-balloon"></i>
+        <span key="t-tb">Pencocokkan TB</span>
+    </a>
+</li>
 ```
 
 ---
 
-## 7. Flow User
+## 7. Perubahan di Equalization
 
-```
-1. User proses ekualisasi (SPT vs GL)
-2. Tabel hasil ekualisasi muncul + stat cards
-3. Di bawah form, ada card "PPN Trial Balance"
-4. User input angka total PPN dari TB mereka → klik "Simpan TB"
-5. Stat card menampilkan perbandingan:
-   - Total PPN SPT:    Rp 1.000.000.000
-   - Total PPN GL:     Rp   950.000.000
-   - PPN Trial Balance: Rp   980.000.000  ← dari input user
-   - Selisih TB vs SPT: Rp  20.000.000
-   - Selisih TB vs GL:  Rp  30.000.000
-6. User bisa update angka TB kapan saja
-```
+### Dihapus dari EqualizationController:
+- `use App\Models\EQTAXTBData` import
+- Load TB data di method `equalization()`
+- Method `saveTB()`
+
+### Dihapus dari equalization view:
+- Card input TB (PPN TB input + keterangan + tombol simpan)
+- Stat card PPN TB, Selisih TB vs SPT, Selisih TB vs GL
+- JavaScript `saveTB()`
+- CSS `bg-purple-grad`
 
 ---
 
-## 8. File yang Perlu Diubah/Dibuat
+## 8. File yang Diubah/Dibuat
 
 | No | File | Aksi | Keterangan |
 |----|------|------|-----------|
-| 1 | `database/migrations/xxxx_create_eqtax_tb_data_table.php` | **BARU** | Tabel TB |
-| 2 | `app/Models/EQTAXTBData.php` | **BARU** | Model TB |
-| 3 | `routes/routers/eqtax.php` | **EDIT** | Tambah route `save-tb` |
-| 4 | `app/Http/Controllers/EQTax/EqualizationController.php` | **EDIT** | Tambah `saveTB()`, update `equalization()` |
-| 5 | `resources/views/eqtax/equalization/index.blade.php` | **EDIT** | Tambah input TB, stat card TB, JS |
+| 1 | `database/migrations/xxxx_create_eqtax_tb_data_table.php` | **ADA** | Tabel TB (sudah ada) |
+| 2 | `app/Models/EQTAXTBData.php` | **ADA** | Model TB (sudah ada) |
+| 3 | `app/Http/Controllers/EQTax/TBController.php` | **BARU** | Controller khusus TB |
+| 4 | `routes/routers/eqtax.php` | **EDIT** | Hapus save-tb dari equalization, tambah routes TB |
+| 5 | `resources/views/eqtax/tb/index.blade.php` | **BARU** | View pencocokkan TB |
+| 6 | `resources/views/layouts/partials/eqtax/app-sidebar.blade.php` | **EDIT** | Tambah menu "Pencocokkan TB" |
+| 7 | `app/Http/Controllers/EQTax/EqualizationController.php` | **EDIT** | Hapus saveTB(), hapus load TB |
+| 8 | `resources/views/eqtax/equalization/index.blade.php` | **EDIT** | Hapus semua TB-related code |
 
 ---
 
-## 9. CSS Tambahan
-
-```css
-.bg-purple-grad {
-    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-}
-```
-
----
-
-## 10. Checklist
+## 9. Checklist
 
 - [x] Buat planning document ini
-- [ ] Buat migration `eqtax_tb_data`
-- [ ] Buat model `EQTAXTBData`
-- [ ] Tambah route `eqtax.equalization.save-tb`
-- [ ] Implement `EqualizationController::saveTB()`
-- [ ] Update `EqualizationController::equalization()` — load data TB
-- [ ] Tambah input field TB di equalization view
-- [ ] Tambah stat card TB + Selisih TB vs SPT
-- [ ] Tambah JavaScript `saveTB()` + toast
-- [ ] Tambah CSS `bg-purple-grad`
-- [ ] Test input TB → simpan → stat card update
-- [ ] Test update TB → simpan → stat card update
-- [ ] Validasi PHP syntax
+- [x] Buat `TBController`
+- [x] Tambah routes TB (`eqtax.tb.index`, `eqtax.tb.process`, `eqtax.tb.save`)
+- [x] Hapus route `save-tb` dari equalization
+- [x] Buat view `eqtax/tb/index.blade.php`
+- [x] Tambah menu "Pencocokkan TB" di sidebar
+- [x] Hapus `saveTB()` dari EqualizationController
+- [x] Hapus load TB dari `EqualizationController::equalization()`
+- [x] Hapus input TB card dari equalization view
+- [x] Hapus stat card TB dari equalization view
+- [x] Hapus JavaScript `saveTB()` dari equalization view
+- [x] Hapus CSS `bg-purple-grad` dari equalization view
+- [x] Test halaman Pencocokkan TB → proses → input → simpan
+- [x] Test halaman Ekualisasi → tidak ada TB code

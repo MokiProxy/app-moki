@@ -3,12 +3,10 @@
 namespace App\Imports;
 
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
-class PPNSheetImport implements WithMultipleSheets
+class GLImport implements WithMultipleSheets
 {
     public array $result = [];
     protected string $filePath;
@@ -20,14 +18,11 @@ class PPNSheetImport implements WithMultipleSheets
 
     public function sheets(): array
     {
-        $sheetsArray = [];
-
         $spreadsheet = IOFactory::load($this->filePath);
+        $firstSheetName = $spreadsheet->getSheetNames()[0] ?? 'Sheet1';
 
-        foreach ($spreadsheet->getSheetNames() as $sheetName) {
-            $sheetsArray[$sheetName] = new PPNSingleSheetImport($sheetName, $this);
-        }
-
-        return $sheetsArray;
+        return [
+            $firstSheetName => new GLSheetImport($firstSheetName, $this),
+        ];
     }
 }

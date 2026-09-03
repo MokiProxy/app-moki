@@ -73,7 +73,6 @@ class EqualizationExport implements FromCollection, WithHeadings, WithMapping, S
             'H' => 18,
             'I' => 18,
             'J' => 14,
-            'K' => 20,
         ];
     }
 
@@ -90,7 +89,6 @@ class EqualizationExport implements FromCollection, WithHeadings, WithMapping, S
             'PPN GL',
             'Selisih PPN',
             'Status',
-            'Entity',
         ];
     }
 
@@ -109,7 +107,6 @@ class EqualizationExport implements FromCollection, WithHeadings, WithMapping, S
             $item->ppn_gl ?? 0,
             $item->selisih_ppn ?? 0,
             $item->status ?? '-',
-            $item->entities ?? '-',
         ];
     }
 
@@ -138,7 +135,7 @@ class EqualizationExport implements FromCollection, WithHeadings, WithMapping, S
         $sheet->setCellValue('A1', 'LAPORAN EKUALISASI PAJAK');
         $sheet->mergeCells("A1:{$lastColumn}1");
 
-        $meta = 'Masa Pajak: '.$this->summary['masa_pajak'].' | Tahun: '.$this->summary['tahun'].' | Entity: '.$this->summary['entity'];
+        $meta = 'Masa Pajak: '.$this->summary['masa_pajak'].' | Tahun: '.$this->summary['tahun'];
         $meta .= ' | Dibuat: '.now()->format('d-m-Y H:i:s');
         $sheet->setCellValue('A2', $meta);
         $sheet->mergeCells("A2:{$lastColumn}2");

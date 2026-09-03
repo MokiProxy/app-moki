@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\EQTax;
 
 use App\Http\Controllers\Controller;
-use App\Imports\PPNSheetImport;
+use App\Imports\GLImport;
 use App\Models\EQTAXGL;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,10 +27,6 @@ class GLController extends Controller
             });
         }
 
-        if ($request->filled('entity')) {
-            $query->where('entity', $request->input('entity'));
-        }
-
         if ($request->filled('sheet')) {
             $query->where('sheet', $request->input('sheet'));
         }
@@ -47,13 +43,9 @@ class GLController extends Controller
         $totalRecords = EQTAXGL::count();
         $totalPpn = EQTAXGL::sum('ppn');
         $totalDpp = EQTAXGL::sum('dpp');
-        $entitySummary = EQTAXGL::select('entity', DB::raw('COUNT(*) as count'), DB::raw('SUM(dpp) as total_dpp'), DB::raw('SUM(ppn) as total_ppn'))
-            ->groupBy('entity')
-            ->get();
-        $entities = EQTAXGL::select('entity')->distinct()->whereNotNull('entity')->orderBy('entity')->pluck('entity');
         $sheets = EQTAXGL::select('sheet')->distinct()->whereNotNull('sheet')->orderBy('sheet')->pluck('sheet');
 
-        return view("eqtax.gl.index", compact("pageName", "glData", "totalRecords", "totalPpn", "totalDpp", "entitySummary", "entities", "sheets"));
+        return view("eqtax.gl.index", compact("pageName", "glData", "totalRecords", "totalPpn", "totalDpp", "sheets"));
     }
 
     public function import(Request $request)
@@ -62,7 +54,7 @@ class GLController extends Controller
             'file' => 'required|mimes:xlsx,xls,csv'
         ]);
 
-        $import = new PPNSheetImport($request->file('file'));
+        $import = new GLImport($request->file('file'));
         Excel::import($import, $request->file('file'));
 
         if (empty($import->result)) {

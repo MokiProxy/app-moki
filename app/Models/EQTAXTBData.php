@@ -11,15 +11,10 @@ class EQTAXTBData extends Model
 
     protected $table = 'eqtax_tb_data';
 
-    protected $fillable = ['period', 'entity', 'ppn_tb', 'keterangan'];
+    protected $fillable = ['period', 'ppn_tb', 'keterangan'];
 
     public function scopePeriod($query, $period)
     {
         return $query->where('period', $period);
-    }
-
-    public function scopeEntity($query, $entity)
-    {
-        return $query->where('entity', $entity);
     }
 }

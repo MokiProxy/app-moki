@@ -37,6 +37,13 @@ $roleColor = "primary-it-admin";
         </li>
 
         <li>
+            <a href="{{ route('eqtax.tb.index') }}" class="waves-effect">
+                <i class="bx bx-balloon"></i>
+                <span key="t-tb">Pencocokkan TB</span>
+            </a>
+        </li>
+
+        <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">
                 <i class="bx bx-grid-alt text-{{ $roleColor }}"></i>
                 <span key="t-back-portal" class="fw-bold">Back to Portal</span>
