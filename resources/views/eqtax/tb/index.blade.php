@@ -110,6 +110,7 @@ $authUserName = auth()->user()->name;
             </div>
 
             <div class="card-body">
+                @can('eqtax.tb.process')
                 <form action="{{ route('eqtax.tb.process') }}" method="POST" class="filter-form">
                     @csrf
                     <div class="row g-3">
@@ -142,8 +143,10 @@ $authUserName = auth()->user()->name;
                         </div>
                     </div>
                 </form>
+                @endcan
 
                 @if(isset($summary))
+                @can('eqtax.tb.save')
                 <div class="card mb-4 border-primary">
                     <div class="card-body">
                         <div class="row align-items-center g-3">
@@ -152,7 +155,7 @@ $authUserName = auth()->user()->name;
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
                                     <input type="text" class="form-control" id="ppn_tb_input"
-                                           value="{{ isset($summary['ppn_tb']) && $summary['ppn_tb'] !== null ? number_format($summary['ppn_tb'], 0, ',', '.') : '' }}"
+                                           value="{{ isset($summary['ppn_tb']) && $summary['ppn_tb'] !== null ? format_number($summary['ppn_tb']) : '' }}"
                                            placeholder="Masukkan total PPN dari TB"
                                            oninput="formatNumberInput(this)">
                                 </div>
@@ -172,6 +175,7 @@ $authUserName = auth()->user()->name;
                         </div>
                     </div>
                 </div>
+                @endcan
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
@@ -180,7 +184,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total PPN SPT</h6>
-                                        <h4 class="text-white mb-0">Rp {{ number_format($summary['total_ppn_spt'], 0, ',', '.') }}</h4>
+                                        <h4 class="text-white mb-0">{{ format_rupiah($summary['total_ppn_spt']) }}</h4>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-file-invoice-dollar"></i>
@@ -196,7 +200,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total PPN GL</h6>
-                                        <h4 class="text-white mb-0">Rp {{ number_format($summary['total_ppn_gl'], 0, ',', '.') }}</h4>
+                                        <h4 class="text-white mb-0">{{ format_rupiah($summary['total_ppn_gl']) }}</h4>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-book"></i>
@@ -214,7 +218,7 @@ $authUserName = auth()->user()->name;
                                         <h6 class="text-white mb-1">PPN Trial Balance</h6>
                                         <h4 class="text-white mb-0">
                                             @if($summary['ppn_tb'] !== null)
-                                                Rp {{ number_format($summary['ppn_tb'], 0, ',', '.') }}
+                                                {{ format_rupiah($summary['ppn_tb']) }}
                                             @else
                                                 -
                                             @endif
@@ -239,7 +243,7 @@ $authUserName = auth()->user()->name;
                                         <h6 class="text-white mb-1">Selisih TB vs SPT</h6>
                                         <h4 class="text-white mb-0">
                                             @if($summary['selisih_tb_vs_spt'] !== null)
-                                                Rp {{ number_format(abs($summary['selisih_tb_vs_spt']), 0, ',', '.') }}
+                                                {{ format_rupiah(abs($summary['selisih_tb_vs_spt'])) }}
                                             @else
                                                 -
                                             @endif
@@ -267,7 +271,7 @@ $authUserName = auth()->user()->name;
                                         <h6 class="text-white mb-1">Selisih TB vs GL</h6>
                                         <h4 class="text-white mb-0">
                                             @if($summary['selisih_tb_vs_gl'] !== null)
-                                                Rp {{ number_format(abs($summary['selisih_tb_vs_gl']), 0, ',', '.') }}
+                                                {{ format_rupiah(abs($summary['selisih_tb_vs_gl'])) }}
                                             @else
                                                 -
                                             @endif

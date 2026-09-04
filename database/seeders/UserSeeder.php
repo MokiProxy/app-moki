@@ -75,6 +75,14 @@ class UserSeeder extends Seeder
                 'employee_id' => '2025086',
                 'role'        => ["helpdesk-technician", "staff"],
             ],
+            [
+                'name'        => 'Rudi',
+                'nopeg'       => '2025087',
+                'email'       => 'rudi@satriabahana.co.id',
+                'password'    => Hash::make('password'),
+                'employee_id' => '2025087',
+                'role'        => ["eqtax-user", "staff"],
+            ],
         ];
 
         foreach ($users as $item) {

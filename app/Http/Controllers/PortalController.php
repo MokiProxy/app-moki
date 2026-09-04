@@ -86,7 +86,7 @@ class PortalController extends Controller
                 'sub'   => 'EQTAX',
                 'icon'  => 'mdi-percent',
                 'color' => '#276F27',
-                'permission' => 'dokter.menu',
+                'permission' => 'eqtax.menu',
                 'link'  => route('eqtax.index')
             ],
             [

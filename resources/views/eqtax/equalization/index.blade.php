@@ -91,6 +91,15 @@ $authUserName = auth()->user()->name;
         font-weight: 600;
     }
 
+    .status-to-be-check {
+        background-color: #e0e7ff;
+        color: #3730a3;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
     .selisih-positive {
         color: #059669;
         font-weight: 600;
@@ -139,15 +148,18 @@ $authUserName = auth()->user()->name;
             <div class="card-body border-bottom bg-light">
                 <div class="d-flex align-items-center">
                     <h5 class="mb-0 card-title flex-grow-1">{{ $pageName }}</h5>
+                    @can('eqtax.equalization.export')
                     @if(isset($summary) && isset($results) && $results->count() > 0)
                     <a href="{{ route('eqtax.equalization.export', ['masa_pajak' => $summary['masa_pajak'], 'tahun' => $summary['tahun']]) }}" class="btn btn-success me-2">
                         <i class="mdi mdi-file-excel me-1"></i> Export Excel
                     </a>
                     @endif
+                    @endcan
                 </div>
             </div>
 
             <div class="card-body">
+                @can('eqtax.equalization.process')
                 <form action="{{ route('eqtax.equalization.process') }}" method="POST" class="filter-form">
                     @csrf
                     <div class="row g-3">
@@ -180,6 +192,7 @@ $authUserName = auth()->user()->name;
                         </div>
                     </div>
                 </form>
+                @endcan
 
                 @if(isset($summary))
                 <div class="row g-3 mb-4">
@@ -189,7 +202,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total PPN SPT</h6>
-                                        <h4 class="text-white mb-0">Rp {{ number_format($summary['total_ppn_spt'], 0, ',', '.') }}</h4>
+                                        <h4 class="text-white mb-0">{{ format_rupiah($summary['total_ppn_spt']) }}</h4>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-file-invoice-dollar"></i>
@@ -205,7 +218,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total PPN GL</h6>
-                                        <h4 class="text-white mb-0">Rp {{ number_format($summary['total_ppn_gl'], 0, ',', '.') }}</h4>
+                                        <h4 class="text-white mb-0">{{ format_rupiah($summary['total_ppn_gl']) }}</h4>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-book"></i>
@@ -221,7 +234,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total Selisih PPN</h6>
-                                        <h4 class="text-white mb-0">Rp {{ number_format($summary['total_selisih'], 0, ',', '.') }}</h4>
+                                        <h4 class="text-white mb-0">{{ format_rupiah($summary['total_selisih']) }}</h4>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-balance-scale"></i>
@@ -306,7 +319,7 @@ $authUserName = auth()->user()->name;
                             <tr class="align-middle">
                                 <th>No</th>
                                 <th>No Faktur Pajak</th>
-                                <th>Nama Penjual</th>
+                                <th>Nama Penjual/Pembeli</th>
                                 <th>DPP SPT</th>
                                 <th>DPP GL</th>
                                 <th>PPN SPT</th>
@@ -321,18 +334,20 @@ $authUserName = auth()->user()->name;
                                 <td>{{ $key + 1 }}</td>
                                 <td class="fw-bold">{{ $dt->no_faktur_pajak }}</td>
                                 <td>{{ $dt->nama_penjual }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->dpp_spt, 0, ',', '.') }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->dpp_gl, 0, ',', '.') }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->ppn_spt, 0, ',', '.') }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->ppn_gl, 0, ',', '.') }}</td>
+                                <td class="text-end">{{ format_rupiah($dt->dpp_spt) }}</td>
+                                <td class="text-end">{{ format_rupiah($dt->dpp_gl) }}</td>
+                                <td class="text-end">{{ format_rupiah($dt->ppn_spt) }}</td>
+                                <td class="text-end">{{ format_rupiah($dt->ppn_gl) }}</td>
                                 <td class="text-end {{ $dt->selisih_ppn > 0 ? 'selisih-negative' : ($dt->selisih_ppn < 0 ? 'selisih-positive' : 'selisih-zero') }}">
-                                    Rp {{ number_format(abs($dt->selisih_ppn), 0, ',', '.') }}
+                                    {{ format_rupiah(abs($dt->selisih_ppn)) }}
                                 </td>
                                 <td>
                                     @if($dt->status == 'MATCH')
                                         <span class="status-match">Match</span>
                                     @elseif($dt->status == 'SPT_ONLY')
                                         <span class="status-spt-only">SPT Only</span>
+                                    @elseif($dt->status == 'TO_BE_CHECK')
+                                        <span class="status-to-be-check">To Be Check</span>
                                     @else
                                         <span class="status-gl-only">GL Only</span>
                                     @endif

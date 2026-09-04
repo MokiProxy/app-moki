@@ -22,6 +22,7 @@ class EmployeeSeeder extends Seeder
             ["nik" => "0595987493841", "name" => "Karmono", "email" => "karmono@satriabahana.co.id", "hp" => null, "jabatan" => "MANAGER MSI", "address" => null],
             ["nik" => "0595987493851", "name" => "Harmoko", "email" => "harmoko@satriabahana.co.id", "hp" => null, "jabatan" => "ASISTEN MANAGER INFRA DAN KEAMANAN SISTEM", "address" => null],
             ["nik" => "0595987493861", "name" => "Vita", "email" => "vita@satriabahana.co.id", "hp" => null, "jabatan" => "IT TEKNOLOGI", "address" => null],
+            ["nik" => "0595987493871", "name" => "Rudi", "email" => "rudi@satriabahana.co.id", "hp" => null, "jabatan" => "EQTAX USER", "address" => null],
 
             // Employee For Test Hierarchy
             ["nik" => "0595987493881", "name" => "Abimana CEO", "email" => "abimana.ceo@tpm-facility.com", "hp" => null, "jabatan" => "CEO", "address" => null],

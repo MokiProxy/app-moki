@@ -174,6 +174,7 @@ class EqualizationExport implements FromCollection, WithHeadings, WithMapping, S
             'MATCH' => ['fill' => 'C6EFCE', 'font' => '006100'],
             'SPT_ONLY' => ['fill' => 'FFEB9C', 'font' => '9C6500'],
             'GL_ONLY' => ['fill' => 'FFC7CE', 'font' => '9C0006'],
+            'TO_BE_CHECK' => ['fill' => 'CFE2F3', 'font' => '1F4E79'],
         ];
 
         foreach ($this->data as $i => $item) {

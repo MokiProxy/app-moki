@@ -196,7 +196,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total DPP</h6>
-                                        <h6 class="text-white mb-0">Rp {{ number_format($totalDpp, 0, ',', '.') }}</h6>
+                                        <h6 class="text-white mb-0">{{ format_rupiah($totalDpp) }}</h6>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-coins"></i>
@@ -211,7 +211,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total PPN</h6>
-                                        <h6 class="text-white mb-0">Rp {{ number_format($totalPpn, 0, ',', '.') }}</h6>
+                                        <h6 class="text-white mb-0">{{ format_rupiah($totalPpn) }}</h6>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-money-bill-wave"></i>
@@ -220,6 +220,7 @@ $authUserName = auth()->user()->name;
                             </div>
                         </div>
                     </div>
+                    @can('eqtax.gl.import')
                     <div class="col-md-2">
                         <div class="card stat-card bg-emerald-grad">
                             <div class="card-body">
@@ -241,6 +242,7 @@ $authUserName = auth()->user()->name;
                             </div>
                         </div>
                     </div>
+                    @endcan
                 </div>
 
                 <div class="table-responsive">
@@ -275,8 +277,8 @@ $authUserName = auth()->user()->name;
                                 <td class="editable text-start" data-field="invoice_date" data-type="text" data-value="{{ $dt->invoice_date }}">{{ $dt->invoice_date }}</td>
                                 <td class="editable text-start" data-field="invoice_no" data-type="text" data-value="{{ $dt->invoice_no }}">{{ $dt->invoice_no }}</td>
                                 <td class="editable text-start" data-field="invoice_item" data-type="text" data-value="{{ $dt->invoice_item }}">{{ $dt->invoice_item }}</td>
-                                <td class="text-end editable" data-field="dpp" data-type="number" data-value="{{ $dt->dpp }}">Rp {{ number_format($dt->dpp, 0, ',', '.') }}</td>
-                                <td class="text-end editable" data-field="ppn" data-type="number" data-value="{{ $dt->ppn }}">Rp {{ number_format($dt->ppn, 0, ',', '.') }}</td>
+                                <td class="text-end editable" data-field="dpp" data-type="number" data-value="{{ $dt->dpp }}">{{ format_rupiah($dt->dpp) }}</td>
+                                <td class="text-end editable" data-field="ppn" data-type="number" data-value="{{ $dt->ppn }}">{{ format_rupiah($dt->ppn) }}</td>
                                 <td class="editable text-start" data-field="keterangan" data-type="text" data-value="{{ $dt->keterangan }}">{{ Str::limit($dt->keterangan, 30) }}</td>
                             </tr>
                             @empty

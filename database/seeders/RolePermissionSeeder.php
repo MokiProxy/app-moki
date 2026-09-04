@@ -34,6 +34,9 @@ class RolePermissionSeeder extends Seeder
             // Dokter roles
             'dokter-user',
             'dokter-admin',
+
+            // EQTAX roles
+            'eqtax-user',
         ];
 
         foreach ($roles as $role) {
@@ -48,6 +51,7 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'data-pegawai.menu', 'guard_name' => 'web'],
             ['name' => 'form-it.menu', 'guard_name' => 'web'],
             ['name' => 'sop-it.menu', 'guard_name' => 'web'],
+            ['name' => 'eqtax.menu', 'guard_name' => 'web'],
 
             // AMS
             ['name' => 'ams.dashboard', 'guard_name' => 'web'],
@@ -120,6 +124,21 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'dokter.merge-flows.delete', 'guard_name' => 'web'],
             ['name' => 'dokter.auditor-access.manage', 'guard_name' => 'web'],
 
+            // EQTAX
+            ['name' => 'eqtax.dashboard', 'guard_name' => 'web'],
+            ['name' => 'eqtax.spt.coretax.view', 'guard_name' => 'web'],
+            ['name' => 'eqtax.spt.coretax.import', 'guard_name' => 'web'],
+            ['name' => 'eqtax.spt.coretax.update-field', 'guard_name' => 'web'],
+            ['name' => 'eqtax.gl.view', 'guard_name' => 'web'],
+            ['name' => 'eqtax.gl.import', 'guard_name' => 'web'],
+            ['name' => 'eqtax.gl.update-field', 'guard_name' => 'web'],
+            ['name' => 'eqtax.equalization.view', 'guard_name' => 'web'],
+            ['name' => 'eqtax.equalization.process', 'guard_name' => 'web'],
+            ['name' => 'eqtax.equalization.export', 'guard_name' => 'web'],
+            ['name' => 'eqtax.tb.view', 'guard_name' => 'web'],
+            ['name' => 'eqtax.tb.process', 'guard_name' => 'web'],
+            ['name' => 'eqtax.tb.save', 'guard_name' => 'web'],
+
             // Form IT
             ['name' => 'form-it.dashboard', 'guard_name' => 'web'],
             ['name' => 'form-it.forms.view', 'guard_name' => 'web'],
@@ -160,6 +179,26 @@ class RolePermissionSeeder extends Seeder
         // Dokter
         $dokterUser = Role::where('name', 'dokter-user')->first();
         $dokterAdmin = Role::where('name', 'dokter-admin')->first();
+
+        // EQTAX
+        $eqtaxUser = Role::where('name', 'eqtax-user')->first();
+
+        $eqtaxUser->givePermissionTo([
+            'eqtax.menu',
+            'eqtax.dashboard',
+            'eqtax.spt.coretax.view',
+            'eqtax.spt.coretax.import',
+            'eqtax.spt.coretax.update-field',
+            'eqtax.gl.view',
+            'eqtax.gl.import',
+            'eqtax.gl.update-field',
+            'eqtax.equalization.view',
+            'eqtax.equalization.process',
+            'eqtax.equalization.export',
+            'eqtax.tb.view',
+            'eqtax.tb.process',
+            'eqtax.tb.save',
+        ]);
 
         $superAdmin->syncPermissions($allPermissions);
 
@@ -297,6 +336,21 @@ class RolePermissionSeeder extends Seeder
             'dokter.log-file.view',
             'dokter.log-file.export',
             'dokter.auditor-access.manage',
+            // EQTAX
+            'eqtax.menu',
+            'eqtax.dashboard',
+            'eqtax.spt.coretax.view',
+            'eqtax.spt.coretax.import',
+            'eqtax.spt.coretax.update-field',
+            'eqtax.gl.view',
+            'eqtax.gl.import',
+            'eqtax.gl.update-field',
+            'eqtax.equalization.view',
+            'eqtax.equalization.process',
+            'eqtax.equalization.export',
+            'eqtax.tb.view',
+            'eqtax.tb.process',
+            'eqtax.tb.save',
             // Form IT
             'form-it.dashboard',
             'form-it.forms.view',

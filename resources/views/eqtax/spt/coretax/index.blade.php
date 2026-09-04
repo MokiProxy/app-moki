@@ -168,7 +168,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total DPP</h6>
-                                        <h4 class="text-white mb-0">Rp {{ number_format($totalDpp, 0, ',', '.') }}</h4>
+                                        <h4 class="text-white mb-0">{{ format_rupiah($totalDpp) }}</h4>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-coins"></i>
@@ -183,7 +183,7 @@ $authUserName = auth()->user()->name;
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-white mb-1">Total PPN</h6>
-                                        <h4 class="text-white mb-0">Rp {{ number_format($totalPpn, 0, ',', '.') }}</h4>
+                                        <h4 class="text-white mb-0">{{ format_rupiah($totalPpn) }}</h4>
                                     </div>
                                     <div class="icon-overlay">
                                         <i class="fas fa-money-bill-wave"></i>
@@ -192,6 +192,7 @@ $authUserName = auth()->user()->name;
                             </div>
                         </div>
                     </div>
+                    @can('eqtax.spt.coretax.import')
                     <div class="col-md-3">
                         <div class="card stat-card bg-indigo-grad">
                             <div class="card-body">
@@ -210,6 +211,7 @@ $authUserName = auth()->user()->name;
                             </div>
                         </div>
                     </div>
+                    @endcan
                 </div>
 
                 <ul class="nav nav-tabs mb-3" id="spt-tabs" role="tablist">
@@ -304,7 +306,7 @@ $authUserName = auth()->user()->name;
                     ],
                     default => [
                         ['field' => 'no_faktur_pajak', 'label' => 'No Faktur Pajak', 'type' => 'text', 'align' => 'text-start'],
-                        ['field' => 'nama_penjual', 'label' => 'Nama Penjual', 'type' => 'text', 'align' => 'text-start'],
+                        ['field' => 'nama_penjual', 'label' => 'Nama Penjual/Pembeli', 'type' => 'text', 'align' => 'text-start'],
                         ['field' => 'npwp_penjual', 'label' => 'NPWP', 'type' => 'text', 'align' => 'text-start'],
                         ['field' => 'tgl_faktur_pajak', 'label' => 'Tanggal FP', 'type' => 'date', 'align' => 'text-start'],
                         ['field' => 'masa_pajak', 'label' => 'Masa Pajak', 'type' => 'text', 'align' => 'text-start'],
@@ -343,7 +345,7 @@ $authUserName = auth()->user()->name;
                                     $value = $dt->{$field};
                                 @endphp
                                 @if($col['type'] === 'number')
-                                <td class="text-end editable" data-field="{{ $field }}" data-type="number" data-value="{{ $value }}">Rp {{ number_format($value, 0, ',', '.') }}</td>
+                                <td class="text-end editable" data-field="{{ $field }}" data-type="number" data-value="{{ $value }}">{{ format_rupiah($value) }}</td>
                                 @elseif($col['type'] === 'date')
                                 <td class="editable text-start" data-field="{{ $field }}" data-type="date" data-value="{{ $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : '' }}">{{ $value ? \Carbon\Carbon::parse($value)->format('d/m/Y') : '-' }}</td>
                                 @elseif($col['type'] === 'boolean')

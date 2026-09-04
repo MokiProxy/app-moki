@@ -261,7 +261,7 @@ $authUserName = auth()->user()->name;
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-white mb-1">Selisih PPN (SPT)</h6>
-                            <h4 class="text-white mb-0">Rp {{ number_format($selisihKurangBayar, 0, ',', '.') }}</h4>
+                            <h4 class="text-white mb-0">{{ format_rupiah($selisihKurangBayar) }}</h4>
                             <small class="text-white-50">{{ $countKurangBayar }} faktur</small>
                         </div>
                         <div class="icon-overlay">
@@ -277,7 +277,7 @@ $authUserName = auth()->user()->name;
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-white mb-1">Selisih PPN (GL)</h6>
-                            <h4 class="text-white mb-0">Rp {{ number_format(abs($selisihLebihBayar), 0, ',', '.') }}</h4>
+                            <h4 class="text-white mb-0">{{ format_rupiah(abs($selisihLebihBayar)) }}</h4>
                             <small class="text-white-50">{{ $countLebihBayar }} faktur</small>
                         </div>
                         <div class="icon-overlay">
@@ -455,7 +455,7 @@ $authUserName = auth()->user()->name;
                             <tr class="align-middle">
                                 <th>Periode</th>
                                 <th>No Faktur Pajak</th>
-                                <th>Nama Penjual</th>
+                                <th>Nama Penjual/Pembeli</th>
                                 <th>DPP SPT</th>
                                 <th>DPP GL</th>
                                 <th>PPN SPT</th>
@@ -470,12 +470,12 @@ $authUserName = auth()->user()->name;
                                 <td>{{ $dt->period }}</td>
                                 <td class="fw-bold">{{ $dt->no_faktur_pajak }}</td>
                                 <td>{{ $dt->nama_penjual }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->dpp_spt, 0, ',', '.') }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->dpp_gl, 0, ',', '.') }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->ppn_spt, 0, ',', '.') }}</td>
-                                <td class="text-end">Rp {{ number_format($dt->ppn_gl, 0, ',', '.') }}</td>
+                                <td class="text-end">{{ format_rupiah($dt->dpp_spt) }}</td>
+                                <td class="text-end">{{ format_rupiah($dt->dpp_gl) }}</td>
+                                <td class="text-end">{{ format_rupiah($dt->ppn_spt) }}</td>
+                                <td class="text-end">{{ format_rupiah($dt->ppn_gl) }}</td>
                                 <td class="text-end {{ $dt->selisih_ppn > 0 ? 'selisih-negative' : ($dt->selisih_ppn < 0 ? 'selisih-positive' : 'selisih-zero') }}">
-                                    Rp {{ number_format(abs($dt->selisih_ppn), 0, ',', '.') }}
+                                    {{ format_rupiah(abs($dt->selisih_ppn)) }}
                                 </td>
                                 <td class="text-center">
                                     @if($dt->status == 'MATCH')
@@ -577,7 +577,7 @@ $authUserName = auth()->user()->name;
             .then(result => {
                 if (result.success) {
                     renderTable(result.data.data);
-                    renderPagination(result.data, type);
+                    // renderPagination(result.data, type);
                 }
             })
             .catch(error => {

@@ -193,9 +193,10 @@ class EqualizationController extends Controller
 
             $ppnSpt = $spt ? $spt->ppn_spt : 0;
             $ppnGl = $gl ? $gl->ppn_gl_total : 0;
+            $selisih = $ppnSpt - $ppnGl;
 
             if ($spt && $gl) {
-                $status = 'MATCH';
+                $status = $selisih != 0 ? "TO_BE_CHECK" : "MATCH";
             } elseif ($spt && !$gl) {
                 $status = 'SPT_ONLY';
             } else {
@@ -210,7 +211,7 @@ class EqualizationController extends Controller
                 'dpp_gl' => $gl ? $gl->dpp_gl_total : 0,
                 'ppn_spt' => $ppnSpt,
                 'ppn_gl' => $ppnGl,
-                'selisih_ppn' => $ppnSpt - $ppnGl,
+                'selisih_ppn' => $selisih,
                 'status' => $status,
             ]);
         }

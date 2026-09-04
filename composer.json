@@ -40,7 +40,8 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Helpers/fonnte.php"
+            "app/Helpers/fonnte.php",
+            "app/Helpers/format.php"
         ]
     },
     "autoload-dev": {

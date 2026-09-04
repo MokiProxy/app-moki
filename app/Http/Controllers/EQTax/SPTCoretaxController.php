@@ -119,7 +119,7 @@ class SPTCoretaxController extends Controller
             return $value ? 'Yes' : 'No';
         }
         if (in_array($field, $numberFields)) {
-            return 'Rp ' . number_format((float) $value, 0, ',', '.');
+            return format_rupiah($value);
         }
         return (string) $value;
     }
