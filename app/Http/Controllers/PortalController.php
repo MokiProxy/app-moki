@@ -90,6 +90,14 @@ class PortalController extends Controller
                 'link'  => route('eqtax.index')
             ],
             [
+                'title' => 'E-RKAP',
+                'sub'   => 'RKAP Elektronik',
+                'icon'  => 'mdi-cash',
+                'color' => '#556EE6',
+                'permission' => 'eqtax.menu',
+                'link'  => route('erkap.index')
+            ],
+            [
                 'title' => 'MORE',
                 'sub'   => 'Other Apps',
                 'icon'  => 'mdi-apps',

@@ -60,6 +60,7 @@ Route::group(['middleware' => ['auth']], function () {
     require __DIR__.'/routers/dokter.php';
     require __DIR__.'/routers/form-it.php';
     require __DIR__.'/routers/eqtax.php';
+    require __DIR__.'/routers/erkap.php';
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

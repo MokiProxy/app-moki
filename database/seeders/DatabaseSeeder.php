@@ -43,5 +43,22 @@ class DatabaseSeeder extends Seeder
         $this->call(DocumentTypeSeeder::class);
         $this->call(VendorSeeder::class);
         $this->call(MergeFlowSeeder::class);
+
+
+
+        // E-RKAP
+        $this->call(CostElementCategoriesSeeder::class);
+        $this->call(CostElementsSeeder::class);
+        $this->call(ErkapRiskAppetiteSeeder::class);
+        $this->call(ErkapRiskTaxonomySeeder::class);
+        $this->call(ErkapRiskTypeSeeder::class);
+        $this->call(ErkapRatingCriteriaSeeder::class);
+        $this->call(ErkapRiskScales::class);
+        $this->call(ErkapRiskProbabilitiy::class);
+        $this->call(ErkapRiskImpact::class);
+        $this->call(ErkapRiskScoreLevelSeeder::class);
+        $this->call(ErkapInvestationTypeSeeder::class);
+        $this->call(ErkapInvestationCriteriaSeeder::class);
+        $this->call(ErkapInvestattionCategorySeeder::class);
     }
 }

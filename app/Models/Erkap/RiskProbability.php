@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Models\Erkap;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class RiskProbability extends Model
+{
+    use HasFactory;
+    protected $table = "erkap_risk_probabilities";
+
+    protected $fillable = ['name', 'point'];
+
+    public function riskScoreLevels()
+    {
+        return $this->hasMany(RiskScoreLevel::class, 'erkap_risk_probability_id');
+    }
+}

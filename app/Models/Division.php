@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Erkap\DepartmentTarget;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -54,4 +55,9 @@ class Division extends Model
    public function employees() {
     return $this->hasMany(Employee::class, 'division_id');
 }
+
+    public function departmentTargets()
+    {
+        return $this->hasMany(DepartmentTarget::class, 'division_id');
+    }
 }
