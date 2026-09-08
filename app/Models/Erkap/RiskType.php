@@ -17,4 +17,9 @@ class RiskType extends Model
     {
         return $this->belongsTo(RiskTaxonomy::class, 'risk_taxonomy_id');
     }
+
+    public function riskIdentifications()
+    {
+        return $this->hasMany(RiskIdentification::class, 'erkap_risk_type_id');
+    }
 }

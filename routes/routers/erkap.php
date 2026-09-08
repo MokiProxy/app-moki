@@ -7,6 +7,7 @@ use App\Http\Controllers\Erkap\InvestattionCategoryController;
 use App\Http\Controllers\Erkap\InvestationCriteriaController;
 use App\Http\Controllers\Erkap\InvestationTypeController;
 use App\Http\Controllers\Erkap\RatingCriteriaController;
+use App\Http\Controllers\Erkap\RKAPController;
 use App\Http\Controllers\Erkap\RiskAppetiteController;
 use App\Http\Controllers\Erkap\RiskImpactController;
 use App\Http\Controllers\Erkap\RiskProbabilityController;
@@ -134,5 +135,14 @@ Route::prefix("erkap")->name("erkap.")->group(function () {
         Route::get('/{investattionCategory}/edit', [InvestattionCategoryController::class, 'edit'])->name('edit');
         Route::put('/{investattionCategory}', [InvestattionCategoryController::class, 'update'])->name('update');
         Route::delete('/{investattionCategory}', [InvestattionCategoryController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('rkap')->name('rkap.')->group(function () {
+        Route::get('/', [RKAPController::class, 'index'])->name('index');
+        Route::get('/create', [RKAPController::class, 'create'])->name('create');
+        Route::post('/', [RKAPController::class, 'store'])->name('store');
+        Route::get('/{rkap}/edit', [RKAPController::class, 'edit'])->name('edit');
+        Route::put('/{rkap}', [RKAPController::class, 'update'])->name('update');
+        Route::delete('/{rkap}', [RKAPController::class, 'destroy'])->name('destroy');
     });
 });

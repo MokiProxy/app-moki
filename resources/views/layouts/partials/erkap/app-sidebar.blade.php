@@ -34,8 +34,10 @@ $roleColor = "primary-it-admin";
                 <li><a href="{{ route('erkap.investation-types.index') }}">Investation Types</a></li>
                 <li><a href="{{ route('erkap.investation-criterias.index') }}">Investation Criterias</a></li>
                 <li><a href="{{ route('erkap.investattion-categories.index') }}">Investattion Categories</a></li>
+                <li><a href="{{ route('erkap.rkap.index') }}">Periode RKAP</a></li>
             </ul>
         </li>
+
 
         <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">

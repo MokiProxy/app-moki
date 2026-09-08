@@ -22,4 +22,9 @@ class RiskTaxonomy extends Model
     {
         return $this->hasMany(RiskType::class);
     }
+
+    public function riskIdentifications()
+    {
+        return $this->hasMany(RiskIdentification::class, 'erkap_risk_taxonomy_id');
+    }
 }
