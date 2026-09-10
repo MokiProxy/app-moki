@@ -1,12 +1,20 @@
 <?php
 
+use App\Http\Controllers\Erkap\CompanyTargetController;
 use App\Http\Controllers\Erkap\CostElementCategoryController;
 use App\Http\Controllers\Erkap\CostElementController;
 use App\Http\Controllers\Erkap\DashboardController as ErkapDashboardController;
+use App\Http\Controllers\Erkap\DepartmentRiskStrategyController;
+use App\Http\Controllers\Erkap\DepartmentTargetController;
 use App\Http\Controllers\Erkap\InvestattionCategoryController;
 use App\Http\Controllers\Erkap\InvestationCriteriaController;
 use App\Http\Controllers\Erkap\InvestationTypeController;
 use App\Http\Controllers\Erkap\RatingCriteriaController;
+use App\Http\Controllers\Erkap\RiskAnalysisController;
+use App\Http\Controllers\Erkap\RiskIdentificationController;
+use App\Http\Controllers\Erkap\RiskIdentificationImpactController;
+use App\Http\Controllers\Erkap\RiskIdentificationReasonController;
+use App\Http\Controllers\Erkap\RiskRankingController;
 use App\Http\Controllers\Erkap\RKAPController;
 use App\Http\Controllers\Erkap\RiskAppetiteController;
 use App\Http\Controllers\Erkap\RiskImpactController;
@@ -144,5 +152,77 @@ Route::prefix("erkap")->name("erkap.")->group(function () {
         Route::get('/{rkap}/edit', [RKAPController::class, 'edit'])->name('edit');
         Route::put('/{rkap}', [RKAPController::class, 'update'])->name('update');
         Route::delete('/{rkap}', [RKAPController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('company-targets')->name('company-targets.')->group(function () {
+        Route::get('/', [CompanyTargetController::class, 'index'])->name('index');
+        Route::get('/create', [CompanyTargetController::class, 'create'])->name('create');
+        Route::post('/', [CompanyTargetController::class, 'store'])->name('store');
+        Route::get('/{companyTarget}/edit', [CompanyTargetController::class, 'edit'])->name('edit');
+        Route::put('/{companyTarget}', [CompanyTargetController::class, 'update'])->name('update');
+        Route::delete('/{companyTarget}', [CompanyTargetController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('department-targets')->name('department-targets.')->group(function () {
+        Route::get('/', [DepartmentTargetController::class, 'index'])->name('index');
+        Route::get('/create', [DepartmentTargetController::class, 'create'])->name('create');
+        Route::post('/', [DepartmentTargetController::class, 'store'])->name('store');
+        Route::get('/{departmentTarget}/edit', [DepartmentTargetController::class, 'edit'])->name('edit');
+        Route::put('/{departmentTarget}', [DepartmentTargetController::class, 'update'])->name('update');
+        Route::delete('/{departmentTarget}', [DepartmentTargetController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('risk-identifications')->name('risk-identifications.')->group(function () {
+        Route::get('/', [RiskIdentificationController::class, 'index'])->name('index');
+        Route::get('/create', [RiskIdentificationController::class, 'create'])->name('create');
+        Route::post('/', [RiskIdentificationController::class, 'store'])->name('store');
+        Route::get('/{riskIdentification}/edit', [RiskIdentificationController::class, 'edit'])->name('edit');
+        Route::put('/{riskIdentification}', [RiskIdentificationController::class, 'update'])->name('update');
+        Route::delete('/{riskIdentification}', [RiskIdentificationController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('risk-identification-reasons')->name('risk-identification-reasons.')->group(function () {
+        Route::get('/', [RiskIdentificationReasonController::class, 'index'])->name('index');
+        Route::get('/create', [RiskIdentificationReasonController::class, 'create'])->name('create');
+        Route::post('/', [RiskIdentificationReasonController::class, 'store'])->name('store');
+        Route::get('/{riskIdentificationReason}/edit', [RiskIdentificationReasonController::class, 'edit'])->name('edit');
+        Route::put('/{riskIdentificationReason}', [RiskIdentificationReasonController::class, 'update'])->name('update');
+        Route::delete('/{riskIdentificationReason}', [RiskIdentificationReasonController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('risk-identification-impacts')->name('risk-identification-impacts.')->group(function () {
+        Route::get('/', [RiskIdentificationImpactController::class, 'index'])->name('index');
+        Route::get('/create', [RiskIdentificationImpactController::class, 'create'])->name('create');
+        Route::post('/', [RiskIdentificationImpactController::class, 'store'])->name('store');
+        Route::get('/{riskIdentificationImpact}/edit', [RiskIdentificationImpactController::class, 'edit'])->name('edit');
+        Route::put('/{riskIdentificationImpact}', [RiskIdentificationImpactController::class, 'update'])->name('update');
+        Route::delete('/{riskIdentificationImpact}', [RiskIdentificationImpactController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('risk-analysis')->name('risk-analysis.')->group(function () {
+        Route::get('/', [RiskAnalysisController::class, 'index'])->name('index');
+        Route::get('/create', [RiskAnalysisController::class, 'create'])->name('create');
+        Route::post('/', [RiskAnalysisController::class, 'store'])->name('store');
+        Route::get('/{riskAnalysis}/edit', [RiskAnalysisController::class, 'edit'])->name('edit');
+        Route::put('/{riskAnalysis}', [RiskAnalysisController::class, 'update'])->name('update');
+        Route::delete('/{riskAnalysis}', [RiskAnalysisController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('risk-rankings')->name('risk-rankings.')->group(function () {
+        Route::get('/', [RiskRankingController::class, 'index'])->name('index');
+        Route::get('/create', [RiskRankingController::class, 'create'])->name('create');
+        Route::post('/', [RiskRankingController::class, 'store'])->name('store');
+        Route::get('/{riskRanking}/edit', [RiskRankingController::class, 'edit'])->name('edit');
+        Route::put('/{riskRanking}', [RiskRankingController::class, 'update'])->name('update');
+        Route::delete('/{riskRanking}', [RiskRankingController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('department-risk-strategies')->name('department-risk-strategies.')->group(function () {
+        Route::get('/', [DepartmentRiskStrategyController::class, 'index'])->name('index');
+        Route::get('/create', [DepartmentRiskStrategyController::class, 'create'])->name('create');
+        Route::post('/', [DepartmentRiskStrategyController::class, 'store'])->name('store');
+        Route::get('/{departmentRiskStrategy}/edit', [DepartmentRiskStrategyController::class, 'edit'])->name('edit');
+        Route::put('/{departmentRiskStrategy}', [DepartmentRiskStrategyController::class, 'update'])->name('update');
+        Route::delete('/{departmentRiskStrategy}', [DepartmentRiskStrategyController::class, 'destroy'])->name('destroy');
     });
 });

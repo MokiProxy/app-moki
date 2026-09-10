@@ -16,4 +16,9 @@ class RiskImpact extends Model
     {
         return $this->hasMany(RiskScoreLevel::class, 'erkap_risk_impact_id');
     }
+
+    public function riskAnalysis()
+    {
+        return $this->hasMany(RiskAnalysis::class, 'erkap_risk_impact_id');
+    }
 }

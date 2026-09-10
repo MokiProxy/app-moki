@@ -22,4 +22,9 @@ class RiskScoreLevel extends Model
     {
         return $this->belongsTo(RiskImpact::class, 'erkap_risk_impact_id');
     }
+
+    public function riskAnalysis()
+    {
+        return $this->hasMany(RiskAnalysis::class, 'erkap_risk_score_value_id');
+    }
 }

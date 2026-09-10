@@ -27,4 +27,29 @@ class RiskIdentification extends Model
     {
         return $this->belongsTo(RiskTaxonomy::class, 'erkap_risk_taxonomy_id');
     }
+
+    public function reasons()
+    {
+        return $this->hasMany(RiskIdentificationReason::class, 'erkap_risk_identification_id');
+    }
+
+    public function impacts()
+    {
+        return $this->hasMany(RiskIdentificationImpact::class, 'erkap_risk_identification_id');
+    }
+
+    public function analysis()
+    {
+        return $this->hasMany(RiskAnalysis::class, 'erkap_risk_identification_id');
+    }
+
+    public function rankings()
+    {
+        return $this->hasMany(RiskRanking::class, 'erkap_risk_identification_id');
+    }
+
+    public function departmentRiskStrategies()
+    {
+        return $this->hasMany(DepartmentRiskStrategy::class, 'erkap_risk_identification_id');
+    }
 }

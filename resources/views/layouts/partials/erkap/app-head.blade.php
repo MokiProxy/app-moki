@@ -46,6 +46,14 @@ $authUserRoleId = auth()->user()->getRoleNames()->first();
         .text-primary-it-admin {
             color: #556EE6;
         }
+
+        .simplebar-content-wrapper {
+            width: 500px;
+        }
+
+        .simplebar-content {
+            width: 500px;
+        }
     </style>
 
 </head>
