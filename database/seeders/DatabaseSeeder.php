@@ -61,5 +61,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ErkapInvestationCriteriaSeeder::class);
         $this->call(ErkapInvestattionCategorySeeder::class);
         $this->call(SasaranDanAsesmenRisikoSeeder::class);
+        $this->call(ErkapWorkProgramSeeder::class);
     }
 }

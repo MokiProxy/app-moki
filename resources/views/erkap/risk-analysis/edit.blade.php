@@ -79,14 +79,10 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Skor & Level <span class="text-danger">*</span></label>
-                            <select name="erkap_risk_score_value_id" class="form-select @error('erkap_risk_score_value_id') is-invalid @enderror" required>
-                                <option value="" disabled {{ old('erkap_risk_score_value_id', $riskAnalysis->erkap_risk_score_value_id) ? '' : 'selected' }}>Pilih Skor & Level</option>
-                                @foreach($riskScoreValues as $riskScoreValue)
-                                    <option value="{{ $riskScoreValue->id }}" {{ old('erkap_risk_score_value_id', $riskAnalysis->erkap_risk_score_value_id) == $riskScoreValue->id ? 'selected' : '' }}>
-                                        {{ $riskScoreValue->score }} - {{ $riskScoreValue->level }}
-                                    </option>
-                                @endforeach
+                            <select id="erkap_risk_score_value_id" class="form-select" required disabled>
+                                <option value="" disabled selected>Pilih Probabilitas & Dampak terlebih dahulu</option>
                             </select>
+                            <input type="hidden" name="erkap_risk_score_value_id" id="erkap_risk_score_value_id_hidden" value="{{ old('erkap_risk_score_value_id', $riskAnalysis->erkap_risk_score_value_id) }}">
                             @error('erkap_risk_score_value_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
@@ -102,4 +98,55 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('plugin')
+<script>
+$(document).ready(function() {
+    var scoreLevelUrl = '{{ route("erkap.risk-analysis.get-score-level", ["probabilityId" => "__PROBABILITY_ID__", "impactId" => "__IMPACT_ID__"]) }}';
+
+    function fetchScoreLevel() {
+        var probabilityId = $('select[name="erkap_risk_probability_id"]').val();
+        var impactId = $('select[name="erkap_risk_impact_id"]').val();
+        var $scoreSelect = $('#erkap_risk_score_value_id');
+        var $scoreHidden = $('#erkap_risk_score_value_id_hidden');
+
+        if (!probabilityId || !impactId) {
+            $scoreSelect.prop('disabled', true)
+                .html('<option value="" disabled selected>Pilih Probabilitas & Dampak terlebih dahulu</option>');
+            $scoreHidden.val('');
+            return;
+        }
+
+        var url = scoreLevelUrl.replace('__PROBABILITY_ID__', probabilityId).replace('__IMPACT_ID__', impactId);
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                if (response.found) {
+                    $scoreSelect.prop('disabled', false)
+                        .html('<option value="' + response.id + '" selected>' + response.score + ' - ' + response.level + '</option>');
+                    $scoreHidden.val(response.id);
+                } else {
+                    $scoreSelect.prop('disabled', true)
+                        .html('<option value="" disabled selected>Tidak ditemukan kombinasi yang sesuai</option>');
+                    $scoreHidden.val('');
+                }
+            },
+            error: function() {
+                $scoreSelect.prop('disabled', true)
+                    .html('<option value="" disabled selected>Gagal memuat data</option>');
+                $scoreHidden.val('');
+            }
+        });
+    }
+
+    $('select[name="erkap_risk_probability_id"]').on('change', fetchScoreLevel);
+    $('select[name="erkap_risk_impact_id"]').on('change', fetchScoreLevel);
+
+    // Auto-fetch on page load for edit form
+    fetchScoreLevel();
+});
+</script>
 @endsection

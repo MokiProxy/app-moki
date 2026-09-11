@@ -17,4 +17,9 @@ class CostElement extends Model
     {
         return $this->belongsTo(CostElementCategory::class, 'erkap_cost_element_category_id');
     }
+
+    public function routineCosts()
+    {
+        return $this->hasMany(RoutineCost::class, 'erkap_cost_element_id');
+    }
 }

@@ -11,6 +11,7 @@ use App\Models\Erkap\RiskImpact;
 use App\Models\Erkap\RiskProbability;
 use App\Models\Erkap\RiskScoreLevel;
 use Exception;
+use Illuminate\Http\JsonResponse;
 
 class RiskAnalysisController extends Controller
 {
@@ -28,9 +29,8 @@ class RiskAnalysisController extends Controller
         $riskIdentifications = RiskIdentification::all();
         $riskProbabilities = RiskProbability::all();
         $riskImpacts = RiskImpact::all();
-        $riskScoreValues = RiskScoreLevel::all();
 
-        return view('erkap.risk-analysis.create', compact('pageName', 'riskIdentifications', 'riskProbabilities', 'riskImpacts', 'riskScoreValues'));
+        return view('erkap.risk-analysis.create', compact('pageName', 'riskIdentifications', 'riskProbabilities', 'riskImpacts'));
     }
 
     public function store(StoreRiskAnalysisRequest $request)
@@ -58,9 +58,8 @@ class RiskAnalysisController extends Controller
         $riskIdentifications = RiskIdentification::all();
         $riskProbabilities = RiskProbability::all();
         $riskImpacts = RiskImpact::all();
-        $riskScoreValues = RiskScoreLevel::all();
 
-        return view('erkap.risk-analysis.edit', compact('pageName', 'riskAnalysis', 'riskIdentifications', 'riskProbabilities', 'riskImpacts', 'riskScoreValues'));
+        return view('erkap.risk-analysis.edit', compact('pageName', 'riskAnalysis', 'riskIdentifications', 'riskProbabilities', 'riskImpacts'));
     }
 
     public function update(UpdateRiskAnalysisRequest $request, RiskAnalysis $riskAnalysis)
@@ -92,5 +91,23 @@ class RiskAnalysisController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-analysis.index')->with('error', $err->getMessage());
         }
+    }
+
+    public function getScoreLevel($probabilityId, $impactId): JsonResponse
+    {
+        $scoreLevel = RiskScoreLevel::where('erkap_risk_probability_id', $probabilityId)
+            ->where('erkap_risk_impact_id', $impactId)
+            ->first();
+
+        if (! $scoreLevel) {
+            return response()->json(['found' => false]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'id' => $scoreLevel->id,
+            'score' => $scoreLevel->score,
+            'level' => $scoreLevel->level,
+        ]);
     }
 }

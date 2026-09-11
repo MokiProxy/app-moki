@@ -92,14 +92,14 @@ $roleColor = "primary-it-admin";
 
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
-                <i class='bx bx-data'></i>
+                <i class='bx bx-file'></i>
                 <span key="t-master-data">Sasaran Asesmen Risiko</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
                 <ul class="sub-menu" aria-expanded="false">
                     <li>
                         <a href="javascript: void(0);" class="has-arrow waves-effect">
-                            <i class='bx bx-data'></i>
+                            <i class='bx bx-file'></i>
                             <span key="t-master-data">Sasaran</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
@@ -111,7 +111,7 @@ $roleColor = "primary-it-admin";
                 <ul class="sub-menu" aria-expanded="false">
                     <li>
                         <a href="javascript: void(0);" class="has-arrow waves-effect">
-                            <i class='bx bx-data'></i>
+                            <i class='bx bx-file'></i>
                             <span key="t-master-data">Identifikasi Risiko</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
@@ -124,7 +124,7 @@ $roleColor = "primary-it-admin";
                 <ul class="sub-menu" aria-expanded="false">
                     <li>
                         <a href="javascript: void(0);" class="has-arrow waves-effect">
-                            <i class='bx bx-data'></i>
+                            <i class='bx bx-file'></i>
                             <span key="t-master-data">Analisis Risiko</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
@@ -136,7 +136,7 @@ $roleColor = "primary-it-admin";
                 <ul class="sub-menu" aria-expanded="false">
                     <li>
                         <a href="javascript: void(0);" class="has-arrow waves-effect">
-                            <i class='bx bx-data'></i>
+                            <i class='bx bx-file'></i>
                             <span key="t-master-data">Strategi Risiko</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
@@ -144,6 +144,37 @@ $roleColor = "primary-it-admin";
                         </ul>
                     </li>
                 </ul>
+            </ul>
+        </li>
+
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-timer'></i>
+                <span key="t-master-data">Jadwal Kerja</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                            <li><a href="{{ route('erkap.work-programs.index') }}">Program Kerja</a></li>
+                        </ul>
+        </li>
+
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-money'></i>
+                <span key="t-master-data">Biaya Umum</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <ul class="sub-menu" aria-expanded="false">
+                    <li>
+                        <a href="javascript: void(0);" class="has-arrow waves-effect">
+                            <i class='bx bx-money'></i>
+                            <span key="t-master-data">Barang / Jasa</span>
+                        </a>
+                        <ul class="sub-menu" aria-expanded="false">
+                            <li><a href="{{ route('erkap.company-targets.index') }}">Barang / Jasa</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <li><a href="{{ route('erkap.routine-costs.index') }}">Biaya Rutin</a></li>
             </ul>
         </li>
 

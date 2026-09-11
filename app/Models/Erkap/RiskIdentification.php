@@ -52,4 +52,9 @@ class RiskIdentification extends Model
     {
         return $this->hasMany(DepartmentRiskStrategy::class, 'erkap_risk_identification_id');
     }
+
+    public function workPrograms()
+    {
+        return $this->hasMany(WorkProgram::class, 'erkap_risk_identification_id');
+    }
 }

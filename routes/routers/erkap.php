@@ -23,6 +23,8 @@ use App\Http\Controllers\Erkap\RiskScaleController;
 use App\Http\Controllers\Erkap\RiskScoreLevelController;
 use App\Http\Controllers\Erkap\RiskTaxonomyController;
 use App\Http\Controllers\Erkap\RiskTypeController;
+use App\Http\Controllers\Erkap\RoutineCostController;
+use App\Http\Controllers\Erkap\WorkProgramController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix("erkap")->name("erkap.")->group(function () {
@@ -203,6 +205,7 @@ Route::prefix("erkap")->name("erkap.")->group(function () {
         Route::get('/', [RiskAnalysisController::class, 'index'])->name('index');
         Route::get('/create', [RiskAnalysisController::class, 'create'])->name('create');
         Route::post('/', [RiskAnalysisController::class, 'store'])->name('store');
+        Route::get('/get-score-level/{probabilityId}/{impactId}', [RiskAnalysisController::class, 'getScoreLevel'])->name('get-score-level');
         Route::get('/{riskAnalysis}/edit', [RiskAnalysisController::class, 'edit'])->name('edit');
         Route::put('/{riskAnalysis}', [RiskAnalysisController::class, 'update'])->name('update');
         Route::delete('/{riskAnalysis}', [RiskAnalysisController::class, 'destroy'])->name('destroy');
@@ -224,5 +227,23 @@ Route::prefix("erkap")->name("erkap.")->group(function () {
         Route::get('/{departmentRiskStrategy}/edit', [DepartmentRiskStrategyController::class, 'edit'])->name('edit');
         Route::put('/{departmentRiskStrategy}', [DepartmentRiskStrategyController::class, 'update'])->name('update');
         Route::delete('/{departmentRiskStrategy}', [DepartmentRiskStrategyController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('work-programs')->name('work-programs.')->group(function () {
+        Route::get('/', [WorkProgramController::class, 'index'])->name('index');
+        Route::get('/create', [WorkProgramController::class, 'create'])->name('create');
+        Route::post('/', [WorkProgramController::class, 'store'])->name('store');
+        Route::get('/{workProgram}/edit', [WorkProgramController::class, 'edit'])->name('edit');
+        Route::put('/{workProgram}', [WorkProgramController::class, 'update'])->name('update');
+        Route::delete('/{workProgram}', [WorkProgramController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('routine-costs')->name('routine-costs.')->group(function () {
+        Route::get('/', [RoutineCostController::class, 'index'])->name('index');
+        Route::get('/create', [RoutineCostController::class, 'create'])->name('create');
+        Route::post('/', [RoutineCostController::class, 'store'])->name('store');
+        Route::get('/{routineCost}/edit', [RoutineCostController::class, 'edit'])->name('edit');
+        Route::put('/{routineCost}', [RoutineCostController::class, 'update'])->name('update');
+        Route::delete('/{routineCost}', [RoutineCostController::class, 'destroy'])->name('destroy');
     });
 });
