@@ -2,6 +2,7 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Approval extends Model
 {
+    use HasAuditTrail;
+
     protected $table = 'erkap_approvals';
 
     protected $fillable = [

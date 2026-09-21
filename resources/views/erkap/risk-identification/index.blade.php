@@ -15,6 +15,12 @@
             <div class="card-body border-bottom bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 card-title text-dark fw-bold">{{ $pageName }}</h5>
                 <div class="d-flex gap-1">
+                    <a href="{{ route('erkap.risk-identifications.export') }}" class="btn btn-outline-success" title="Export Excel">
+                        <i class="mdi mdi-file-excel me-1"></i> Excel
+                    </a>
+                    <a href="{{ route('erkap.risk-identifications.export-pdf') }}" class="btn btn-outline-danger" title="Export PDF">
+                        <i class="mdi mdi-file-pdf me-1"></i> PDF
+                    </a>
                     <a href="{{ route('erkap.risk-identifications.create') }}" class="btn btn-primary">
                         <i class="mdi mdi-plus me-1"></i> Tambah Identifikasi Risiko
                     </a>

@@ -24,6 +24,12 @@
                         </button>
                     </form>
                     @endif
+                    <a href="{{ route('erkap.routine-costs.export') }}" class="btn btn-outline-success" title="Export Excel">
+                        <i class="mdi mdi-file-excel me-1"></i> Excel
+                    </a>
+                    <a href="{{ route('erkap.routine-costs.export-pdf') }}" class="btn btn-outline-danger" title="Export PDF">
+                        <i class="mdi mdi-file-pdf me-1"></i> PDF
+                    </a>
                     <a href="{{ route('erkap.routine-costs.create') }}" class="btn btn-primary">
                         <i class="mdi mdi-plus me-1"></i> Tambah Biaya Rutin
                     </a>

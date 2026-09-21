@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Erkap;
 
+use App\Exports\Erkap\RoutineCostExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoutineCostRequest;
 use App\Http\Requests\UpdateRoutineCostRequest;
@@ -13,10 +14,12 @@ use App\Models\Erkap\RoutineCost;
 use App\Models\Erkap\WorkProgram;
 use App\Services\ApprovalService;
 use App\Services\ErkapAccess;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RoutineCostController extends Controller
 {
@@ -62,6 +65,33 @@ class RoutineCostController extends Controller
             'erkap.routine-cost.index',
             compact('pageName', 'routineCosts', 'subtotalByElement', 'subtotalByProgram', 'grandTotal', 'submittableCount')
         );
+    }
+
+    public function export()
+    {
+        $routineCosts = RoutineCost::with(['workProgram', 'costElement', 'costCenter'])
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds());
+            })
+            ->orderBy('id')
+            ->get();
+
+        return Excel::download(new RoutineCostExport($routineCosts), 'biaya-rutin-' . date('Y-m-d-Hi') . '.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $routineCosts = RoutineCost::with(['workProgram', 'costElement', 'costCenter'])
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds());
+            })
+            ->orderBy('id')
+            ->get();
+
+        $pdf = Pdf::loadView('erkap.exports.routine-cost-pdf', compact('routineCosts'));
+        $pdf->setOption('isRemoteEnabled', true);
+
+        return $pdf->download('biaya-rutin-' . date('Y-m-d-Hi') . '.pdf');
     }
 
     public function create()

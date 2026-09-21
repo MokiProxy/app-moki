@@ -2,6 +2,7 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\Division;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CostCenter extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditTrail;
 
     protected $table = 'cost_centers';
 

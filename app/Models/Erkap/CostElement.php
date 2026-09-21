@@ -2,13 +2,14 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\ChartOfAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CostElement extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditTrail;
 
     protected $table = 'erkap_cost_elements';
 

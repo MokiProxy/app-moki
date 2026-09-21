@@ -2,13 +2,14 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\Erkap\Traits\HasApprovalWorkflow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class WorkProgram extends Model
 {
-    use HasFactory, HasApprovalWorkflow;
+    use HasFactory, HasApprovalWorkflow, HasAuditTrail;
 
     protected $table = 'erkap_work_programs';
 
@@ -50,5 +51,10 @@ class WorkProgram extends Model
     public function hasBudget(): bool
     {
         return $this->routineCosts()->count() > 0 || $this->investmentPlans()->count() > 0;
+    }
+
+    public function realizations()
+    {
+        return $this->hasMany(ProgramRealization::class, 'erkap_work_program_id');
     }
 }

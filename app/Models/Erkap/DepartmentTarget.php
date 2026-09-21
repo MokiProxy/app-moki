@@ -2,13 +2,14 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\Division;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class DepartmentTarget extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditTrail;
 
     protected $table = 'erkap_department_targets';
 
@@ -32,5 +33,10 @@ class DepartmentTarget extends Model
     public function riskIdentifications()
     {
         return $this->hasMany(RiskIdentification::class, 'erkap_department_target_id');
+    }
+
+    public function performanceScorecards()
+    {
+        return $this->hasMany(PerformanceScorecard::class, 'erkap_department_target_id');
     }
 }

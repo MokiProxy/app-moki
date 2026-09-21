@@ -2,12 +2,13 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class RiskIdentification extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditTrail;
 
     protected $table = 'erkap_risk_identifications';
 
@@ -71,5 +72,10 @@ class RiskIdentification extends Model
     public function hasWorkProgram(): bool
     {
         return $this->workPrograms()->count() > 0;
+    }
+
+    public function assessmentsMonthly()
+    {
+        return $this->hasMany(RiskAssessmentMonthly::class, 'erkap_risk_identification_id');
     }
 }

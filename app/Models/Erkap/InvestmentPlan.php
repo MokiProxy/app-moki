@@ -2,13 +2,14 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\Erkap\Traits\HasApprovalWorkflow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class InvestmentPlan extends Model
 {
-    use HasFactory, HasApprovalWorkflow;
+    use HasFactory, HasApprovalWorkflow, HasAuditTrail;
 
     protected $table = 'erkap_investment_plans';
 
@@ -61,5 +62,10 @@ class InvestmentPlan extends Model
     public function investationCriteria()
     {
         return $this->belongsTo(InvestationCriteria::class, 'erkap_investation_criteria_id');
+    }
+
+    public function budgetRealizations()
+    {
+        return $this->hasMany(BudgetRealization::class, 'erkap_investment_plan_id');
     }
 }

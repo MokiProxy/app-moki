@@ -2,13 +2,14 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\Erkap\Traits\HasApprovalWorkflow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class RoutineCost extends Model
 {
-    use HasFactory, HasApprovalWorkflow;
+    use HasFactory, HasApprovalWorkflow, HasAuditTrail;
 
     protected $table = 'erkap_routine_costs';
 
@@ -55,5 +56,10 @@ class RoutineCost extends Model
     public function costCenter()
     {
         return $this->belongsTo(CostCenter::class, 'cost_center_id');
+    }
+
+    public function budgetRealizations()
+    {
+        return $this->hasMany(BudgetRealization::class, 'erkap_routine_cost_id');
     }
 }

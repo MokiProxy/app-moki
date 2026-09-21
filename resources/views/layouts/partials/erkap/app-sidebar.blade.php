@@ -33,6 +33,15 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
         </li>
         @endcan
 
+        @can('erkap.audit-logs.view')
+        <li>
+            <a href="{{ route('erkap.audit-logs.index') }}" class="waves-effect">
+                <i class="bx bx-history"></i>
+                <span key="t-audit-log">Audit Trail</span>
+            </a>
+        </li>
+        @endcan
+
         @can('erkap.rkap.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -228,6 +237,27 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
                 <li><a href="{{ route('erkap.expense-plans.index') }}">Rencana Beban</a></li>
                 <li><a href="{{ route('erkap.profit-loss.index') }}">Laba Rugi (P&L)</a></li>
                 <li><a href="{{ route('erkap.profit-loss.simulate') }}">Simulasi Skenario</a></li>
+            </ul>
+        </li>
+        @endcan
+
+        @can('erkap.budget-realizations.view')
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-line-chart-down'></i>
+                <span key="t-monitoring">Monitoring & Realisasi</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('erkap.budget-realizations.index') }}">Realisasi Anggaran (BvA)</a></li>
+                @can('erkap.program-realizations.view')
+                <li><a href="{{ route('erkap.program-realizations.index') }}">Realisasi Program Kerja</a></li>
+                @endcan
+                @can('erkap.risk-assessments-monthly.view')
+                <li><a href="{{ route('erkap.risk-assessments-monthly.index') }}">Risk Assessment Bulanan</a></li>
+                @endcan
+                @can('erkap.performance-scorecards.view')
+                <li><a href="{{ route('erkap.performance-scorecards.index') }}">Performance Scorecard (KPI)</a></li>
+                @endcan
             </ul>
         </li>
         @endcan

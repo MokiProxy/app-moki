@@ -2,6 +2,7 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\ChartOfAccount;
 use App\Models\Division;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class RevenuePlan extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditTrail;
 
     protected $table = 'erkap_revenue_plans';
 

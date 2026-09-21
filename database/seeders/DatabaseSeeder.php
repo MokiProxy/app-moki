@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         // // 2. Data Dengan Relasi (Dependent)
         $this->call(EmployeeSeeder::class); // Butuh DivisionID
         $this->call(UserSeeder::class);
+        $this->call(UserRoleSeeder::class);
         $this->call(AssetSeeder::class);    // Biasanya butuh Category/Supplier
 
         // Help Desk
@@ -65,5 +66,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SasaranDanAsesmenRisikoSeeder::class);
         $this->call(ErkapWorkProgramSeeder::class);
         $this->call(FinancialProjectionSeeder::class);
+        $this->call(MonitoringRealisasiSeeder::class);
     }
 }

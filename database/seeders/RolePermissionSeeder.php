@@ -196,6 +196,10 @@ class RolePermissionSeeder extends Seeder
             'revenue-plans',
             'expense-plans',
             'profit-loss',
+            'budget-realizations',
+            'program-realizations',
+            'risk-assessments-monthly',
+            'performance-scorecards',
         ];
 
         $erkapActions = ['view', 'create', 'edit', 'delete'];
@@ -227,6 +231,7 @@ class RolePermissionSeeder extends Seeder
         }
 
         $permissions[] = ['name' => 'erkap.approvals.view', 'guard_name' => 'web'];
+        $permissions[] = ['name' => 'erkap.audit-logs.view', 'guard_name' => 'web'];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate($permission);
@@ -297,6 +302,10 @@ class RolePermissionSeeder extends Seeder
             'revenue-plans',
             'expense-plans',
             'profit-loss',
+            'budget-realizations',
+            'program-realizations',
+            'risk-assessments-monthly',
+            'performance-scorecards',
         ];
 
         $costOwnerPermissions = $toEkapPermissions($costOwnerResources);
@@ -340,44 +349,83 @@ class RolePermissionSeeder extends Seeder
 
         $erkapAdmin->givePermissionTo($erkapAdminPermissions);
         $erkapAdmin->givePermissionTo($approvalPermissions);
+        $erkapAdmin->givePermissionTo(['erkap.audit-logs.view']);
 
         $erkapPpk->givePermissionTo([
+            'erkap.menu',
             'erkap.approvals.view',
+            'erkap.work-programs.view',
             'erkap.work-programs.approve',
             'erkap.work-programs.reject',
+            'erkap.routine-costs.view',
             'erkap.routine-costs.approve',
             'erkap.routine-costs.reject',
+            'erkap.investment-plans.view',
             'erkap.investment-plans.approve',
             'erkap.investment-plans.reject',
         ]);
 
         $erkapController->givePermissionTo($erkapPpk->permissions->pluck('name')->all());
         $erkapController->givePermissionTo([
+            'erkap.rkap.view',
             'erkap.rkap.approve',
             'erkap.rkap.reject',
+            'erkap.budget-capex.view',
+            'erkap.profit-loss.view',
         ]);
 
         $erkapDireksiKeuangan->givePermissionTo([
+            'erkap.menu',
             'erkap.approvals.view',
+            'erkap.investment-plans.view',
             'erkap.investment-plans.approve',
             'erkap.investment-plans.reject',
+            'erkap.budget-capex.view',
         ]);
 
         $erkapDireksi->givePermissionTo([
+            'erkap.menu',
             'erkap.approvals.view',
+            'erkap.rkap.view',
             'erkap.rkap.approve',
             'erkap.rkap.reject',
+            'erkap.profit-loss.view',
         ]);
 
         $erkapKomisaris->givePermissionTo([
+            'erkap.menu',
             'erkap.approvals.view',
+            'erkap.rkap.view',
             'erkap.rkap.approve',
             'erkap.rkap.reject',
+            'erkap.profit-loss.view',
         ]);
 
-        $erkapAccounting->givePermissionTo(['erkap.approvals.view']);
-        $erkapRiskManager->givePermissionTo(['erkap.approvals.view']);
-        $erkapAuditor->givePermissionTo(['erkap.approvals.view']);
+        $erkapAccounting->givePermissionTo([
+            'erkap.menu',
+            'erkap.approvals.view',
+            'erkap.routine-costs.view',
+            'erkap.investment-plans.view',
+            'erkap.budget-realizations.view',
+            'erkap.profit-loss.view',
+        ]);
+
+        $erkapRiskManager->givePermissionTo([
+            'erkap.menu',
+            'erkap.approvals.view',
+            'erkap.risk-identifications.view',
+            'erkap.risk-analysis.view',
+            'erkap.risk-assessments-monthly.view',
+        ]);
+
+        $erkapAuditor->givePermissionTo(
+            $allPermissions->where('name', 'like', 'erkap.%.view')->pluck('name')->all()
+        );
+        $erkapAuditor->givePermissionTo([
+            'erkap.menu',
+            'erkap.approvals.view',
+            'erkap.audit-logs.view',
+        ]);
 
         $eqtaxUser->givePermissionTo([
             'eqtax.menu',

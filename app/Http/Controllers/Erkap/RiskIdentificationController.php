@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Erkap;
 
+use App\Exports\Erkap\RiskIdentificationExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRiskIdentificationRequest;
 use App\Http\Requests\UpdateRiskIdentificationRequest;
@@ -10,7 +11,9 @@ use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskTaxonomy;
 use App\Models\Erkap\RiskType;
 use App\Services\ErkapAccess;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RiskIdentificationController extends Controller
 {
@@ -25,6 +28,35 @@ class RiskIdentificationController extends Controller
             ->paginate(10);
 
         return view('erkap.risk-identification.index', compact('pageName', 'riskIdentifications'));
+    }
+
+    public function export()
+    {
+        $riskIdentifications = RiskIdentification::with(['departmentTarget.division', 'departmentTarget.ratingCriteria', 'riskType', 'riskTaxonomy'])
+            ->withCount('workPrograms')
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_department_target_id', ErkapAccess::departmentTargetIds());
+            })
+            ->orderBy('id')
+            ->get();
+
+        return Excel::download(new RiskIdentificationExport($riskIdentifications), 'identifikasi-risiko-' . date('Y-m-d-Hi') . '.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $riskIdentifications = RiskIdentification::with(['departmentTarget.division', 'departmentTarget.ratingCriteria', 'riskType', 'riskTaxonomy'])
+            ->withCount('workPrograms')
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_department_target_id', ErkapAccess::departmentTargetIds());
+            })
+            ->orderBy('id')
+            ->get();
+
+        $pdf = Pdf::loadView('erkap.exports.risk-identification-pdf', compact('riskIdentifications'));
+        $pdf->setOption('isRemoteEnabled', true);
+
+        return $pdf->download('identifikasi-risiko-' . date('Y-m-d-Hi') . '.pdf');
     }
 
     public function create()

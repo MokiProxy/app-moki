@@ -24,6 +24,9 @@
                         </button>
                     </form>
                     @endif
+                    <a href="{{ route('erkap.investment-plans.export') }}" class="btn btn-outline-success" title="Export Excel">
+                        <i class="mdi mdi-file-excel me-1"></i> Excel
+                    </a>
                     <a href="{{ route('erkap.investment-plans.create') }}" class="btn btn-primary">
                         <i class="mdi mdi-plus me-1"></i> Tambah Investasi
                     </a>

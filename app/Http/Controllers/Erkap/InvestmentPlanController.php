@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Erkap;
 
+use App\Exports\Erkap\InvestmentPlanExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvestmentPlanRequest;
 use App\Http\Requests\UpdateInvestmentPlanRequest;
@@ -13,6 +14,7 @@ use App\Models\Erkap\WorkProgram;
 use App\Services\ApprovalService;
 use App\Services\ErkapAccess;
 use Exception;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InvestmentPlanController extends Controller
 {
@@ -31,6 +33,18 @@ class InvestmentPlanController extends Controller
             ->count();
 
         return view('erkap.investment-plan.index', compact('pageName', 'investmentPlans', 'submittableCount'));
+    }
+
+    public function export()
+    {
+        $investmentPlans = InvestmentPlan::with(['workProgram', 'investattionCategory', 'investationType', 'investationCriteria'])
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds());
+            })
+            ->orderBy('id')
+            ->get();
+
+        return Excel::download(new InvestmentPlanExport($investmentPlans), 'rencana-investasi-' . date('Y-m-d-Hi') . '.xlsx');
     }
 
     public function create()

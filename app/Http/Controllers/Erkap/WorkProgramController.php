@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Erkap;
 
+use App\Exports\Erkap\WorkProgramExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWorkProgramRequest;
 use App\Http\Requests\UpdateWorkProgramRequest;
@@ -9,8 +10,10 @@ use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\WorkProgram;
 use App\Services\ApprovalService;
 use App\Services\ErkapAccess;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class WorkProgramController extends Controller
 {
@@ -32,6 +35,33 @@ class WorkProgramController extends Controller
             ->count();
 
         return view('erkap.work-program.index', compact('pageName', 'workPrograms', 'submittableCount'));
+    }
+
+    public function export()
+    {
+        $workPrograms = WorkProgram::with(['riskIdentification.departmentTarget.division', 'riskIdentification.departmentTarget.ratingCriteria'])
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
+            })
+            ->orderBy('id')
+            ->get();
+
+        return Excel::download(new WorkProgramExport($workPrograms), 'program-kerja-' . date('Y-m-d-Hi') . '.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $workPrograms = WorkProgram::with(['riskIdentification.departmentTarget.division', 'riskIdentification.departmentTarget.ratingCriteria'])
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
+            })
+            ->orderBy('id')
+            ->get();
+
+        $pdf = Pdf::loadView('erkap.exports.work-program-pdf', compact('workPrograms'));
+        $pdf->setOption('isRemoteEnabled', true);
+
+        return $pdf->download('program-kerja-' . date('Y-m-d-Hi') . '.pdf');
     }
 
     public function create(Request $request)
