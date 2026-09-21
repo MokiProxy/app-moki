@@ -52,6 +52,7 @@
 
     <!-- JAVASCRIPT -->
     @include('layouts.partials.app-plugin')
+    @include('layouts.partials.erkap.app-plugin')
 </body>
 
 <!-- Mirrored from themesbrand.com/skote/layouts/layouts-preloader.html by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 15 Nov 2022 07:57:46 GMT -->

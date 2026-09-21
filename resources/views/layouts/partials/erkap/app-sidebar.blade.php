@@ -2,19 +2,38 @@
 $authUserRoleNames = auth()->user()->getRoleNames();
 $authUserRoleId = $authUserRoleNames->first() ?? 'none';
 $roleColor = "primary-it-admin";
+$pendingApprovalCount = \App\Models\Erkap\Approval::query()
+    ->where('approver_id', auth()->id())
+    ->where('status', 'pending')
+    ->count();
 @endphp
 
 <div id="sidebar-menu" class="mt-2">
 
     <ul class="metismenu list-unstyled" id="side-menu">
 
+        @can('erkap.menu')
         <li>
             <a href="{{ route('erkap.index') }}" class="waves-effect">
                 <i class="bx bx-home-circle"></i>
                 <span key="t-dashboard">Dashboard</span>
             </a>
         </li>
+        @endcan
 
+        @can('erkap.approvals.view')
+        <li>
+            <a href="{{ route('erkap.approvals.index') }}" class="waves-effect">
+                <i class="bx bx-check-shield"></i>
+                <span key="t-approval">Approval</span>
+                @if($pendingApprovalCount > 0)
+                <span class="badge bg-danger ms-1">{{ $pendingApprovalCount }}</span>
+                @endif
+            </a>
+        </li>
+        @endcan
+
+        @can('erkap.rkap.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-data'></i>
@@ -28,6 +47,7 @@ $roleColor = "primary-it-admin";
                             <span key="t-master-data">Chart of Accounts</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
+                            <li><a href="{{ route('erkap.chart-of-accounts.index') }}">Chart of Accounts</a></li>
                             <li><a href="{{ route('erkap.cost-element-categories.index') }}">Kategori Elemen Biaya</a></li>
                             <li><a href="{{ route('erkap.cost-elements.index') }}">Elemen Biaya</a></li>
                         </ul>
@@ -87,9 +107,19 @@ $roleColor = "primary-it-admin";
                         <li><a href="{{ route('erkap.rkap.index') }}">Periode RKAP</a></li>
                     </ul>
                 </li>
+                @can('erkap.cost-centers.view')
+                <li>
+                    <a href="{{ route('erkap.cost-centers.index') }}" class="waves-effect">
+                        <i class='bx bx-hash'></i>
+                        <span key="t-cost-center">Pusat Biaya (Cost Center)</span>
+                    </a>
+                </li>
+                @endcan
             </ul>
         </li>
+        @endcan
 
+        @can('erkap.department-targets.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-file'></i>
@@ -103,7 +133,9 @@ $roleColor = "primary-it-admin";
                             <span key="t-master-data">Sasaran</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
+                            @can('erkap.company-targets.view')
                             <li><a href="{{ route('erkap.company-targets.index') }}">Sasaran Perusahaan</a></li>
+                            @endcan
                             <li><a href="{{ route('erkap.department-targets.index') }}">Sasaran Departemen</a></li>
                         </ul>
                     </li>
@@ -146,7 +178,9 @@ $roleColor = "primary-it-admin";
                 </ul>
             </ul>
         </li>
+        @endcan
 
+        @can('erkap.work-programs.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-timer'></i>
@@ -156,27 +190,47 @@ $roleColor = "primary-it-admin";
                             <li><a href="{{ route('erkap.work-programs.index') }}">Program Kerja</a></li>
                         </ul>
         </li>
+        @endcan
 
+        @can('erkap.routine-costs.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-money'></i>
                 <span key="t-master-data">Biaya Umum</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                <ul class="sub-menu" aria-expanded="false">
-                    <li>
-                        <a href="javascript: void(0);" class="has-arrow waves-effect">
-                            <i class='bx bx-money'></i>
-                            <span key="t-master-data">Barang / Jasa</span>
-                        </a>
-                        <ul class="sub-menu" aria-expanded="false">
-                            <li><a href="{{ route('erkap.company-targets.index') }}">Barang / Jasa</a></li>
-                        </ul>
-                    </li>
-                </ul>
                 <li><a href="{{ route('erkap.routine-costs.index') }}">Biaya Rutin</a></li>
             </ul>
         </li>
+        @endcan
+
+        @can('erkap.investment-plans.view')
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-trending-up'></i>
+                <span key="t-master-data">Investasi (CAPEX)</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('erkap.investment-plans.index') }}">Rencana Investasi</a></li>
+                <li><a href="{{ route('erkap.budget-capex.index') }}">Anggaran Investasi</a></li>
+            </ul>
+        </li>
+        @endcan
+
+        @can('erkap.revenue-plans.view')
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-line-chart'></i>
+                <span key="t-master-data">Financial Projection</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('erkap.revenue-plans.index') }}">Rencana Pendapatan</a></li>
+                <li><a href="{{ route('erkap.expense-plans.index') }}">Rencana Beban</a></li>
+                <li><a href="{{ route('erkap.profit-loss.index') }}">Laba Rugi (P&L)</a></li>
+                <li><a href="{{ route('erkap.profit-loss.simulate') }}">Simulasi Skenario</a></li>
+            </ul>
+        </li>
+        @endcan
 
         <li>
             <a href="{{ route('portal.index') }}" class="waves-effect text-{{ $roleColor }}">

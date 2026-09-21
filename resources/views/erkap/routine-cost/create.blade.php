@@ -67,23 +67,12 @@ $months = [
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Kategori Biaya <span class="text-danger">*</span></label>
-                            <select name="cost_category" class="form-select @error('cost_category') is-invalid @enderror" required>
-                                <option value="" disabled selected>Pilih Kategori Biaya</option>
-                                <option value="Biaya Umum" {{ old('cost_category') == 'Biaya Umum' ? 'selected' : '' }}>Biaya Umum</option>
-                                <option value="Bahan Bakar Minyak" {{ old('cost_category') == 'Bahan Bakar Minyak' ? 'selected' : '' }}>Bahan Bakar Minyak</option>
-                                <option value="Sewa Kendaraan" {{ old('cost_category') == 'Sewa Kendaraan' ? 'selected' : '' }}>Sewa Kendaraan</option>
-                            </select>
-                            @error('cost_category') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-
-                        <div class="col-md-6">
                             <label class="form-label fw-bold">Elemen Biaya <span class="text-danger">*</span></label>
                             <select name="erkap_cost_element_id" class="form-select @error('erkap_cost_element_id') is-invalid @enderror" required>
                                 <option value="" disabled selected>Pilih Elemen Biaya</option>
                                 @foreach($costElements as $costElement)
                                     <option value="{{ $costElement->id }}" {{ old('erkap_cost_element_id') == $costElement->id ? 'selected' : '' }}>
-                                        {{ $costElement->name }}
+                                        {{ $costElement->code }} {{ $costElement->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -97,14 +86,38 @@ $months = [
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Cost Center ID</label>
-                            <input type="number" name="cost_center_id" class="form-control @error('cost_center_id') is-invalid @enderror" value="{{ old('cost_center_id') }}" placeholder="Opsional">
-                            @error('cost_center_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <label class="form-label fw-bold">Cost Center Swakelola</label>
+                            <select id="cost_center_swakelola" class="form-select">
+                                <option value="">Pilih Cost Center Swakelola</option>
+                                @foreach($swakelolaCostCenters as $costCenter)
+                                    <option value="{{ $costCenter->id }}" data-owner="{{ $costCenter->owner }}" data-cost-element="{{ $costCenter->cost_element_id }}" {{ old('cost_center_id') == $costCenter->id ? 'selected' : '' }}>
+                                        {{ $costCenter->code }} - {{ $costCenter->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="col-md-4">
+                            <label class="form-label fw-bold">Cost Center Non Swakelola</label>
+                            <select id="cost_center_non_swakelola" class="form-select">
+                                <option value="">Pilih Cost Center Non Swakelola</option>
+                                @foreach($nonSwakelolaCostCenters as $costCenter)
+                                    <option value="{{ $costCenter->id }}" data-owner="{{ $costCenter->owner }}" data-cost-element="{{ $costCenter->cost_element_id }}" {{ old('cost_center_id') == $costCenter->id ? 'selected' : '' }}>
+                                        {{ $costCenter->code }} - {{ $costCenter->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <input type="hidden" name="cost_center_id" id="cost_center_id" value="{{ old('cost_center_id') }}">
+
+                        @error('cost_center_id')
+                        <div class="col-12"><div class="text-danger small">{{ $message }}</div></div>
+                        @enderror
+
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Pemilik Cost Center <span class="text-danger">*</span></label>
-                            <input type="text" name="cost_center_owner" class="form-control @error('cost_center_owner') is-invalid @enderror" value="{{ old('cost_center_owner') }}" placeholder="Nama pemilik cost center" required>
+                            <input type="text" name="cost_center_owner" id="cost_center_owner" class="form-control @error('cost_center_owner') is-invalid @enderror" value="{{ old('cost_center_owner') }}" placeholder="Nama pemilik cost center" required>
                             @error('cost_center_owner') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
@@ -114,28 +127,41 @@ $months = [
                             @error('qty') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Satuan <span class="text-danger">*</span></label>
+                            <input type="text" name="units" class="form-control @error('units') is-invalid @enderror" value="{{ old('units') }}" placeholder="cth: unit, set, liter" required maxlength="50">
+                            @error('units') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Harga Satuan <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0" name="unit_price" class="form-control @error('unit_price') is-invalid @enderror" value="{{ old('unit_price') }}" required>
+                            <input type="text" inputmode="decimal" name="unit_price" class="form-control rupiah-input @error('unit_price') is-invalid @enderror" value="{{ old('unit_price') }}" placeholder="0,00" required>
                             @error('unit_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Total</label>
-                            <input type="number" step="0.01" min="0" name="total" id="total" class="form-control bg-light @error('total') is-invalid @enderror" value="{{ old('total') }}" readonly>
+                            <input type="text" inputmode="decimal" name="total" id="total" class="form-control bg-light rupiah-input @error('total') is-invalid @enderror" value="{{ old('total') }}" readonly>
                             @error('total') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div id="cost-preview" class="form-text"></div>
                         </div>
                     </div>
 
                     <div class="mt-4">
-                        <h6 class="text-uppercase fw-bold text-muted mb-3"><i class="mdi mdi-calendar-month me-1"></i> Biaya Bulanan</h6>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="text-uppercase fw-bold text-muted mb-0"><i class="mdi mdi-calendar-month me-1"></i> Biaya Bulanan</h6>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" name="is_kumulatif" id="is_kumulatif" value="1" {{ old('is_kumulatif') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_kumulatif">Kumulatif</label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row g-3">
                         @foreach($months as $field => $label)
                         <div class="col-md-2">
                             <label class="form-label fw-bold">{{ $label }}</label>
-                            <input type="number" step="0.01" min="0" name="{{ $field }}" class="form-control month-cost @error($field) is-invalid @enderror" value="{{ old($field) }}">
+                            <input type="text" inputmode="decimal" name="{{ $field }}" class="form-control month-cost rupiah-input @error($field) is-invalid @enderror" value="{{ old($field) }}" placeholder="0,00">
                             @error($field) <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         @endforeach
@@ -155,21 +181,61 @@ $months = [
 @endsection
 
 @section('plugin')
+@include('erkap.partials.rupiah')
 <script>
-    function calculateTotal() {
+    function monthTotal() {
         var total = 0;
         $('.month-cost').each(function() {
-            var val = parseFloat($(this).val());
-            if (!isNaN(val)) {
-                total += val;
-            }
+            total += Rupiah.parse($(this).val());
         });
-        $('#total').val(total);
+        return total;
+    }
+
+    function updateCostPreview() {
+        var qty = parseFloat($('input[name="qty"]').val()) || 0;
+        var price = Rupiah.parse($('input[name="unit_price"]').val());
+        var expected = qty * price;
+        var monthly = monthTotal();
+        var kumulatif = $('#is_kumulatif').is(':checked');
+        $('#total').val(Rupiah.format(kumulatif ? expected : monthly));
+        var msg = 'Total kebutuhan: ' + Rupiah.format(expected) + ' (qty × harga satuan). Total bulanan: ' + Rupiah.format(monthly) + '.';
+        if (!kumulatif && Math.abs(expected - monthly) > 0.01) {
+            msg += ' PERHATIAN: total bulanan belum sama dengan qty × harga satuan.';
+            $('#cost-preview').removeClass('text-success').addClass('text-danger fw-bold');
+        } else {
+            $('#cost-preview').removeClass('text-danger fw-bold').addClass('text-success');
+        }
+        $('#cost-preview').text(msg);
+    }
+
+    function syncCostCenter($select) {
+        var owner = $select.find(':selected').data('owner');
+        if (owner) {
+            $('#cost_center_owner').val(owner);
+        }
+        var costElementId = $select.find(':selected').data('cost-element');
+        if (costElementId) {
+            $('select[name="erkap_cost_element_id"]').val(costElementId).trigger('change.select2');
+        }
+        $('#cost_center_id').val($select.val() || '');
     }
 
     $(document).ready(function() {
-        $(document).on('input', '.month-cost', calculateTotal);
-        calculateTotal();
+        $(document).on('input', '.month-cost, input[name="qty"], input[name="unit_price"]', updateCostPreview);
+        $('#is_kumulatif').on('change', updateCostPreview);
+        $(document).on('change', '#cost_center_swakelola', function() {
+            if ($(this).val()) {
+                $('#cost_center_non_swakelola').val('').trigger('change.select2');
+            }
+            syncCostCenter($(this));
+        });
+        $(document).on('change', '#cost_center_non_swakelola', function() {
+            if ($(this).val()) {
+                $('#cost_center_swakelola').val('').trigger('change.select2');
+            }
+            syncCostCenter($(this));
+        });
+        updateCostPreview();
     });
 </script>
 @endsection

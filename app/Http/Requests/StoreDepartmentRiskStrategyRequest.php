@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDepartmentRiskStrategyRequest extends FormRequest
 {
@@ -15,7 +16,7 @@ class StoreDepartmentRiskStrategyRequest extends FormRequest
     {
         return [
             'erkap_risk_identification_id' => ['required', 'integer', 'exists:erkap_risk_identifications,id'],
-            'risk' => ['required', 'string'],
+            'strategy' => ['required', Rule::in(['avoid', 'reduce', 'transfer', 'accept'])],
         ];
     }
 }

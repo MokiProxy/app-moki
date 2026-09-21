@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRiskIdentificationImpactRequest;
 use App\Http\Requests\UpdateRiskIdentificationImpactRequest;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskIdentificationImpact;
+use App\Services\ErkapAccess;
 use Exception;
 
 class RiskIdentificationImpactController extends Controller
@@ -14,7 +15,11 @@ class RiskIdentificationImpactController extends Controller
     public function index()
     {
         $pageName = 'Dampak Identifikasi Risiko';
-        $impacts = RiskIdentificationImpact::with('riskIdentification')->paginate(10);
+        $impacts = RiskIdentificationImpact::with('riskIdentification')
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
+            })
+            ->paginate(10);
 
         return view('erkap.risk-identification-impact.index', compact('pageName', 'impacts'));
     }
@@ -22,7 +27,7 @@ class RiskIdentificationImpactController extends Controller
     public function create()
     {
         $pageName = 'Buat Dampak Identifikasi Risiko';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.risk-identification-impact.create', compact('pageName', 'riskIdentifications'));
     }
@@ -30,6 +35,8 @@ class RiskIdentificationImpactController extends Controller
     public function store(StoreRiskIdentificationImpactRequest $request)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             RiskIdentificationImpact::create($request->validated());
 
             return redirect()->route('erkap.risk-identification-impacts.index')
@@ -48,8 +55,10 @@ class RiskIdentificationImpactController extends Controller
 
     public function edit(RiskIdentificationImpact $riskIdentificationImpact)
     {
+        ErkapAccess::assertRiskIdentificationAccess($riskIdentificationImpact->erkap_risk_identification_id);
+
         $pageName = 'Edit Dampak Identifikasi Risiko';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.risk-identification-impact.edit', compact('pageName', 'riskIdentificationImpact', 'riskIdentifications'));
     }
@@ -57,6 +66,9 @@ class RiskIdentificationImpactController extends Controller
     public function update(UpdateRiskIdentificationImpactRequest $request, RiskIdentificationImpact $riskIdentificationImpact)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($riskIdentificationImpact->erkap_risk_identification_id);
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             $riskIdentificationImpact->update($request->validated());
 
             return redirect()->route('erkap.risk-identification-impacts.index')
@@ -76,6 +88,8 @@ class RiskIdentificationImpactController extends Controller
     public function destroy(RiskIdentificationImpact $riskIdentificationImpact)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($riskIdentificationImpact->erkap_risk_identification_id);
+
             $riskIdentificationImpact->delete();
 
             return redirect()->route('erkap.risk-identification-impacts.index')

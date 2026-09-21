@@ -50,18 +50,21 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
                 $risks = [
                     [
                         "risk" => "Terganggunya bisnis proses perusahaan yang memanfaatkan teknologi IT",
+                        "risk_direction" => "negative",
                         "erkap_department_target_id" => $deptTarget->id,
                         "erkap_risk_type_id" => 32,
                         "erkap_risk_taxonomy_id" => 5,
                     ],
                     [
                         "risk" => "Perangkat tidak memenuhi kebutuhan pengguna (user)",
+                        "risk_direction" => "negative",
                         "erkap_department_target_id" => $deptTarget->id,
                         "erkap_risk_type_id" => 34,
                         "erkap_risk_taxonomy_id" => 6,
                     ],
                     [
                         "risk" => "Terkena Pinalti",
+                        "risk_direction" => "negative",
                         "erkap_department_target_id" => $deptTarget->id,
                         "erkap_risk_type_id" => 35,
                         "erkap_risk_taxonomy_id" => 3,
@@ -134,11 +137,11 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
                     }
 
                     $strategies = [
-                        ["erkap_risk_identification_id" => 1, "strategy" => "Melakukan pemenuhan kebutuhan perangkat jaringan di setiap unit kerja perushaan"],
-                        ["erkap_risk_identification_id" => 1, "strategy" => "Menyediakan suku cadang sebagai backup jika terjadi kerusakan"],
-                        ["erkap_risk_identification_id" => 2, "strategy" => "Melakukan perawatan secara berkala"],
-                        ["erkap_risk_identification_id" => 3, "strategy" => "Memenuhi kebutuhan lisensi semua perangkat lunak yang terinstall di dalam perangkat yang digunakan user"],
-                        ["erkap_risk_identification_id" => 3, "strategy" => "Memastikan perpanjangan lisensi dibayarkan tepat waktu"],
+                        ["erkap_risk_identification_id" => 1, "strategy" => "reduce"],
+                        ["erkap_risk_identification_id" => 1, "strategy" => "reduce"],
+                        ["erkap_risk_identification_id" => 2, "strategy" => "reduce"],
+                        ["erkap_risk_identification_id" => 3, "strategy" => "reduce"],
+                        ["erkap_risk_identification_id" => 3, "strategy" => "reduce"],
                     ];
                     foreach ($strategies as $strategy) {
                         if($strategy['erkap_risk_identification_id'] == $riskIdentification->id) {

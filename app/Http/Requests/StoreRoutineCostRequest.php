@@ -17,11 +17,11 @@ class StoreRoutineCostRequest extends FormRequest
 
         return [
             'erkap_work_program_id' => ['required', 'integer', 'exists:erkap_work_programs,id'],
-            'cost_category' => ['required', 'string', 'in:Biaya Umum,Bahan Bakar Minyak,Sewa Kendaraan'],
             'need' => ['required', 'string'],
-            'cost_center_id' => ['nullable', 'integer'],
+            'cost_center_id' => ['nullable', 'integer', 'exists:cost_centers,id'],
             'cost_center_owner' => ['required', 'string', 'max:255'],
             'qty' => ['required', 'numeric'],
+            'units' => ['required', 'string', 'max:50'],
             'unit_price' => ['required', 'numeric'],
             'erkap_cost_element_id' => ['required', 'integer', 'exists:erkap_cost_elements,id'],
             'jan_cost' => $monthRules,
@@ -37,6 +37,7 @@ class StoreRoutineCostRequest extends FormRequest
             'nov_cost' => $monthRules,
             'des_cost' => $monthRules,
             'total' => ['required', 'numeric'],
+            'is_kumulatif' => ['nullable', 'boolean'],
         ];
     }
 }

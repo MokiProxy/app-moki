@@ -13,7 +13,7 @@ class StoreWorkProgramRequest extends FormRequest
 
     public function rules(): array
     {
-        $monthRules = ['nullable', 'numeric'];
+        $monthRules = ['required', 'numeric', 'min:0'];
 
         return [
             'erkap_risk_identification_id' => ['required', 'integer', 'exists:erkap_risk_identifications,id'],
@@ -33,5 +33,29 @@ class StoreWorkProgramRequest extends FormRequest
             'nov_plan' => $monthRules,
             'dec_plan' => $monthRules,
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $monthlyTotal = collect([
+                $this->jan_plan,
+                $this->feb_plan,
+                $this->mar_plan,
+                $this->apr_plan,
+                $this->may_plan,
+                $this->jun_plan,
+                $this->jul_plan,
+                $this->aug_plan,
+                $this->sep_plan,
+                $this->oct_plan,
+                $this->nov_plan,
+                $this->dec_plan,
+            ])->sum();
+
+            if (abs($monthlyTotal - (float) $this->year_plan) > 0.01) {
+                $validator->errors()->add('year_plan', 'Rencana tahunan harus sama dengan jumlah rencana bulanan.');
+            }
+        });
     }
 }

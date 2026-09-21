@@ -42,7 +42,10 @@
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Risk</th>
+                                <th>Arah Risiko</th>
                                 <th>Sasaran Departemen</th>
+                                <th>Rating</th>
+                                <th>Program Kerja</th>
                                 <th>Risk Type</th>
                                 <th>Risk Taxonomy</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
@@ -50,10 +53,38 @@
                         </thead>
                         <tbody>
                             @forelse($riskIdentifications as $key => $riskIdentification)
+                            @php
+                            $rating = optional(optional($riskIdentification->departmentTarget)->ratingCriteria)->rating ?? null;
+                            @endphp
                             <tr>
                                 <td class="text-center">{{ $riskIdentifications->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $riskIdentification->risk }}</td>
+                                <td>
+                                    @if($riskIdentification->risk_direction == 'positive')
+                                        <span class="badge bg-success">Positif</span>
+                                    @else
+                                        <span class="badge bg-danger">Negatif</span>
+                                    @endif
+                                </td>
                                 <td>{{ $riskIdentification->departmentTarget->target ?? '-' }}</td>
+                                <td>
+                                    @if($rating)
+                                        <span class="badge bg-primary">{{ $rating }}</span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($riskIdentification->work_programs_count > 0)
+                                        <span class="badge bg-success">Ada Program Kerja</span>
+                                    @elseif(in_array($rating, ['AAA', 'AA', 'A'], true))
+                                        <a href="{{ route('erkap.work-programs.create', ['risk_identification_id' => $riskIdentification->id]) }}" class="btn btn-outline-primary btn-sm">
+                                            Buat Program Kerja
+                                        </a>
+                                    @else
+                                        <span class="badge bg-warning text-dark">Belum Ada</span>
+                                    @endif
+                                </td>
                                 <td>{{ $riskIdentification->riskType->name ?? '-' }}</td>
                                 <td>{{ $riskIdentification->riskTaxonomy->name ?? '-' }}</td>
                                 <td class="text-center">
@@ -67,7 +98,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">Belum ada data identifikasi risiko.</td>
+                                <td colspan="9" class="text-center text-muted">Belum ada data identifikasi risiko.</td>
                             </tr>
                             @endforelse
                         </tbody>

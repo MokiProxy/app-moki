@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Erkap;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCostElementRequest;
 use App\Http\Requests\UpdateCostElementRequest;
+use App\Models\ChartOfAccount;
 use App\Models\Erkap\CostElement;
 use App\Models\Erkap\CostElementCategory;
 use Exception;
@@ -14,7 +15,7 @@ class CostElementController extends Controller
     public function index()
     {
         $pageName = 'Elemen Biaya';
-        $costElements = CostElement::with('costElementCategory')->paginate(10);
+        $costElements = CostElement::with(['costElementCategory', 'chartOfAccount'])->paginate(10);
 
         return view('erkap.cost-element.index', compact('pageName', 'costElements'));
     }
@@ -23,8 +24,9 @@ class CostElementController extends Controller
     {
         $pageName = 'Buat Elemen Biaya';
         $categories = CostElementCategory::all();
+        $chartOfAccounts = ChartOfAccount::orderBy('code')->get();
 
-        return view('erkap.cost-element.create', compact('pageName', 'categories'));
+        return view('erkap.cost-element.create', compact('pageName', 'categories', 'chartOfAccounts'));
     }
 
     public function store(StoreCostElementRequest $request)
@@ -50,8 +52,9 @@ class CostElementController extends Controller
     {
         $pageName = 'Edit Elemen Biaya';
         $categories = CostElementCategory::all();
+        $chartOfAccounts = ChartOfAccount::orderBy('code')->get();
 
-        return view('erkap.cost-element.edit', compact('pageName', 'costElement', 'categories'));
+        return view('erkap.cost-element.edit', compact('pageName', 'costElement', 'categories', 'chartOfAccounts'));
     }
 
     public function update(UpdateCostElementRequest $request, CostElement $costElement)

@@ -76,6 +76,21 @@
                             @error('erkap_risk_taxonomy_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Arah Risiko <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-4 form-control border-0 pt-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="risk_direction" id="risk_direction_negative" value="negative" {{ old('risk_direction', 'negative') == 'negative' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="risk_direction_negative">Negatif</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="risk_direction" id="risk_direction_positive" value="positive" {{ old('risk_direction') == 'positive' ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="risk_direction_positive">Positif</label>
+                                </div>
+                            </div>
+                            @error('risk_direction') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Risk <span class="text-danger">*</span></label>
                             <input type="text" name="risk" class="form-control @error('risk') is-invalid @enderror" value="{{ old('risk') }}" required maxlength="255">

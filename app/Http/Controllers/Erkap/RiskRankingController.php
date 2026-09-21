@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRiskRankingRequest;
 use App\Http\Requests\UpdateRiskRankingRequest;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskRanking;
+use App\Services\ErkapAccess;
 use Exception;
 
 class RiskRankingController extends Controller
@@ -14,7 +15,11 @@ class RiskRankingController extends Controller
     public function index()
     {
         $pageName = 'Peringkat Risiko';
-        $riskRankings = RiskRanking::with('riskIdentification')->paginate(10);
+        $riskRankings = RiskRanking::with('riskIdentification')
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
+            })
+            ->paginate(10);
 
         return view('erkap.risk-ranking.index', compact('pageName', 'riskRankings'));
     }
@@ -22,7 +27,7 @@ class RiskRankingController extends Controller
     public function create()
     {
         $pageName = 'Buat Peringkat Risiko';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.risk-ranking.create', compact('pageName', 'riskIdentifications'));
     }
@@ -30,6 +35,8 @@ class RiskRankingController extends Controller
     public function store(StoreRiskRankingRequest $request)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             RiskRanking::create($request->validated());
 
             return redirect()->route('erkap.risk-rankings.index')
@@ -48,8 +55,10 @@ class RiskRankingController extends Controller
 
     public function edit(RiskRanking $riskRanking)
     {
+        ErkapAccess::assertRiskIdentificationAccess($riskRanking->erkap_risk_identification_id);
+
         $pageName = 'Edit Peringkat Risiko';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.risk-ranking.edit', compact('pageName', 'riskRanking', 'riskIdentifications'));
     }
@@ -57,6 +66,9 @@ class RiskRankingController extends Controller
     public function update(UpdateRiskRankingRequest $request, RiskRanking $riskRanking)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($riskRanking->erkap_risk_identification_id);
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             $riskRanking->update($request->validated());
 
             return redirect()->route('erkap.risk-rankings.index')
@@ -76,6 +88,8 @@ class RiskRankingController extends Controller
     public function destroy(RiskRanking $riskRanking)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($riskRanking->erkap_risk_identification_id);
+
             $riskRanking->delete();
 
             return redirect()->route('erkap.risk-rankings.index')

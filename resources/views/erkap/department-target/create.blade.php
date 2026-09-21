@@ -52,6 +52,11 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Divisi <span class="text-danger">*</span></label>
+                            @if(isset($userDivision))
+                            <input type="hidden" name="division_id" value="{{ old('division_id', $userDivision->id) }}">
+                            <input type="text" class="form-control" value="{{ $userDivision->name }}" disabled>
+                            <div class="form-text text-muted">Divisi otomatis sesuai divisi Anda.</div>
+                            @else
                             <select name="division_id" class="form-select @error('division_id') is-invalid @enderror" required>
                                 <option value="" disabled selected>Pilih Divisi</option>
                                 @foreach($divisions as $division)
@@ -61,6 +66,7 @@
                                 @endforeach
                             </select>
                             @error('division_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @endif
                         </div>
 
                         <div class="col-md-6">

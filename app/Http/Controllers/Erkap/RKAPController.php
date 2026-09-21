@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRKAPRequest;
 use App\Http\Requests\UpdateRKAPRequest;
 use App\Models\Erkap\RKAP;
+use App\Services\ApprovalService;
 use Exception;
 
 class RKAPController extends Controller
@@ -84,6 +85,19 @@ class RKAPController extends Controller
                 ->with('success', 'Periode RKAP berhasil dihapus!');
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.index')->with('error', $err->getMessage());
+        }
+    }
+
+    public function submit(RKAP $rkap)
+    {
+        try {
+            ApprovalService::submit($rkap);
+
+            return redirect()->route('erkap.rkap.index')
+                ->with('success', 'Periode RKAP berhasil diajukan untuk persetujuan!');
+        } catch (Exception $err) {
+            return redirect()->route('erkap.rkap.index')
+                ->with('error', $err->getMessage());
         }
     }
 }

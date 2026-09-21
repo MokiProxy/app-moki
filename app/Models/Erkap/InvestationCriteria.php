@@ -12,4 +12,9 @@ class InvestationCriteria extends Model
     protected $table = 'erkap_investation_criterias';
 
     protected $fillable = ['code', 'name'];
+
+    public function investmentPlans()
+    {
+        return $this->hasMany(InvestmentPlan::class, 'erkap_investation_criteria_id');
+    }
 }

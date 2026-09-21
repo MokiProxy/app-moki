@@ -16,6 +16,7 @@ $authUserRoleId = auth()->user()->getRoleNames()->first();
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ config('setting.logo') }}">
     <link href="{{ asset('libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
     @yield('css')

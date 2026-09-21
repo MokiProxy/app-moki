@@ -7,6 +7,7 @@ use App\Http\Requests\StoreDepartmentRiskStrategyRequest;
 use App\Http\Requests\UpdateDepartmentRiskStrategyRequest;
 use App\Models\Erkap\DepartmentRiskStrategy;
 use App\Models\Erkap\RiskIdentification;
+use App\Services\ErkapAccess;
 use Exception;
 
 class DepartmentRiskStrategyController extends Controller
@@ -14,7 +15,11 @@ class DepartmentRiskStrategyController extends Controller
     public function index()
     {
         $pageName = 'Strategi Risiko Departemen';
-        $departmentRiskStrategies = DepartmentRiskStrategy::with('riskIdentification')->paginate(10);
+        $departmentRiskStrategies = DepartmentRiskStrategy::with('riskIdentification')
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
+            })
+            ->paginate(10);
 
         return view('erkap.department-risk-strategy.index', compact('pageName', 'departmentRiskStrategies'));
     }
@@ -22,7 +27,7 @@ class DepartmentRiskStrategyController extends Controller
     public function create()
     {
         $pageName = 'Buat Strategi Risiko Departemen';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.department-risk-strategy.create', compact('pageName', 'riskIdentifications'));
     }
@@ -30,6 +35,8 @@ class DepartmentRiskStrategyController extends Controller
     public function store(StoreDepartmentRiskStrategyRequest $request)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             DepartmentRiskStrategy::create($request->validated());
 
             return redirect()->route('erkap.department-risk-strategies.index')
@@ -48,8 +55,10 @@ class DepartmentRiskStrategyController extends Controller
 
     public function edit(DepartmentRiskStrategy $departmentRiskStrategy)
     {
+        ErkapAccess::assertRiskIdentificationAccess($departmentRiskStrategy->erkap_risk_identification_id);
+
         $pageName = 'Edit Strategi Risiko Departemen';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.department-risk-strategy.edit', compact('pageName', 'departmentRiskStrategy', 'riskIdentifications'));
     }
@@ -57,6 +66,9 @@ class DepartmentRiskStrategyController extends Controller
     public function update(UpdateDepartmentRiskStrategyRequest $request, DepartmentRiskStrategy $departmentRiskStrategy)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($departmentRiskStrategy->erkap_risk_identification_id);
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             $departmentRiskStrategy->update($request->validated());
 
             return redirect()->route('erkap.department-risk-strategies.index')
@@ -76,6 +88,8 @@ class DepartmentRiskStrategyController extends Controller
     public function destroy(DepartmentRiskStrategy $departmentRiskStrategy)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($departmentRiskStrategy->erkap_risk_identification_id);
+
             $departmentRiskStrategy->delete();
 
             return redirect()->route('erkap.department-risk-strategies.index')

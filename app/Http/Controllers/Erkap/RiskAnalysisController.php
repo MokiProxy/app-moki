@@ -10,6 +10,7 @@ use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskImpact;
 use App\Models\Erkap\RiskProbability;
 use App\Models\Erkap\RiskScoreLevel;
+use App\Services\ErkapAccess;
 use Exception;
 use Illuminate\Http\JsonResponse;
 
@@ -18,7 +19,11 @@ class RiskAnalysisController extends Controller
     public function index()
     {
         $pageName = 'Analisis Risiko';
-        $riskAnalyses = RiskAnalysis::with(['riskIdentification', 'riskProbability', 'riskImpact', 'riskScoreValue'])->paginate(10);
+        $riskAnalyses = RiskAnalysis::with(['riskIdentification', 'riskProbability', 'riskImpact', 'riskScoreValue'])
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
+            })
+            ->paginate(10);
 
         return view('erkap.risk-analysis.index', compact('pageName', 'riskAnalyses'));
     }
@@ -26,7 +31,7 @@ class RiskAnalysisController extends Controller
     public function create()
     {
         $pageName = 'Buat Analisis Risiko';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
         $riskProbabilities = RiskProbability::all();
         $riskImpacts = RiskImpact::all();
 
@@ -36,6 +41,8 @@ class RiskAnalysisController extends Controller
     public function store(StoreRiskAnalysisRequest $request)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             RiskAnalysis::create($request->validated());
 
             return redirect()->route('erkap.risk-analysis.index')
@@ -54,8 +61,10 @@ class RiskAnalysisController extends Controller
 
     public function edit(RiskAnalysis $riskAnalysis)
     {
+        ErkapAccess::assertRiskIdentificationAccess($riskAnalysis->erkap_risk_identification_id);
+
         $pageName = 'Edit Analisis Risiko';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
         $riskProbabilities = RiskProbability::all();
         $riskImpacts = RiskImpact::all();
 
@@ -65,6 +74,9 @@ class RiskAnalysisController extends Controller
     public function update(UpdateRiskAnalysisRequest $request, RiskAnalysis $riskAnalysis)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($riskAnalysis->erkap_risk_identification_id);
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             $riskAnalysis->update($request->validated());
 
             return redirect()->route('erkap.risk-analysis.index')
@@ -84,6 +96,8 @@ class RiskAnalysisController extends Controller
     public function destroy(RiskAnalysis $riskAnalysis)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($riskAnalysis->erkap_risk_identification_id);
+
             $riskAnalysis->delete();
 
             return redirect()->route('erkap.risk-analysis.index')

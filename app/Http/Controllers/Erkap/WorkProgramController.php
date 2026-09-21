@@ -7,30 +7,87 @@ use App\Http\Requests\StoreWorkProgramRequest;
 use App\Http\Requests\UpdateWorkProgramRequest;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\WorkProgram;
+use App\Services\ApprovalService;
+use App\Services\ErkapAccess;
 use Exception;
+use Illuminate\Http\Request;
 
 class WorkProgramController extends Controller
 {
+    private const ALLOWED_RATINGS = ['AAA', 'AA', 'A'];
+
     public function index()
     {
         $pageName = 'Program Kerja';
-        $workPrograms = WorkProgram::with('riskIdentification')->paginate(10);
+        $workPrograms = WorkProgram::with(['riskIdentification.departmentTarget.ratingCriteria'])
+            ->withCount(['routineCosts', 'investmentPlans'])
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
+            })
+            ->paginate(10);
 
-        return view('erkap.work-program.index', compact('pageName', 'workPrograms'));
+        $submittableCount = WorkProgram::query()
+            ->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds())
+            ->whereIn('status', ['draft', 'rejected'])
+            ->count();
+
+        return view('erkap.work-program.index', compact('pageName', 'workPrograms', 'submittableCount'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $pageName = 'Buat Program Kerja';
-        $riskIdentifications = RiskIdentification::all();
 
-        return view('erkap.work-program.create', compact('pageName', 'riskIdentifications'));
+        $selectedRiskId = $request->filled('risk_identification_id')
+            ? $request->integer('risk_identification_id')
+            : ($request->filled('erkap_risk_identification_id')
+                ? $request->integer('erkap_risk_identification_id')
+                : null);
+
+        $riskIdentification = null;
+        if ($selectedRiskId) {
+            $riskIdentification = RiskIdentification::with('departmentTarget.ratingCriteria')
+                ->whereIn('id', ErkapAccess::riskIdentificationIds())
+                ->find($selectedRiskId);
+
+            if (! $riskIdentification) {
+                abort(404);
+            }
+
+            if (! $this->checkRating($riskIdentification)) {
+                return redirect()->route('erkap.work-programs.create')
+                    ->with('error', 'Program kerja hanya bisa dibuat untuk sasaran dengan rating A ke atas.');
+            }
+        }
+
+        $riskIdentifications = RiskIdentification::with('departmentTarget.ratingCriteria')
+            ->whereIn('id', ErkapAccess::riskIdentificationIds())
+            ->get();
+
+        return view('erkap.work-program.create', compact('pageName', 'riskIdentifications', 'riskIdentification'));
     }
 
     public function store(StoreWorkProgramRequest $request)
     {
         try {
-            WorkProgram::create($request->validated());
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
+            $riskIdentification = RiskIdentification::with('departmentTarget.ratingCriteria')
+                ->findOrFail($request->integer('erkap_risk_identification_id'));
+
+            if (! $this->checkRating($riskIdentification)) {
+                return redirect()->route('erkap.work-programs.create')
+                    ->withInput()
+                    ->with('error', 'Program kerja hanya bisa dibuat untuk sasaran dengan rating A ke atas.');
+            }
+
+            $data = $request->validated();
+
+            if (empty($data['name'])) {
+                $data['name'] = 'Program Kerja: '.$riskIdentification->risk;
+            }
+
+            WorkProgram::create($data);
 
             return redirect()->route('erkap.work-programs.index')
                 ->with('success', 'Program kerja baru berhasil disimpan!');
@@ -48,8 +105,12 @@ class WorkProgramController extends Controller
 
     public function edit(WorkProgram $workProgram)
     {
+        ErkapAccess::assertRiskIdentificationAccess($workProgram->erkap_risk_identification_id);
+
         $pageName = 'Edit Program Kerja';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::with('departmentTarget.ratingCriteria')
+            ->whereIn('id', ErkapAccess::riskIdentificationIds())
+            ->get();
 
         return view('erkap.work-program.edit', compact('pageName', 'workProgram', 'riskIdentifications'));
     }
@@ -57,6 +118,18 @@ class WorkProgramController extends Controller
     public function update(UpdateWorkProgramRequest $request, WorkProgram $workProgram)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($workProgram->erkap_risk_identification_id);
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
+            $riskIdentification = RiskIdentification::with('departmentTarget.ratingCriteria')
+                ->findOrFail($request->integer('erkap_risk_identification_id'));
+
+            if (! $this->checkRating($riskIdentification)) {
+                return redirect()->route('erkap.work-programs.edit', $workProgram->id)
+                    ->withInput()
+                    ->with('error', 'Program kerja hanya bisa dibuat untuk sasaran dengan rating A ke atas.');
+            }
+
             $workProgram->update($request->validated());
 
             return redirect()->route('erkap.work-programs.index')
@@ -76,6 +149,8 @@ class WorkProgramController extends Controller
     public function destroy(WorkProgram $workProgram)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($workProgram->erkap_risk_identification_id);
+
             $workProgram->delete();
 
             return redirect()->route('erkap.work-programs.index')
@@ -83,5 +158,62 @@ class WorkProgramController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.work-programs.index')->with('error', $err->getMessage());
         }
+    }
+
+    public function submit(WorkProgram $workProgram)
+    {
+        try {
+            ErkapAccess::assertRiskIdentificationAccess($workProgram->erkap_risk_identification_id);
+
+            ApprovalService::submit($workProgram);
+
+            return redirect()->route('erkap.work-programs.index')
+                ->with('success', 'Program kerja berhasil diajukan untuk persetujuan!');
+        } catch (Exception $err) {
+            return redirect()->route('erkap.work-programs.index')->with('error', $err->getMessage());
+        }
+    }
+
+    public function submitBatch()
+    {
+        try {
+            $workPrograms = WorkProgram::query()
+                ->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds())
+                ->whereIn('status', ['draft', 'rejected'])
+                ->get();
+
+            if ($workPrograms->isEmpty()) {
+                return redirect()->route('erkap.work-programs.index')
+                    ->with('error', 'Tidak ada program kerja yang dapat diajukan untuk persetujuan.');
+            }
+
+            $results = ApprovalService::submitBatch($workPrograms);
+
+            $message = "{$results['submitted']} program kerja berhasil diajukan untuk persetujuan.";
+
+            if ($results['skipped'] > 0) {
+                $message .= " {$results['skipped']} dilewati (sudah dalam proses/disetujui).";
+            }
+
+            if ($results['failed'] > 0) {
+                $message .= " {$results['failed']} gagal diajukan.";
+            }
+
+            if ($results['failed'] > 0 && $results['errors']) {
+                $message .= ' ('.$results['errors'][0].')';
+            }
+
+            return redirect()->route('erkap.work-programs.index')
+                ->with($results['failed'] > 0 ? 'error' : 'success', $message);
+        } catch (Exception $err) {
+            return redirect()->route('erkap.work-programs.index')->with('error', $err->getMessage());
+        }
+    }
+
+    protected function checkRating(RiskIdentification $riskIdentification): bool
+    {
+        $rating = optional(optional($riskIdentification->departmentTarget)->ratingCriteria)->rating;
+
+        return in_array($rating, self::ALLOWED_RATINGS, true);
     }
 }

@@ -12,4 +12,9 @@ class InvestattionCategory extends Model
     protected $table = 'erkap_investattion_categories';
 
     protected $fillable = ['code', 'name'];
+
+    public function investmentPlans()
+    {
+        return $this->hasMany(InvestmentPlan::class, 'erkap_investattion_category_id');
+    }
 }

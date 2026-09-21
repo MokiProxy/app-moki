@@ -6,6 +6,7 @@
 <style>
     .text-dark { color: #000000 !important; }
     table.table th, table.table td { white-space: nowrap; }
+    tr.no-budget { background-color: #fff3cd !important; }
 </style>
 @endsection
 
@@ -16,6 +17,14 @@
             <div class="card-body border-bottom bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 card-title text-dark fw-bold">{{ $pageName }}</h5>
                 <div class="d-flex gap-1">
+                    @if(isset($submittableCount) && $submittableCount > 0 && auth()->user()->can('erkap.work-programs.submit'))
+                    <form method="POST" action="{{ route('erkap.work-programs.submit-batch') }}" class="d-inline" onsubmit="return confirm('Ajukan {{ $submittableCount }} program kerja untuk persetujuan sekaligus?')">
+                        @csrf
+                        <button type="submit" class="btn btn-success">
+                            <i class="mdi mdi-send-multiple me-1"></i> Ajukan Semua Persetujuan
+                        </button>
+                    </form>
+                    @endif
                     <a href="{{ route('erkap.work-programs.create') }}" class="btn btn-primary">
                         <i class="mdi mdi-plus me-1"></i> Tambah Program Kerja
                     </a>
@@ -43,6 +52,7 @@
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Identifikasi Risiko</th>
+                                <th class="text-center">Rating</th>
                                 <th>Program Kerja</th>
                                 <th>Satuan</th>
                                 <th class="text-center">Tahunan</th>
@@ -58,14 +68,30 @@
                                 <th class="text-center">Okt</th>
                                 <th class="text-center">Nov</th>
                                 <th class="text-center">Des</th>
-                                <th style="width: 120px" class="text-center">Aksi</th>
+                                <th class="text-center">Biaya</th>
+                                <th style="width: 180px" class="text-center">Status</th>
+                                <th style="width: 170px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                            $ratingBadge = function ($rating) {
+                                if (in_array($rating, ['AAA', 'AA', 'A'], true)) {
+                                    return '<span class="badge bg-danger">' . e($rating ?? '-') . '</span>';
+                                }
+
+                                return '<span class="badge bg-secondary">' . e($rating ?? '-') . '</span>';
+                            };
+                            @endphp
                             @forelse($workPrograms as $key => $workProgram)
-                            <tr>
+                            @php
+                            $ratingProgram = optional(optional(optional($workProgram->riskIdentification)->departmentTarget)->ratingCriteria)->rating ?? null;
+                            $hasBudget = $workProgram->routine_costs_count > 0 || $workProgram->investment_plans_count > 0;
+                            @endphp
+                            <tr class="@if(!$hasBudget) no-budget @endif">
                                 <td class="text-center">{{ $workPrograms->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $workProgram->riskIdentification->risk ?? '-' }}</td>
+                                <td class="text-center">{!! $ratingBadge($ratingProgram) !!}</td>
                                 <td>{{ $workProgram->name }}</td>
                                 <td>{{ $workProgram->units }}</td>
                                 <td class="text-center">{{ $workProgram->year_plan !== null ? number_format($workProgram->year_plan, 0, ',', '.') : '-' }}</td>
@@ -82,6 +108,24 @@
                                 <td class="text-center">{{ $workProgram->nov_plan ?? '-' }}</td>
                                 <td class="text-center">{{ $workProgram->dec_plan ?? '-' }}</td>
                                 <td class="text-center">
+                                    @if($hasBudget)
+                                        <span class="badge bg-success" title="Program kerja sudah memiliki biaya">Ada</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark" title="Program kerja belum memiliki biaya rutin/investasi">Belum Ada</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-{{ $workProgram->statusClass() }}">{{ $workProgram->statusLabel() }}</span>
+                                </td>
+                                <td class="text-center">
+                                    @if($workProgram->canBeSubmitted() && auth()->user()->can('erkap.work-programs.submit'))
+                                    <form method="POST" action="{{ route('erkap.work-programs.submit', $workProgram->id) }}" class="d-inline" onsubmit="return confirm('Ajukan program kerja ini untuk persetujuan?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary btn-sm" title="Ajukan Persetujuan">
+                                            <i class="mdi mdi-send"></i>
+                                        </button>
+                                    </form>
+                                    @endif
                                     <a href="{{ route('erkap.work-programs.edit', $workProgram->id) }}" class="btn btn-warning btn-sm btn-edit" title="Edit">
                                         <i class="mdi mdi-pencil"></i>
                                     </a>
@@ -92,7 +136,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="18" class="text-center text-muted">Belum ada data program kerja.</td>
+                                <td colspan="20" class="text-center text-muted">Belum ada data program kerja.</td>
                             </tr>
                             @endforelse
                         </tbody>

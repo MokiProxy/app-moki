@@ -37,6 +37,18 @@ class RolePermissionSeeder extends Seeder
 
             // EQTAX roles
             'eqtax-user',
+
+            // E-RKAP roles
+            'erkap-cost-owner',
+            'erkap-admin',
+            'erkap-ppk',
+            'erkap-controller',
+            'erkap-direksi-keuangan',
+            'erkap-direksi',
+            'erkap-komisaris',
+            'erkap-accounting',
+            'erkap-risk-manager',
+            'erkap-auditor',
         ];
 
         foreach ($roles as $role) {
@@ -152,6 +164,70 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'form-it.fixed-asset.approve', 'guard_name' => 'web'],
         ];
 
+        $erkapResources = [
+            'cost-element-categories',
+            'cost-elements',
+            'chart-of-accounts',
+            'risk-appetites',
+            'risk-taxonomies',
+            'risk-types',
+            'rating-criterias',
+            'risk-scales',
+            'risk-probabilities',
+            'risk-impacts',
+            'risk-score-levels',
+            'investation-types',
+            'investation-criterias',
+            'investattion-categories',
+            'rkap',
+            'company-targets',
+            'department-targets',
+            'risk-identifications',
+            'risk-identification-reasons',
+            'risk-identification-impacts',
+            'risk-analysis',
+            'risk-rankings',
+            'department-risk-strategies',
+            'work-programs',
+            'routine-costs',
+            'cost-centers',
+            'investment-plans',
+            'budget-capex',
+            'revenue-plans',
+            'expense-plans',
+            'profit-loss',
+        ];
+
+        $erkapActions = ['view', 'create', 'edit', 'delete'];
+
+        foreach ($erkapResources as $resource) {
+            foreach ($erkapActions as $action) {
+                $permissions[] = ['name' => "erkap.{$resource}.{$action}", 'guard_name' => 'web'];
+            }
+        }
+
+        $permissions[] = ['name' => 'erkap.menu', 'guard_name' => 'web'];
+
+        $approvalResourceActions = [
+            'submit', 'approve', 'reject',
+        ];
+
+        $approvalResources = [
+            'work-programs',
+            'routine-costs',
+            'investment-plans',
+            'rkap',
+            'budget-capex',
+        ];
+
+        foreach ($approvalResources as $resource) {
+            foreach ($approvalResourceActions as $action) {
+                $permissions[] = ['name' => "erkap.{$resource}.{$action}", 'guard_name' => 'web'];
+            }
+        }
+
+        $permissions[] = ['name' => 'erkap.approvals.view', 'guard_name' => 'web'];
+
         foreach ($permissions as $permission) {
             Permission::firstOrCreate($permission);
         }
@@ -182,6 +258,126 @@ class RolePermissionSeeder extends Seeder
 
         // EQTAX
         $eqtaxUser = Role::where('name', 'eqtax-user')->first();
+
+        // E-RKAP
+        $erkapCostOwner = Role::where('name', 'erkap-cost-owner')->first();
+        $erkapAdmin = Role::where('name', 'erkap-admin')->first();
+        $erkapPpk = Role::where('name', 'erkap-ppk')->first();
+        $erkapController = Role::where('name', 'erkap-controller')->first();
+        $erkapDireksiKeuangan = Role::where('name', 'erkap-direksi-keuangan')->first();
+        $erkapDireksi = Role::where('name', 'erkap-direksi')->first();
+        $erkapKomisaris = Role::where('name', 'erkap-komisaris')->first();
+        $erkapAccounting = Role::where('name', 'erkap-accounting')->first();
+        $erkapRiskManager = Role::where('name', 'erkap-risk-manager')->first();
+        $erkapAuditor = Role::where('name', 'erkap-auditor')->first();
+
+        $toEkapPermissions = function (array $resources) use ($erkapActions) {
+            $names = ['erkap.menu'];
+
+            foreach ($resources as $resource) {
+                foreach ($erkapActions as $action) {
+                    $names[] = "erkap.{$resource}.{$action}";
+                }
+            }
+
+            return $names;
+        };
+
+        $costOwnerResources = [
+            'department-targets',
+            'risk-identifications',
+            'risk-identification-reasons',
+            'risk-identification-impacts',
+            'risk-analysis',
+            'risk-rankings',
+            'department-risk-strategies',
+            'work-programs',
+            'routine-costs',
+            'investment-plans',
+            'revenue-plans',
+            'expense-plans',
+            'profit-loss',
+        ];
+
+        $costOwnerPermissions = $toEkapPermissions($costOwnerResources);
+        $erkapAdminPermissions = $toEkapPermissions($erkapResources);
+
+        $approvalPermissions = [
+            'erkap.approvals.view',
+            'erkap.work-programs.submit',
+            'erkap.work-programs.approve',
+            'erkap.work-programs.reject',
+            'erkap.routine-costs.submit',
+            'erkap.routine-costs.approve',
+            'erkap.routine-costs.reject',
+            'erkap.investment-plans.submit',
+            'erkap.investment-plans.approve',
+            'erkap.investment-plans.reject',
+            'erkap.rkap.submit',
+            'erkap.rkap.approve',
+            'erkap.rkap.reject',
+            'erkap.budget-capex.submit',
+            'erkap.budget-capex.approve',
+            'erkap.budget-capex.reject',
+        ];
+
+        $submitPermissions = function ($resources) {
+            return collect($resources)->map(fn ($resource) => "erkap.{$resource}.submit")->values()->all();
+        };
+
+        $erkapCostOwner->givePermissionTo($costOwnerPermissions);
+        $erkapCostOwner->revokePermissionTo([
+            'erkap.company-targets.view',
+            'erkap.company-targets.create',
+            'erkap.company-targets.edit',
+            'erkap.company-targets.delete',
+        ]);
+        $erkapCostOwner->givePermissionTo($submitPermissions([
+            'work-programs',
+            'routine-costs',
+            'investment-plans',
+        ]));
+
+        $erkapAdmin->givePermissionTo($erkapAdminPermissions);
+        $erkapAdmin->givePermissionTo($approvalPermissions);
+
+        $erkapPpk->givePermissionTo([
+            'erkap.approvals.view',
+            'erkap.work-programs.approve',
+            'erkap.work-programs.reject',
+            'erkap.routine-costs.approve',
+            'erkap.routine-costs.reject',
+            'erkap.investment-plans.approve',
+            'erkap.investment-plans.reject',
+        ]);
+
+        $erkapController->givePermissionTo($erkapPpk->permissions->pluck('name')->all());
+        $erkapController->givePermissionTo([
+            'erkap.rkap.approve',
+            'erkap.rkap.reject',
+        ]);
+
+        $erkapDireksiKeuangan->givePermissionTo([
+            'erkap.approvals.view',
+            'erkap.investment-plans.approve',
+            'erkap.investment-plans.reject',
+        ]);
+
+        $erkapDireksi->givePermissionTo([
+            'erkap.approvals.view',
+            'erkap.rkap.approve',
+            'erkap.rkap.reject',
+        ]);
+
+        $erkapKomisaris->givePermissionTo([
+            'erkap.approvals.view',
+            'erkap.rkap.approve',
+            'erkap.rkap.reject',
+        ]);
+
+        $erkapAccounting->givePermissionTo(['erkap.approvals.view']);
+        $erkapRiskManager->givePermissionTo(['erkap.approvals.view']);
+        $erkapAuditor->givePermissionTo(['erkap.approvals.view']);
 
         $eqtaxUser->givePermissionTo([
             'eqtax.menu',
@@ -361,6 +557,9 @@ class RolePermissionSeeder extends Seeder
             'form-it.fixed-asset.view',
             'form-it.fixed-asset.create',
             'form-it.fixed-asset.approve',
+            // E-RKAP
+            ...$erkapAdminPermissions,
+            ...$approvalPermissions,
         ]);
 
         $approver->givePermissionTo([

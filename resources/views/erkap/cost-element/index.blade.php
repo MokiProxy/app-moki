@@ -44,6 +44,7 @@
                                 <th style="width: 120px">Kode</th>
                                 <th>Nama</th>
                                 <th>Kategori</th>
+                                <th>Akun CoA</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -54,6 +55,15 @@
                                 <td class="fw-bold">{{ $costElement->code }}</td>
                                 <td>{{ $costElement->name }}</td>
                                 <td>{{ $costElement->costElementCategory->name ?? '-' }}</td>
+                                <td>
+                                    @if($costElement->chartOfAccount)
+                                        <span class="badge bg-{{ $costElement->chartOfAccount->type === 'revenue' ? 'success' : 'danger' }}">
+                                            {{ $costElement->chartOfAccount->code }} - {{ $costElement->chartOfAccount->name }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <a href="{{ route('erkap.cost-elements.edit', $costElement->id) }}" class="btn btn-warning btn-sm btn-edit" title="Edit">
                                         <i class="mdi mdi-pencil"></i>
@@ -65,7 +75,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted">Belum ada data elemen biaya.</td>
+                                <td colspan="6" class="text-center text-muted">Belum ada data elemen biaya.</td>
                             </tr>
                             @endforelse
                         </tbody>

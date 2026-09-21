@@ -51,12 +51,12 @@
                             <tr>
                                 <td class="text-center">{{ $departmentRiskStrategies->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $departmentRiskStrategy->riskIdentification->risk ?? '-' }}</td>
-                                <td>{{ $departmentRiskStrategy->strategy }}</td>
+                                <td>{{ \App\Models\Erkap\DepartmentRiskStrategy::getStrategies()[$departmentRiskStrategy->strategy] ?? $departmentRiskStrategy->strategy }}</td>
                                 <td class="text-center">
                                     <a href="{{ route('erkap.department-risk-strategies.edit', $departmentRiskStrategy->id) }}" class="btn btn-warning btn-sm btn-edit" title="Edit">
                                         <i class="mdi mdi-pencil"></i>
                                     </a>
-                                    <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="{{ $departmentRiskStrategy->id }}" data-name="{{ $departmentRiskStrategy->risk }}" title="Hapus">
+                                    <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="{{ $departmentRiskStrategy->id }}" data-name="{{ $departmentRiskStrategy->riskIdentification->risk ?? 'Strategi Risiko' }}" title="Hapus">
                                         <i class="mdi mdi-delete"></i>
                                     </button>
                                 </td>

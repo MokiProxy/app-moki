@@ -11,7 +11,17 @@ class RiskIdentification extends Model
 
     protected $table = 'erkap_risk_identifications';
 
-    protected $fillable = ['risk', 'erkap_department_target_id', 'erkap_risk_type_id', 'erkap_risk_taxonomy_id'];
+    protected $fillable = ['risk', 'risk_direction', 'erkap_department_target_id', 'erkap_risk_type_id', 'erkap_risk_taxonomy_id'];
+
+    public function scopePositive($query)
+    {
+        return $query->where('risk_direction', 'positive');
+    }
+
+    public function scopeNegative($query)
+    {
+        return $query->where('risk_direction', 'negative');
+    }
 
     public function departmentTarget()
     {
@@ -56,5 +66,10 @@ class RiskIdentification extends Model
     public function workPrograms()
     {
         return $this->hasMany(WorkProgram::class, 'erkap_risk_identification_id');
+    }
+
+    public function hasWorkProgram(): bool
+    {
+        return $this->workPrograms()->count() > 0;
     }
 }

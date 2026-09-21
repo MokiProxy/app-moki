@@ -48,7 +48,9 @@ class DatabaseSeeder extends Seeder
 
         // E-RKAP
         $this->call(CostElementCategoriesSeeder::class);
+        $this->call(ChartOfAccountsSeeder::class);
         $this->call(CostElementsSeeder::class);
+        $this->call(CostCentersSeeder::class);
         $this->call(ErkapRiskAppetiteSeeder::class);
         $this->call(ErkapRiskTaxonomySeeder::class);
         $this->call(ErkapRiskTypeSeeder::class);
@@ -62,5 +64,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ErkapInvestattionCategorySeeder::class);
         $this->call(SasaranDanAsesmenRisikoSeeder::class);
         $this->call(ErkapWorkProgramSeeder::class);
+        $this->call(FinancialProjectionSeeder::class);
     }
 }

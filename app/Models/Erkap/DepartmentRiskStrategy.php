@@ -13,6 +13,16 @@ class DepartmentRiskStrategy extends Model
 
     protected $fillable = ['erkap_risk_identification_id', 'strategy'];
 
+    public static function getStrategies()
+    {
+        return [
+            'avoid' => 'Hindari',
+            'reduce' => 'Kurangi',
+            'transfer' => 'Transfer',
+            'accept' => 'Terima',
+        ];
+    }
+
     public function riskIdentification()
     {
         return $this->belongsTo(RiskIdentification::class, 'erkap_risk_identification_id');

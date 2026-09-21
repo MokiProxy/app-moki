@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRiskIdentificationReasonRequest;
 use App\Http\Requests\UpdateRiskIdentificationReasonRequest;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskIdentificationReason;
+use App\Services\ErkapAccess;
 use Exception;
 
 class RiskIdentificationReasonController extends Controller
@@ -14,8 +15,11 @@ class RiskIdentificationReasonController extends Controller
     public function index()
     {
         $pageName = 'Alasan Identifikasi Risiko';
-        $reasons = RiskIdentificationReason::with('riskIdentification')->paginate(10);
-        // $reasons = RiskIdentificationReason::paginate(10);
+        $reasons = RiskIdentificationReason::with('riskIdentification')
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
+            })
+            ->paginate(10);
 
         return view('erkap.risk-identification-reason.index', compact('pageName', 'reasons'));
     }
@@ -23,7 +27,7 @@ class RiskIdentificationReasonController extends Controller
     public function create()
     {
         $pageName = 'Buat Alasan Identifikasi Risiko';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.risk-identification-reason.create', compact('pageName', 'riskIdentifications'));
     }
@@ -31,6 +35,8 @@ class RiskIdentificationReasonController extends Controller
     public function store(StoreRiskIdentificationReasonRequest $request)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             RiskIdentificationReason::create($request->validated());
 
             return redirect()->route('erkap.risk-identification-reasons.index')
@@ -49,8 +55,10 @@ class RiskIdentificationReasonController extends Controller
 
     public function edit(RiskIdentificationReason $riskIdentificationReason)
     {
+        ErkapAccess::assertRiskIdentificationAccess($riskIdentificationReason->erkap_risk_identification_id);
+
         $pageName = 'Edit Alasan Identifikasi Risiko';
-        $riskIdentifications = RiskIdentification::all();
+        $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.risk-identification-reason.edit', compact('pageName', 'riskIdentificationReason', 'riskIdentifications'));
     }
@@ -58,6 +66,9 @@ class RiskIdentificationReasonController extends Controller
     public function update(UpdateRiskIdentificationReasonRequest $request, RiskIdentificationReason $riskIdentificationReason)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($riskIdentificationReason->erkap_risk_identification_id);
+            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+
             $riskIdentificationReason->update($request->validated());
 
             return redirect()->route('erkap.risk-identification-reasons.index')
@@ -77,6 +88,8 @@ class RiskIdentificationReasonController extends Controller
     public function destroy(RiskIdentificationReason $riskIdentificationReason)
     {
         try {
+            ErkapAccess::assertRiskIdentificationAccess($riskIdentificationReason->erkap_risk_identification_id);
+
             $riskIdentificationReason->delete();
 
             return redirect()->route('erkap.risk-identification-reasons.index')

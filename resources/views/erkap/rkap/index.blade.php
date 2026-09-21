@@ -42,7 +42,8 @@
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Periode</th>
-                                <th style="width: 120px" class="text-center">Aksi</th>
+                                <th style="width: 180px" class="text-center">Status</th>
+                                <th style="width: 160px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,6 +52,17 @@
                                 <td class="text-center">{{ $rkaps->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $rkap->year }}</td>
                                 <td class="text-center">
+                                    <span class="badge bg-{{ $rkap->statusClass() }}">{{ $rkap->statusLabel() }}</span>
+                                </td>
+                                <td class="text-center">
+                                    @if($rkap->canBeSubmitted() && auth()->user()->can('erkap.rkap.submit'))
+                                    <form method="POST" action="{{ route('erkap.rkap.submit', $rkap->id) }}" class="d-inline" onsubmit="return confirm('Ajukan periode RKAP ini untuk persetujuan?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary btn-sm" title="Ajukan Persetujuan">
+                                            <i class="mdi mdi-send"></i>
+                                        </button>
+                                    </form>
+                                    @endif
                                     <a href="{{ route('erkap.rkap.edit', $rkap->id) }}" class="btn btn-warning btn-sm btn-edit" title="Edit">
                                         <i class="mdi mdi-pencil"></i>
                                     </a>
@@ -61,7 +73,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="3" class="text-center text-muted">Belum ada data periode RKAP.</td>
+                                <td colspan="4" class="text-center text-muted">Belum ada data periode RKAP.</td>
                             </tr>
                             @endforelse
                         </tbody>
