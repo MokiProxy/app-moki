@@ -351,16 +351,20 @@
     {{-- Top bar: brand + contact --}}
     <div class="auth-topbar">
         <div class="auth-brand">
-            <!-- <img src="{{ asset('img/logo-msi.png') }}" alt="Logo"> -->
-            <span>SBS ONE</span>
+            <img src="{{ asset('img/logo-msi.png') }}" alt="Logo">
+            <span>Portal IT MSI</span>
+        </div>
+        <div class="auth-contact">
+            Have any question or need assistance?
+            <a href="#">Contact Us</a>
         </div>
     </div>
 
     {{-- Hero: select login type --}}
     <div class="auth-hero">
-        <!-- <img src="{{ asset('img/logo-msi.png') }}" alt="Logo" class="auth-hero-logo"> -->
-        <h2>SBS ONE</h2>
-        <div class="version">Satria Bahana Sarana Integrated Platform</div>
+        <img src="{{ asset('img/logo-msi.png') }}" alt="Logo" class="auth-hero-logo">
+        <h2>Portal IT MSI</h2>
+        <div class="version">Version 1.0.0</div>
 
         <p class="select-text">Welcome, please select your login type</p>
 

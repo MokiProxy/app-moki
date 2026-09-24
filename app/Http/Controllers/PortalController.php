@@ -83,7 +83,7 @@ class PortalController extends Controller
             ],
             [
                 'title' => 'EQTAX',
-                'sub'   => 'EQTAX',
+                'sub'   => 'Ekualisasi Pajak',
                 'icon'  => 'mdi-percent',
                 'color' => '#276F27',
                 'permission' => 'eqtax.menu',
@@ -91,7 +91,7 @@ class PortalController extends Controller
             ],
             [
                 'title' => 'E-RKAP',
-                'sub'   => 'RKAP Elektronik',
+                'sub'   => 'Manajemen RKAP Digital',
                 'icon'  => 'mdi-cash',
                 'color' => '#556EE6',
                 'permission' => 'erkap.menu',

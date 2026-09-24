@@ -81,7 +81,7 @@
         .profile-icon {
             width: 38px;
             height: 38px;
-            background: #0f172a;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -114,15 +114,6 @@
         .dropdown-item:hover {
             background-color: #f8fafc;
             color: #0f172a;
-        }
-
-        .greeting-wrapper {
-            max-width: 1300px;
-            margin: 0 auto;
-            margin-top: 30px;
-            margin-bottom: 20px;
-            width: 100%;
-            padding: 0 20px;
         }
 
         .content-wrapper {
@@ -268,43 +259,45 @@
 <body>
 
     <div class="portal-container">
-        <div class="greeting-wrapper d-flex justify-content-between">
-            <div>
-                <h3 class="m-0 p-0">Halo, <span class="fw-bold" style="color: #0f172a;">{{ auth()->user()->name ?? 'Unknown' }}!</span></h3>
-                <p>Selamat Datang Di SBS ONE</p>
-            </div>
-            <div>
-                <div class="profile-section">
-                    <div class="d-none d-sm-block text-white">
-                        <div class="small text-black m-0 p-0 fw-semibold">{{ auth()->user()->name ?? 'Unknown' }}</div>
-                        <div class="small text-black m-0 p-0">{{ auth()->user()->employee_id ?? 'Unknown' }}</div>
-                    </div>
-
-                    <div class="dropdown">
-                        <div class="profile-icon" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="mdi mdi-account text-white"></i>
-                        </div>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                            <li>
-                                <h6 class="dropdown-header">Aksi Pengguna</h6>
-                            </li>
-                            <li><a class="dropdown-item" href="#"><i class="mdi mdi-account-circle-outline me-2"></i> Profil Saya</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="mdi mdi-logout-variant me-2"></i> <strong>Keluar / Logout</strong>
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
+        <header class="header-portal">
+            <div class="brand-wrapper">
+                <img src="{{ asset('img/logo-msi.png') }}" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <h1>Portal IT MSI</h1>
+                    <p>Integrated Solution Platform.</p>
                 </div>
             </div>
-        </div>
+
+            <div class="profile-section">
+                <div class="d-none d-sm-block text-white">
+                    <div class="small fw-bold text-white-50">{{ date('l, d F Y') }}</div>
+                    <div class="small">Selamat Datang, <strong>{{ auth()->user()->name ?? 'Harmoko' }}</strong></div>
+                </div>
+
+                <div class="dropdown">
+                    <div class="profile-icon" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="mdi mdi-account text-white"></i>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                        <li>
+                            <h6 class="dropdown-header">Aksi Pengguna</h6>
+                        </li>
+                        <li><a class="dropdown-item" href="#"><i class="mdi mdi-account-circle-outline me-2"></i> Profil Saya</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="mdi mdi-logout-variant me-2"></i> <strong>Keluar / Logout</strong>
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
 
         <div class="content-wrapper">
             <section class="mb-4">
@@ -389,7 +382,7 @@
             });
         }
 
-        function showNotAllowed(title) {
+          function showNotAllowed(title) {
             Swal.fire({
                 title: 'Anda Tidak Memiliki Akses!',
                 text: 'Anda tidak memiliki akses aplikasi ' + title,
