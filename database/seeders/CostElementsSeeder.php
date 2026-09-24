@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\ChartOfAccount;
 use App\Models\Erkap\CostElement;
 use Illuminate\Database\Seeder;
 
@@ -14,6 +15,7 @@ class CostElementsSeeder extends Seeder
      */
     public function run()
     {
+        $chartOfAccounts = ChartOfAccount::pluck('id', 'code')->all();
         $costElements = [
             ["code" => "6000", "name" => "Pendapatan Penjualan Batubara BUKIT ASAM 45", "erkap_cost_element_category_id" => 1],
             ["code" => "6001", "name" => "Pendapatan Penjualan Batubara BUKIT ASAM 50", "erkap_cost_element_category_id" => 1],
@@ -185,6 +187,8 @@ class CostElementsSeeder extends Seeder
         ];
 
         foreach ($costElements as $costElement) {
+            $costElement['chart_of_account_id'] = $chartOfAccounts[$costElement['code']] ?? null;
+
             CostElement::create($costElement);
         }
     }

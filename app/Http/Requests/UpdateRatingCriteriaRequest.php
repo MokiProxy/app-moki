@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ErkapRatingLevel;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateRatingCriteriaRequest extends FormRequest
 {
@@ -14,7 +16,7 @@ class UpdateRatingCriteriaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rating' => ['required', 'string', 'max:255'],
+            'rating' => ['required', 'string', Rule::in(ErkapRatingLevel::values())],
             'qualification' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:255'],
         ];

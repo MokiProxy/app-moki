@@ -57,6 +57,20 @@
                             @error('erkap_cost_element_category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Chart of Account <span class="text-danger">*</span></label>
+                            <select name="chart_of_account_id" class="form-select @error('chart_of_account_id') is-invalid @enderror" required>
+                                <option value="" disabled {{ old('chart_of_account_id', $costElement->chart_of_account_id) ? '' : 'selected' }}>Pilih CoA</option>
+                                @foreach($chartOfAccounts as $chartOfAccount)
+                                    <option value="{{ $chartOfAccount->id }}" {{ old('chart_of_account_id', $costElement->chart_of_account_id) == $chartOfAccount->id ? 'selected' : '' }}>
+                                        {{ $chartOfAccount->formattedCode }} - {{ $chartOfAccount->name }}
+                                        ({{ $chartOfAccount->type === 'revenue' ? 'Pendapatan' : 'Beban' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('chart_of_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Nama <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $costElement->name) }}" required maxlength="255">
