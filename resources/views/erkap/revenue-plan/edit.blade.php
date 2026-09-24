@@ -86,7 +86,7 @@ $months = [
                                 <option value="" disabled {{ old('chart_of_account_id', $revenuePlan->chart_of_account_id) ? '' : 'selected' }}>Pilih Akun Pendapatan</option>
                                 @foreach($chartOfAccounts as $coa)
                                     <option value="{{ $coa->id }}" {{ old('chart_of_account_id', $revenuePlan->chart_of_account_id) == $coa->id ? 'selected' : '' }}>
-                                        {{ $coa->code }} - {{ $coa->name }}
+                                        {{ $coa->formattedCode }} - {{ $coa->name }}
                                     </option>
                                 @endforeach
                             </select>

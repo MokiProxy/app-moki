@@ -12,10 +12,15 @@ class RiskAppetite extends Model
 
     protected $table = 'erkap_risk_appetites';
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'threshold_score'];
 
     public function riskTaxonomies()
     {
         return $this->hasMany(RiskTaxonomy::class);
+    }
+
+    public function riskAssessments()
+    {
+        return $this->hasMany(RiskAssessmentMonthly::class, 'risk_appetite_id');
     }
 }

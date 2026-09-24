@@ -104,12 +104,12 @@ agents/gap-planning-1/
 - [ ] Form 6 business process + status enum + risk appetite
 
 ### Week 6-7 (Phase 4 - Dashboards & Reporting)
-- [ ] All 11 missing dashboard widgets
-- [ ] Drill-down controller + service + UI
-- [ ] ReportGenerator + 5 report templates
-- [ ] Consolidated Excel export
-- [ ] Scheduled reports command
-- [ ] Chart.js + frappe-gantt + cytoscape.js integration
+- [x] All 11 missing dashboard widgets
+- [x] Drill-down controller + service + UI
+- [x] ReportGenerator + 5 report templates
+- [x] Consolidated Excel export
+- [x] Scheduled reports command
+- [x] Chart integration via ApexCharts (Gantt/Dependency Map berbasis tabel, tanpa frappe-gantt/cytoscape)
 
 ### Week 8-10 (Phase 5 - Integration & Technical)
 - [ ] API layer (routes, resources, controllers)
@@ -153,11 +153,11 @@ agents/gap-planning-1/
 - [ ] Form 6 has business process + risk appetite linkage
 
 ### Phase 4 (Dashboards/Reports)
-- [ ] All 11 missing widgets render correctly
-- [ ] Drill-down reaches transaction level
-- [ ] 5 report types generate PDF + Excel
-- [ ] Consolidated workbook has all 8 sheets
-- [ ] Scheduled reports deliver via email
+- [x] All 11 missing widgets render correctly
+- [x] Drill-down reaches transaction level
+- [x] 5 report types generate PDF + Excel
+- [x] Consolidated workbook has all 8 sheets
+- [x] Scheduled reports deliver via email
 
 ### Phase 5 (Technical)
 - [ ] API covers all RKAP modules with standardized responses

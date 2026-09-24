@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erkap;
 
 use App\Exports\Erkap\BudgetConsolidationExport;
+use App\Exports\Erkap\ConsolidatedRkapExport;
 use App\Http\Controllers\Controller;
 use App\Models\Erkap\BudgetRealization;
 use App\Models\Erkap\DepartmentTarget;
@@ -96,6 +97,7 @@ class DashboardController extends Controller
         $month = $request->integer('month', now()->month);
 
         $realizations = BudgetRealization::with([
+            'routineCost.costCenter.coordinatingDivision',
             'routineCost.workProgram.riskIdentification.departmentTarget.division',
             'investmentPlan.workProgram.riskIdentification.departmentTarget.division',
         ])
@@ -141,6 +143,18 @@ class DashboardController extends Controller
         $pdf->setOption('isRemoteEnabled', true);
 
         return $pdf->download('konsolidasi-anggaran-' . ($rkap?->year ?? $year) . '.pdf');
+    }
+
+    public function exportConsolidated(Request $request)
+    {
+        $rkap = RKAP::find($request->integer('rkap_id')) ?? RKAP::orderByDesc('year')->first();
+        $year = $request->integer('year', (int) ($rkap?->year ?? now()->year));
+        $divisionId = ErkapAccess::isDivisionScoped() ? ErkapAccess::divisionId() : ($request->integer('division_id') ?: null);
+
+        return Excel::download(
+            new ConsolidatedRkapExport($rkap, $year, $divisionId),
+            'konsolidasi-rkap-' . ($rkap?->year ?? $year) . '.xlsx'
+        );
     }
 
     protected function overview(?RKAP $rkap, array $scope, int $year): array

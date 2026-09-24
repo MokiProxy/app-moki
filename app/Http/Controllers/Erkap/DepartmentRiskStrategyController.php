@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateDepartmentRiskStrategyRequest;
 use App\Models\Erkap\DepartmentRiskStrategy;
 use App\Models\Erkap\RiskIdentification;
 use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
 use Exception;
 
 class DepartmentRiskStrategyController extends Controller
@@ -36,6 +37,7 @@ class DepartmentRiskStrategyController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id')));
 
             DepartmentRiskStrategy::create($request->validated());
 
@@ -57,6 +59,13 @@ class DepartmentRiskStrategyController extends Controller
     {
         ErkapAccess::assertRiskIdentificationAccess($departmentRiskStrategy->erkap_risk_identification_id);
 
+        try {
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($departmentRiskStrategy->erkap_risk_identification_id));
+        } catch (Exception $err) {
+            return redirect()->route('erkap.department-risk-strategies.index')
+                ->with('error', $err->getMessage());
+        }
+
         $pageName = 'Edit Strategi Risiko Departemen';
         $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
@@ -68,6 +77,8 @@ class DepartmentRiskStrategyController extends Controller
         try {
             ErkapAccess::assertRiskIdentificationAccess($departmentRiskStrategy->erkap_risk_identification_id);
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($departmentRiskStrategy->erkap_risk_identification_id));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($request->integer('erkap_risk_identification_id')));
 
             $departmentRiskStrategy->update($request->validated());
 
@@ -89,6 +100,7 @@ class DepartmentRiskStrategyController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($departmentRiskStrategy->erkap_risk_identification_id);
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($departmentRiskStrategy->erkap_risk_identification_id));
 
             $departmentRiskStrategy->delete();
 

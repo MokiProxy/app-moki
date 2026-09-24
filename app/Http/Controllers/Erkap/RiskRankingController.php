@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateRiskRankingRequest;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskRanking;
 use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
 use Exception;
 
 class RiskRankingController extends Controller
@@ -36,6 +37,7 @@ class RiskRankingController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id')));
 
             RiskRanking::create($request->validated());
 
@@ -57,6 +59,13 @@ class RiskRankingController extends Controller
     {
         ErkapAccess::assertRiskIdentificationAccess($riskRanking->erkap_risk_identification_id);
 
+        try {
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskRanking->erkap_risk_identification_id));
+        } catch (Exception $err) {
+            return redirect()->route('erkap.risk-rankings.index')
+                ->with('error', $err->getMessage());
+        }
+
         $pageName = 'Edit Peringkat Risiko';
         $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
@@ -68,6 +77,8 @@ class RiskRankingController extends Controller
         try {
             ErkapAccess::assertRiskIdentificationAccess($riskRanking->erkap_risk_identification_id);
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskRanking->erkap_risk_identification_id));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($request->integer('erkap_risk_identification_id')));
 
             $riskRanking->update($request->validated());
 
@@ -89,6 +100,7 @@ class RiskRankingController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($riskRanking->erkap_risk_identification_id);
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskRanking->erkap_risk_identification_id));
 
             $riskRanking->delete();
 

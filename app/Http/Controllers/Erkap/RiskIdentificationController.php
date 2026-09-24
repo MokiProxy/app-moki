@@ -10,7 +10,9 @@ use App\Models\Erkap\DepartmentTarget;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskTaxonomy;
 use App\Models\Erkap\RiskType;
+use App\Services\ApprovalService;
 use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Maatwebsite\Excel\Facades\Excel;
@@ -27,7 +29,14 @@ class RiskIdentificationController extends Controller
             })
             ->paginate(10);
 
-        return view('erkap.risk-identification.index', compact('pageName', 'riskIdentifications'));
+        $submittableCount = RiskIdentification::query()
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->whereIn('erkap_department_target_id', ErkapAccess::departmentTargetIds());
+            })
+            ->whereIn('status', ['draft', 'rejected'])
+            ->count();
+
+        return view('erkap.risk-identification.index', compact('pageName', 'riskIdentifications', 'submittableCount'));
     }
 
     public function export()
@@ -40,7 +49,7 @@ class RiskIdentificationController extends Controller
             ->orderBy('id')
             ->get();
 
-        return Excel::download(new RiskIdentificationExport($riskIdentifications), 'identifikasi-risiko-' . date('Y-m-d-Hi') . '.xlsx');
+        return Excel::download(new RiskIdentificationExport($riskIdentifications), 'identifikasi-risiko-'.date('Y-m-d-Hi').'.xlsx');
     }
 
     public function exportPdf()
@@ -56,7 +65,7 @@ class RiskIdentificationController extends Controller
         $pdf = Pdf::loadView('erkap.exports.risk-identification-pdf', compact('riskIdentifications'));
         $pdf->setOption('isRemoteEnabled', true);
 
-        return $pdf->download('identifikasi-risiko-' . date('Y-m-d-Hi') . '.pdf');
+        return $pdf->download('identifikasi-risiko-'.date('Y-m-d-Hi').'.pdf');
     }
 
     public function create()
@@ -98,6 +107,13 @@ class RiskIdentificationController extends Controller
     {
         ErkapAccess::assertDepartmentTargetAccess($riskIdentification->erkap_department_target_id);
 
+        try {
+            ErkapEvaluationLock::assertRiskEditable($riskIdentification);
+        } catch (Exception $err) {
+            return redirect()->route('erkap.risk-identifications.index')
+                ->with('error', $err->getMessage());
+        }
+
         $pageName = 'Edit Identifikasi Risiko';
         $departmentTargets = DepartmentTarget::query()
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
@@ -115,6 +131,7 @@ class RiskIdentificationController extends Controller
         try {
             ErkapAccess::assertDepartmentTargetAccess($riskIdentification->erkap_department_target_id);
             ErkapAccess::assertDepartmentTargetAccess($request->integer('erkap_department_target_id'));
+            ErkapEvaluationLock::assertRiskEditable($riskIdentification);
 
             $riskIdentification->update($request->validated());
 
@@ -136,6 +153,7 @@ class RiskIdentificationController extends Controller
     {
         try {
             ErkapAccess::assertDepartmentTargetAccess($riskIdentification->erkap_department_target_id);
+            ErkapEvaluationLock::assertRiskEditable($riskIdentification);
 
             if ($riskIdentification->hasWorkProgram()) {
                 return redirect()->route('erkap.risk-identifications.index')
@@ -146,6 +164,59 @@ class RiskIdentificationController extends Controller
 
             return redirect()->route('erkap.risk-identifications.index')
                 ->with('success', 'Identifikasi risiko berhasil dihapus!');
+        } catch (Exception $err) {
+            return redirect()->route('erkap.risk-identifications.index')->with('error', $err->getMessage());
+        }
+    }
+
+    public function submit(RiskIdentification $riskIdentification)
+    {
+        try {
+            ErkapAccess::assertDepartmentTargetAccess($riskIdentification->erkap_department_target_id);
+            $riskIdentification->validateHasStrategyAndWorkProgram();
+
+            ApprovalService::submit($riskIdentification);
+
+            return redirect()->route('erkap.risk-identifications.index')
+                ->with('success', 'Form 1 (identifikasi risiko) berhasil diajukan ke Dept. Manajemen Risiko untuk evaluasi!');
+        } catch (Exception $err) {
+            return redirect()->route('erkap.risk-identifications.index')->with('error', $err->getMessage());
+        }
+    }
+
+    public function submitBatch()
+    {
+        try {
+            $riskIdentifications = RiskIdentification::query()
+                ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                    $query->whereIn('erkap_department_target_id', ErkapAccess::departmentTargetIds());
+                })
+                ->whereIn('status', ['draft', 'rejected'])
+                ->get();
+
+            if ($riskIdentifications->isEmpty()) {
+                return redirect()->route('erkap.risk-identifications.index')
+                    ->with('error', 'Tidak ada Form 1 yang dapat diajukan untuk evaluasi.');
+            }
+
+            $results = ApprovalService::submitBatch($riskIdentifications);
+
+            $message = "{$results['submitted']} Form 1 berhasil diajukan untuk evaluasi Manajemen Risiko.";
+
+            if ($results['skipped'] > 0) {
+                $message .= " {$results['skipped']} dilewati (sudah dalam proses/disetujui).";
+            }
+
+            if ($results['failed'] > 0) {
+                $message .= " {$results['failed']} gagal diajukan.";
+            }
+
+            if ($results['failed'] > 0 && $results['errors']) {
+                $message .= ' ('.$results['errors'][0].')';
+            }
+
+            return redirect()->route('erkap.risk-identifications.index')
+                ->with($results['failed'] > 0 ? 'error' : 'success', $message);
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identifications.index')->with('error', $err->getMessage());
         }

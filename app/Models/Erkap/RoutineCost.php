@@ -4,8 +4,10 @@ namespace App\Models\Erkap;
 
 use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\Erkap\Traits\HasApprovalWorkflow;
+use App\Models\ChartOfAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class RoutineCost extends Model
 {
@@ -22,6 +24,7 @@ class RoutineCost extends Model
         'units',
         'unit_price',
         'erkap_cost_element_id',
+        'chart_of_account_id',
         'jan_cost',
         'feb_cost',
         'mar_cost',
@@ -35,6 +38,7 @@ class RoutineCost extends Model
         'nov_cost',
         'des_cost',
         'total',
+        'prior_year_amount',
         'is_kumulatif',
         'status',
     ];
@@ -53,6 +57,11 @@ class RoutineCost extends Model
         return $this->belongsTo(CostElement::class, 'erkap_cost_element_id');
     }
 
+    public function chartOfAccount()
+    {
+        return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id');
+    }
+
     public function costCenter()
     {
         return $this->belongsTo(CostCenter::class, 'cost_center_id');
@@ -61,5 +70,24 @@ class RoutineCost extends Model
     public function budgetRealizations()
     {
         return $this->hasMany(BudgetRealization::class, 'erkap_routine_cost_id');
+    }
+
+    protected static function booted(): void
+    {
+        // Monthly breakdown validation is called explicitly via validateMonthlyBreakdown()
+        // or during approval process in WorkProgram::canSubmitForApproval()
+    }
+
+    public function validateMonthlyBreakdown(): void
+    {
+        $months = ['jan_cost', 'feb_cost', 'mar_cost', 'apr_cost', 'may_cost', 'jun_cost', 'jul_cost', 'aug_cost', 'sep_cost', 'oct_cost', 'nov_cost', 'des_cost'];
+        $monthlySum = collect($months)->sum(fn ($month) => (float) ($this->$month ?? 0));
+        $total = (float) ($this->total ?? 0);
+
+        if ($total > 0 && abs($monthlySum - $total) > 0.01) {
+            throw ValidationException::withMessages([
+                'monthly_breakdown' => 'Total bulanan harus sama dengan total biaya',
+            ]);
+        }
     }
 }

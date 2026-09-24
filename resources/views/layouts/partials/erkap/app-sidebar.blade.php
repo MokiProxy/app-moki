@@ -3,9 +3,9 @@ $authUserRoleNames = auth()->user()->getRoleNames();
 $authUserRoleId = $authUserRoleNames->first() ?? 'none';
 $roleColor = "primary-it-admin";
 $pendingApprovalCount = \App\Models\Erkap\Approval::query()
-    ->where('approver_id', auth()->id())
-    ->where('status', 'pending')
-    ->count();
+->where('approver_id', auth()->id())
+->where('status', 'pending')
+->count();
 @endphp
 
 <div id="sidebar-menu" class="mt-2">
@@ -17,6 +17,33 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
             <a href="{{ route('erkap.index') }}" class="waves-effect">
                 <i class="bx bx-home-circle"></i>
                 <span key="t-dashboard">Dashboard</span>
+            </a>
+        </li>
+        @endcan
+
+        @can('erkap.menu')
+        <li>
+            <a href="{{ route('erkap.dashboard.widgets') }}" class="waves-effect">
+                <i class="bx bx-chart"></i>
+                <span key="t-analytics">Analytics & Widgets</span>
+            </a>
+        </li>
+        @endcan
+
+        @can('erkap.rkap.view')
+        <li>
+            <a href="{{ route('erkap.rkap.index') }}" class="waves-effect">
+                <i class="bx bx-map-alt"></i>
+                <span key="t-rkap-lifecycle">Lifecycle RKAP</span>
+            </a>
+        </li>
+        @endcan
+
+        @can('erkap.reports.view')
+        <li>
+            <a href="{{ route('erkap.reports.index') }}" class="waves-effect">
+                <i class="bx bx-file-blank"></i>
+                <span key="t-reports">Report Center</span>
             </a>
         </li>
         @endcan
@@ -130,9 +157,12 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
 
         @can('erkap.department-targets.view')
         <li>
-            <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <a href="javascript: void(0);" class="d-flex">
                 <i class='bx bx-file'></i>
-                <span key="t-master-data">Sasaran Asesmen Risiko</span>
+                <div class="d-flex flex-column">
+                    <span style="font-size: 10px;">Form 1</span>
+                    <span key="t-master-data">Sasaran & Asesmen Risiko</span>
+                </div>
             </a>
             <ul class="sub-menu" aria-expanded="false">
                 <ul class="sub-menu" aria-expanded="false">
@@ -159,6 +189,9 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
                             <li><a href="{{ route('erkap.risk-identifications.index') }}">Identifikasi Risiko</a></li>
                             <li><a href="{{ route('erkap.risk-identification-reasons.index') }}">Alasan Identifikasi</a></li>
                             <li><a href="{{ route('erkap.risk-identification-impacts.index') }}">Dampak Identifikasi</a></li>
+                            @can('erkap.risk-identifications.view')
+                            <li><a href="{{ route('erkap.form1.index') }}">Form 1 (Import/Export)</a></li>
+                            @endcan
                         </ul>
                     </li>
                 </ul>
@@ -182,6 +215,9 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
                             <li><a href="{{ route('erkap.department-risk-strategies.index') }}">Strategi Risiko Departemen</a></li>
+                            @can('erkap.risk-treatments.view')
+                            <li><a href="{{ route('erkap.risk-treatments.index') }}">Perlakuan Risiko</a></li>
+                            @endcan
                         </ul>
                     </li>
                 </ul>
@@ -191,21 +227,27 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
 
         @can('erkap.work-programs.view')
         <li>
-            <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <a href="javascript: void(0);" class="d-flex">
                 <i class='bx bx-timer'></i>
-                <span key="t-master-data">Jadwal Kerja</span>
+                <div class="d-flex flex-column">
+                    <span style="font-size: 10px;">Form 2</span>
+                    <span key="t-master-data">Jadwal Kerja</span>
+                </div>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                            <li><a href="{{ route('erkap.work-programs.index') }}">Program Kerja</a></li>
-                        </ul>
+                <li><a href="{{ route('erkap.work-programs.index') }}">Program Kerja</a></li>
+            </ul>
         </li>
         @endcan
 
         @can('erkap.routine-costs.view')
         <li>
-            <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <a href="javascript: void(0);" class="d-flex">
                 <i class='bx bx-money'></i>
-                <span key="t-master-data">Biaya Umum</span>
+                <div class="d-flex flex-column">
+                    <span style="font-size: 10px;">Form 3</span>
+                    <span key="t-master-data">Biaya Umum</span>
+                </div>
             </a>
             <ul class="sub-menu" aria-expanded="false">
                 <li><a href="{{ route('erkap.routine-costs.index') }}">Biaya Rutin</a></li>
@@ -215,13 +257,33 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
 
         @can('erkap.investment-plans.view')
         <li>
-            <a href="javascript: void(0);" class="has-arrow waves-effect">
+            <a href="javascript: void(0);" class="d-flex">
                 <i class='bx bx-trending-up'></i>
-                <span key="t-master-data">Investasi (CAPEX)</span>
+                <div class="d-flex flex-column">
+                    <span style="font-size: 10px;">Form 4</span>
+                    <span key="t-master-data">Biaya Investasi</span>
+                </div>
             </a>
             <ul class="sub-menu" aria-expanded="false">
                 <li><a href="{{ route('erkap.investment-plans.index') }}">Rencana Investasi</a></li>
                 <li><a href="{{ route('erkap.budget-capex.index') }}">Anggaran Investasi</a></li>
+                <li><a href="{{ route('erkap.budget-capex.summary') }}">Ringkasan Nilai Investasi</a></li>
+                <li><a href="{{ route('erkap.budget-capex.payment-distribution') }}">Distribusi Pembayaran</a></li>
+                @can('erkap.investment-gates.view')
+                <li><a href="{{ route('erkap.investment-gates.index') }}">Stage Gate Review</a></li>
+                @endcan
+            </ul>
+        </li>
+        @endcan
+
+        @can('erkap.zbb-reviews.view')
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-wallet'></i>
+                <span key="t-master-data">Zero Based Budgeting</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('erkap.zbb-reviews.index') }}">Review ZBB</a></li>
             </ul>
         </li>
         @endcan

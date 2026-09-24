@@ -28,13 +28,30 @@ class RiskAssessmentMonthly extends Model
         'mitigation_plan',
         'mitigation_status',
         'risk_owner',
+        'target_date',
+        'risk_appetite_id',
         'created_by',
         'updated_by',
+    ];
+
+    protected $casts = [
+        'target_date' => 'date',
+        'mitigation_status' => 'string',
     ];
 
     public function riskIdentification()
     {
         return $this->belongsTo(RiskIdentification::class, 'erkap_risk_identification_id');
+    }
+
+    public function riskAppetite()
+    {
+        return $this->belongsTo(RiskAppetite::class, 'risk_appetite_id');
+    }
+
+    public function businessProcesses()
+    {
+        return $this->hasMany(RiskBusinessProcess::class, 'risk_assessment_monthly_id');
     }
 
     protected static function boot()
@@ -61,5 +78,38 @@ class RiskAssessmentMonthly extends Model
         $this->residual_score = $this->residual_probability !== null && $this->residual_impact !== null
             ? (int) $this->residual_probability * (int) $this->residual_impact
             : null;
+    }
+
+    public function markOverdueIfDue(): bool
+    {
+        if ($this->mitigation_status === 'done') {
+            return false;
+        }
+
+        if (! $this->target_date) {
+            return false;
+        }
+
+        if ($this->target_date->isPast() && $this->mitigation_status !== 'overdue') {
+            $this->mitigation_status = 'overdue';
+            $this->save();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function markAllOverdueIfDue(): int
+    {
+        $updated = 0;
+
+        foreach (static::where('mitigation_status', '!=', 'done')->get() as $assessment) {
+            if ($assessment->markOverdueIfDue()) {
+                $updated++;
+            }
+        }
+
+        return $updated;
     }
 }

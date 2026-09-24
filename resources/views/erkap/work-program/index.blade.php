@@ -74,6 +74,18 @@
                                 <th class="text-center">Okt</th>
                                 <th class="text-center">Nov</th>
                                 <th class="text-center">Des</th>
+                                <th class="text-center bg-primary">Jan %</th>
+                                <th class="text-center bg-primary">Feb %</th>
+                                <th class="text-center bg-primary">Mar %</th>
+                                <th class="text-center bg-primary">Apr %</th>
+                                <th class="text-center bg-primary">Mei %</th>
+                                <th class="text-center bg-primary">Jun %</th>
+                                <th class="text-center bg-primary">Jul %</th>
+                                <th class="text-center bg-primary">Agu %</th>
+                                <th class="text-center bg-primary">Sep %</th>
+                                <th class="text-center bg-primary">Okt %</th>
+                                <th class="text-center bg-primary">Nov %</th>
+                                <th class="text-center bg-primary">Des %</th>
                                 <th class="text-center">Biaya</th>
                                 <th style="width: 180px" class="text-center">Status</th>
                                 <th style="width: 170px" class="text-center">Aksi</th>
@@ -93,6 +105,7 @@
                             @php
                             $ratingProgram = optional(optional(optional($workProgram->riskIdentification)->departmentTarget)->ratingCriteria)->rating ?? null;
                             $hasBudget = $workProgram->routine_costs_count > 0 || $workProgram->investment_plans_count > 0;
+                            $cumulativePercents = $workProgram->monthlyCumulativePercents();
                             @endphp
                             <tr class="@if(!$hasBudget) no-budget @endif">
                                 <td class="text-center">{{ $workPrograms->firstItem() + $key }}</td>
@@ -113,6 +126,10 @@
                                 <td class="text-center">{{ $workProgram->oct_plan ?? '-' }}</td>
                                 <td class="text-center">{{ $workProgram->nov_plan ?? '-' }}</td>
                                 <td class="text-center">{{ $workProgram->dec_plan ?? '-' }}</td>
+                                @php $monthKeys = \App\Models\Erkap\WorkProgram::MONTH_COLUMNS; @endphp
+                                @foreach($monthKeys as $m)
+                                <td class="text-center">{{ number_format($cumulativePercents[$m], 2, ',', '.') }}%</td>
+                                @endforeach
                                 <td class="text-center">
                                     @if($hasBudget)
                                         <span class="badge bg-success" title="Program kerja sudah memiliki biaya">Ada</span>
@@ -142,7 +159,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="20" class="text-center text-muted">Belum ada data program kerja.</td>
+                                <td colspan="33" class="text-center text-muted">Belum ada data program kerja.</td>
                             </tr>
                             @endforelse
                         </tbody>

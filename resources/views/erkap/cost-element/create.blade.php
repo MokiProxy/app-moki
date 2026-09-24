@@ -62,7 +62,7 @@
                                 <option value="" disabled {{ old('chart_of_account_id') ? '' : 'selected' }}>Pilih CoA</option>
                                 @foreach($chartOfAccounts as $chartOfAccount)
                                     <option value="{{ $chartOfAccount->id }}" {{ old('chart_of_account_id') == $chartOfAccount->id ? 'selected' : '' }}>
-                                        {{ $chartOfAccount->code }} - {{ $chartOfAccount->name }}
+                                        {{ $chartOfAccount->formattedCode }} - {{ $chartOfAccount->name }}
                                         ({{ $chartOfAccount->type === 'revenue' ? 'Pendapatan' : 'Beban' }})
                                     </option>
                                 @endforeach

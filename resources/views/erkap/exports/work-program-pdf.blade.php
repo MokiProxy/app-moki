@@ -35,6 +35,8 @@
                 <th>Tahunan</th>
                 <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th><th>Jun</th>
                 <th>Jul</th><th>Agu</th><th>Sep</th><th>Okt</th><th>Nov</th><th>Des</th>
+                <th>Kum Jan %</th><th>Kum Feb %</th><th>Kum Mar %</th><th>Kum Apr %</th><th>Kum Mei %</th><th>Kum Jun %</th>
+                <th>Kum Jul %</th><th>Kum Agu %</th><th>Kum Sep %</th><th>Kum Okt %</th><th>Kum Nov %</th><th>Kum Des %</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -43,6 +45,7 @@
             @php
             $departmentTarget = $workProgram->riskIdentification?->departmentTarget;
             $statusClass = $workProgram->statusClass();
+            $cumulativePercents = $workProgram->monthlyCumulativePercents();
             @endphp
             <tr>
                 <td style="text-align: center;">{{ $loop->iteration }}</td>
@@ -64,13 +67,16 @@
                 <td style="text-align: right;">{{ number_format($workProgram->oct_plan, 0, ',', '.') }}</td>
                 <td style="text-align: right;">{{ number_format($workProgram->nov_plan, 0, ',', '.') }}</td>
                 <td style="text-align: right;">{{ number_format($workProgram->dec_plan, 0, ',', '.') }}</td>
+                @foreach(\App\Models\Erkap\WorkProgram::MONTH_COLUMNS as $m)
+                <td style="text-align: right;">{{ number_format($cumulativePercents[$m], 2, ',', '.') }}%</td>
+                @endforeach
                 <td style="text-align: center;">
                     <span class="status bg-{{ $statusClass }}">{{ $workProgram->statusLabel() }}</span>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="20" style="text-align: center;">Tidak ada program kerja</td>
+                <td colspan="32" style="text-align: center;">Tidak ada program kerja</td>
             </tr>
             @endforelse
         </tbody>

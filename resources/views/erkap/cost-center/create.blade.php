@@ -81,6 +81,31 @@
                             </div>
                             @error('is_swakelola') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
+
+                        <div class="col-md-12">
+                            <div class="form-check form-switch form-check-inline">
+                                <input type="checkbox" name="is_centralized" value="1" class="form-check-input @error('is_centralized') is-invalid @enderror" id="is_centralized" {{ old('is_centralized') ? 'checked' : '' }}>
+                                <label class="form-check-label fw-bold" for="is_centralized">Biaya Tersentralisasi</label>
+                            </div>
+                            <div class="form-text">
+                                Biaya terpusat (mis. gaji &rarr; HR, TI &rarr; Departemen IT) hanya dapat diinput oleh departemen koordinator.
+                            </div>
+                            @error('is_centralized') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('coordinating_division_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-12" id="coordinator-field" style="{{ old('is_centralized') ? '' : 'display: none;' }}">
+                            <label class="form-label fw-bold">Departemen Koordinator <span class="text-danger">*</span></label>
+                            <select name="coordinating_division_id" class="form-select @error('coordinating_division_id') is-invalid @enderror">
+                                <option value="" disabled selected>Pilih Departemen Koordinator</option>
+                                @foreach($divisions as $division)
+                                    <option value="{{ $division->id }}" {{ old('coordinating_division_id') == $division->id ? 'selected' : '' }}>
+                                        {{ $division->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('coordinating_division_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
                     </div>
 
                     <div class="mt-4 border-top pt-3">
@@ -94,4 +119,21 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('plugin')
+<script>
+    $(document).ready(function() {
+        function toggleCoordinator() {
+            if ($('#is_centralized').is(':checked')) {
+                $('#coordinator-field').show();
+            } else {
+                $('#coordinator-field').hide();
+                $('#coordinator-field select').val('');
+            }
+        }
+        $('#is_centralized').on('change', toggleCoordinator);
+        toggleCoordinator();
+    });
+</script>
 @endsection

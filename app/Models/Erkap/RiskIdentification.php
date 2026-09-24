@@ -2,17 +2,25 @@
 
 namespace App\Models\Erkap;
 
+use App\Models\Erkap\Traits\HasApprovalWorkflow;
 use App\Models\Erkap\Traits\HasAuditTrail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class RiskIdentification extends Model
 {
-    use HasFactory, HasAuditTrail;
+    use HasApprovalWorkflow, HasAuditTrail, HasFactory;
 
     protected $table = 'erkap_risk_identifications';
 
-    protected $fillable = ['risk', 'risk_direction', 'erkap_department_target_id', 'erkap_risk_type_id', 'erkap_risk_taxonomy_id'];
+    protected $fillable = ['risk', 'risk_direction', 'erkap_department_target_id', 'erkap_risk_type_id', 'erkap_risk_taxonomy_id', 'status', 'approval_status', 'approved_by', 'approved_at'];
+
+    public function setStatusAttribute($value)
+    {
+        $this->attributes['status'] = $value;
+        $this->attributes['approval_status'] = $value;
+    }
 
     public function scopePositive($query)
     {
@@ -69,6 +77,11 @@ class RiskIdentification extends Model
         return $this->hasMany(WorkProgram::class, 'erkap_risk_identification_id');
     }
 
+    public function riskTreatments()
+    {
+        return $this->hasMany(RiskTreatment::class, 'erkap_risk_identification_id');
+    }
+
     public function hasWorkProgram(): bool
     {
         return $this->workPrograms()->count() > 0;
@@ -77,5 +90,59 @@ class RiskIdentification extends Model
     public function assessmentsMonthly()
     {
         return $this->hasMany(RiskAssessmentMonthly::class, 'erkap_risk_identification_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (self $risk) {
+            $errors = [];
+
+            if ($risk->departmentRiskStrategies()->exists()) {
+                $errors['strategies'] = 'Risiko tidak bisa dihapus karena memiliki strategi mitigasi';
+            }
+
+            if ($risk->workPrograms()->exists()) {
+                $errors['work_programs'] = 'Risiko tidak bisa dihapus karena memiliki Program Kerja';
+            }
+
+            if (! empty($errors)) {
+                throw ValidationException::withMessages($errors);
+            }
+        });
+
+        static::created(function (self $risk) {
+            // Risk created - strategies and work programs will be validated on their creation
+        });
+    }
+
+    public function hasStrategy(): bool
+    {
+        return $this->departmentRiskStrategies()->exists();
+    }
+
+    public function hasTreatment(): bool
+    {
+        return $this->riskTreatments()->exists();
+    }
+
+    public function validateHasStrategyAndWorkProgram(): void
+    {
+        if (! $this->hasStrategy()) {
+            throw ValidationException::withMessages([
+                'strategy' => 'Setiap Risiko wajib memiliki Strategi Mitigasi',
+            ]);
+        }
+
+        if (! $this->hasWorkProgram()) {
+            throw ValidationException::withMessages([
+                'work_program' => 'Setiap Risiko wajib memiliki Program Kerja',
+            ]);
+        }
+
+        if (! $this->hasTreatment()) {
+            throw ValidationException::withMessages([
+                'treatment' => 'Setiap Risiko wajib memiliki minimal satu Rencana Perlakuan Risiko',
+            ]);
+        }
     }
 }

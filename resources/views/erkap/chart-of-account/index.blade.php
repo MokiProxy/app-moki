@@ -15,6 +15,9 @@
             <div class="card-body border-bottom bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 card-title text-dark fw-bold">{{ $pageName }}</h5>
                 <div class="d-flex gap-1">
+                    <a href="{{ route('erkap.chart-of-accounts.create') }}" class="btn btn-primary">
+                        <i class="mdi mdi-plus me-1"></i> Tambah CoA
+                    </a>
                     <form action="{{ route('erkap.chart-of-accounts.sync') }}" method="POST">
                         @csrf
                         <button type="submit" class="btn btn-warning" title="Sinkronkan CoA dengan elemen biaya">
@@ -40,6 +43,10 @@
                 @endif
 
                 <div class="row g-2 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">Cari</label>
+                        <input type="text" class="form-control" id="search-input" value="{{ request('search') }}" placeholder="Kode / nama akun">
+                    </div>
                     <div class="col-md-4">
                         <div class="card border-success">
                             <div class="card-body py-3">
@@ -82,7 +89,7 @@
                             @forelse($chartOfAccounts as $key => $account)
                             <tr>
                                 <td class="text-center">{{ $chartOfAccounts->firstItem() + $key }}</td>
-                                <td class="fw-bold">{{ $account->code }}</td>
+                                <td class="fw-bold">{{ $account->formattedCode }}</td>
                                 <td>{{ $account->name }}</td>
                                 <td>
                                     @if($account->type === 'revenue')
@@ -127,5 +134,14 @@
         url.searchParams.set('type', value);
         window.location.href = url.toString();
     }
+
+    $('#search-input').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+            var url = new URL(window.location.href);
+            url.searchParams.set('search', this.value);
+            url.searchParams.set('page', 1);
+            window.location.href = url.toString();
+        }
+    });
 </script>
 @endsection

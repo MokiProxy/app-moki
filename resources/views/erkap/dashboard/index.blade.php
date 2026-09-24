@@ -89,7 +89,8 @@ $programPlanColumns = ['jan_plan', 'feb_plan', 'mar_plan', 'apr_plan', 'may_plan
         <form method="GET" action="{{ route('erkap.index') }}" class="d-flex flex-wrap align-items-center gap-2">
             <select name="rkap_id" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
                 @forelse($rkaps as $rkap)
-                <option value="{{ $rkap->id }}" @selected($selectedRkap?->id === $rkap->id)>Periode RKAP {{ $rkap->year }}</option>
+                <option value="{{ $rkap->id }}">Periode RKAP {{ $rkap->year }}</option>
+                <!-- <option value="{{ $rkap->id }}" @selected($selectedRkap?->id === $rkap->id)>Periode RKAP {{ $rkap->year }}</option> -->
                 @empty
                 <option value="">Belum ada RKAP</option>
                 @endforelse

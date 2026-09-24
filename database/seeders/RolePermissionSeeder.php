@@ -49,6 +49,9 @@ class RolePermissionSeeder extends Seeder
             'erkap-accounting',
             'erkap-risk-manager',
             'erkap-auditor',
+            'erkap-manajemen-aset',
+            'erkap-gate-review',
+            'erkap-bmi-admin',
         ];
 
         foreach ($roles as $role) {
@@ -188,10 +191,12 @@ class RolePermissionSeeder extends Seeder
             'risk-analysis',
             'risk-rankings',
             'department-risk-strategies',
+            'risk-treatments',
             'work-programs',
             'routine-costs',
             'cost-centers',
             'investment-plans',
+            'investment-gates',
             'budget-capex',
             'revenue-plans',
             'expense-plans',
@@ -200,6 +205,7 @@ class RolePermissionSeeder extends Seeder
             'program-realizations',
             'risk-assessments-monthly',
             'performance-scorecards',
+            'zbb-reviews',
         ];
 
         $erkapActions = ['view', 'create', 'edit', 'delete'];
@@ -222,6 +228,7 @@ class RolePermissionSeeder extends Seeder
             'investment-plans',
             'rkap',
             'budget-capex',
+            'risk-identifications',
         ];
 
         foreach ($approvalResources as $resource) {
@@ -232,6 +239,10 @@ class RolePermissionSeeder extends Seeder
 
         $permissions[] = ['name' => 'erkap.approvals.view', 'guard_name' => 'web'];
         $permissions[] = ['name' => 'erkap.audit-logs.view', 'guard_name' => 'web'];
+
+        $permissions[] = ['name' => 'erkap.investment-gates.review', 'guard_name' => 'web'];
+        $permissions[] = ['name' => 'erkap.investment-plans.download', 'guard_name' => 'web'];
+        $permissions[] = ['name' => 'erkap.rkap.bmi', 'guard_name' => 'web'];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate($permission);
@@ -275,6 +286,9 @@ class RolePermissionSeeder extends Seeder
         $erkapAccounting = Role::where('name', 'erkap-accounting')->first();
         $erkapRiskManager = Role::where('name', 'erkap-risk-manager')->first();
         $erkapAuditor = Role::where('name', 'erkap-auditor')->first();
+        $erkapManajemenAset = Role::where('name', 'erkap-manajemen-aset')->first();
+        $erkapGateReview = Role::where('name', 'erkap-gate-review')->first();
+        $erkapBmiAdmin = Role::where('name', 'erkap-bmi-admin')->first();
 
         $toEkapPermissions = function (array $resources) use ($erkapActions) {
             $names = ['erkap.menu'];
@@ -296,6 +310,7 @@ class RolePermissionSeeder extends Seeder
             'risk-analysis',
             'risk-rankings',
             'department-risk-strategies',
+            'risk-treatments',
             'work-programs',
             'routine-costs',
             'investment-plans',
@@ -328,6 +343,9 @@ class RolePermissionSeeder extends Seeder
             'erkap.budget-capex.submit',
             'erkap.budget-capex.approve',
             'erkap.budget-capex.reject',
+            'erkap.risk-identifications.submit',
+            'erkap.risk-identifications.approve',
+            'erkap.risk-identifications.reject',
         ];
 
         $submitPermissions = function ($resources) {
@@ -345,7 +363,9 @@ class RolePermissionSeeder extends Seeder
             'work-programs',
             'routine-costs',
             'investment-plans',
+            'risk-identifications',
         ]));
+        $erkapCostOwner->givePermissionTo(['erkap.zbb-reviews.view', 'erkap.zbb-reviews.create']);
 
         $erkapAdmin->givePermissionTo($erkapAdminPermissions);
         $erkapAdmin->givePermissionTo($approvalPermissions);
@@ -363,15 +383,23 @@ class RolePermissionSeeder extends Seeder
             'erkap.investment-plans.view',
             'erkap.investment-plans.approve',
             'erkap.investment-plans.reject',
+            'erkap.investment-plans.download',
+            'erkap.investment-gates.view',
+            'erkap.investment-gates.review',
         ]);
 
         $erkapController->givePermissionTo($erkapPpk->permissions->pluck('name')->all());
         $erkapController->givePermissionTo([
             'erkap.rkap.view',
+            'erkap.rkap.edit',
             'erkap.rkap.approve',
             'erkap.rkap.reject',
             'erkap.budget-capex.view',
             'erkap.profit-loss.view',
+            'erkap.zbb-reviews.view',
+            'erkap.zbb-reviews.create',
+            'erkap.zbb-reviews.edit',
+            'erkap.zbb-reviews.delete',
         ]);
 
         $erkapDireksiKeuangan->givePermissionTo([
@@ -380,6 +408,9 @@ class RolePermissionSeeder extends Seeder
             'erkap.investment-plans.view',
             'erkap.investment-plans.approve',
             'erkap.investment-plans.reject',
+            'erkap.investment-plans.download',
+            'erkap.investment-gates.view',
+            'erkap.investment-gates.review',
             'erkap.budget-capex.view',
         ]);
 
@@ -414,6 +445,8 @@ class RolePermissionSeeder extends Seeder
             'erkap.menu',
             'erkap.approvals.view',
             'erkap.risk-identifications.view',
+            'erkap.risk-identifications.approve',
+            'erkap.risk-identifications.reject',
             'erkap.risk-analysis.view',
             'erkap.risk-assessments-monthly.view',
         ]);
@@ -425,6 +458,39 @@ class RolePermissionSeeder extends Seeder
             'erkap.menu',
             'erkap.approvals.view',
             'erkap.audit-logs.view',
+        ]);
+
+        $erkapManajemenAset->givePermissionTo([
+            'erkap.menu',
+            'erkap.approvals.view',
+            'erkap.investment-plans.view',
+            'erkap.investment-plans.approve',
+            'erkap.investment-plans.reject',
+            'erkap.investment-plans.download',
+            'erkap.investment-gates.view',
+            'erkap.investment-gates.review',
+            'erkap.budget-capex.view',
+        ]);
+
+        $erkapGateReview->givePermissionTo([
+            'erkap.menu',
+            'erkap.approvals.view',
+            'erkap.investment-plans.view',
+            'erkap.investment-plans.approve',
+            'erkap.investment-plans.reject',
+            'erkap.investment-plans.download',
+            'erkap.investment-gates.view',
+            'erkap.investment-gates.review',
+            'erkap.budget-capex.view',
+            'erkap.rkap.view',
+            'erkap.rkap.bmi',
+        ]);
+
+        $erkapBmiAdmin->givePermissionTo([
+            'erkap.menu',
+            'erkap.approvals.view',
+            'erkap.rkap.view',
+            'erkap.rkap.bmi',
         ]);
 
         $eqtaxUser->givePermissionTo([

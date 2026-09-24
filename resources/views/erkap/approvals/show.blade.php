@@ -188,6 +188,96 @@
                                             <label class="form-label fw-bold text-muted small">Periode RKAP</label>
                                             <p class="mb-0">{{ $model->year }}</p>
                                         </div>
+                                    @elseif($type === 'risk_register')
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Sasaran Departemen</label>
+                                            <p class="mb-0">{{ $model->departmentTarget->target ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Divisi</label>
+                                            <p class="mb-0">{{ $model->departmentTarget->division->name ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Rating</label>
+                                            <p class="mb-0">{{ $model->departmentTarget->ratingCriteria->rating ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="form-label fw-bold text-muted small">Risiko</label>
+                                            <p class="mb-0">{{ $model->risk }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Arah Risiko</label>
+                                            <p class="mb-0">
+                                                @if($model->risk_direction === 'positive')
+                                                    <span class="badge bg-soft-success text-success">Positif</span>
+                                                @else
+                                                    <span class="badge bg-soft-danger text-danger">Negatif</span>
+                                                @endif
+                                            </p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Risk Type</label>
+                                            <p class="mb-0">{{ $model->riskType->name ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Risk Taxonomy</label>
+                                            <p class="mb-0">{{ $model->riskTaxonomy->name ?? '-' }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Sumber Risiko</label>
+                                            <p class="mb-0">
+                                                @forelse($model->reasons as $reason)
+                                                    <span class="badge bg-light text-dark me-1">{{ $reason->reason }}</span>
+                                                @empty
+                                                    -
+                                                @endforelse
+                                            </p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Dampak</label>
+                                            <p class="mb-0">
+                                                @forelse($model->impacts as $impact)
+                                                    <span class="badge bg-light text-dark me-1">{{ $impact->impact }}</span>
+                                                @empty
+                                                    -
+                                                @endforelse
+                                            </p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold text-muted small">Analisis Risiko</label>
+                                            <p class="mb-0">
+                                                @forelse($model->analysis as $analysis)
+                                                    <span class="badge bg-info me-1">
+                                                        L: {{ $analysis->riskProbability->score ?? '-' }} | I: {{ $analysis->riskImpact->score ?? '-' }}
+                                                    </span>
+                                                    <span class="badge bg-{{ $analysis->riskScoreValue->score >= 20 ? 'danger' : ($analysis->riskScoreValue->score >= 10 ? 'warning' : 'success') }}">
+                                                        Skor {{ $analysis->riskScoreValue->score ?? '-' }} ({{ $analysis->riskScoreValue->level ?? '-' }})
+                                                    </span>
+                                                @empty
+                                                    -
+                                                @endforelse
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted small">Strategi Mitigasi</label>
+                                            <p class="mb-0">
+                                                @forelse($model->departmentRiskStrategies as $strategy)
+                                                    <span class="badge bg-primary me-1">{{ \App\Models\Erkap\DepartmentRiskStrategy::getStrategies()[$strategy->strategy] ?? $strategy->strategy }}</span>
+                                                @empty
+                                                    -
+                                                @endforelse
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-muted small">Program Kerja</label>
+                                            <p class="mb-0">
+                                                @forelse($model->workPrograms as $workProgram)
+                                                    <span class="badge bg-soft-success text-success me-1">{{ $workProgram->name }}</span>
+                                                @empty
+                                                    -
+                                                @endforelse
+                                            </p>
+                                        </div>
                                     @endif
                                     <div class="col-md-6">
                                         <label class="form-label fw-bold text-muted small">Status Dokumen</label>

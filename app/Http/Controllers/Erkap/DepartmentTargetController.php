@@ -21,6 +21,7 @@ class DepartmentTargetController extends Controller
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->where('division_id', ErkapAccess::divisionId());
             })
+            ->orderBy('priority')
             ->paginate(10);
 
         return view('erkap.department-target.index', compact('pageName', 'departmentTargets'));

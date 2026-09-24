@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Erkap\CostElement;
 use App\Models\ChartOfAccount;
+use App\Support\CoaCode;
 use Illuminate\Database\Seeder;
 
 class ChartOfAccountsSeeder extends Seeder
@@ -192,7 +193,7 @@ class ChartOfAccountsSeeder extends Seeder
             $type = str_starts_with($account['code'], '6') ? 'revenue' : 'expense';
 
             ChartOfAccount::updateOrCreate(
-                ['code' => $account['code']],
+                ['code' => CoaCode::pad($account['code'])],
                 [
                     'name' => $account['name'],
                     'type' => $type,
@@ -205,7 +206,8 @@ class ChartOfAccountsSeeder extends Seeder
     }
 
     /**
-     * Link existing cost elements to chart of accounts by matching code.
+     * Link existing cost elements to chart of accounts by matching code
+     * (16-digit normalized, see CostElement::coaSuggestion).
      *
      * @return void
      */
@@ -214,9 +216,7 @@ class ChartOfAccountsSeeder extends Seeder
         $costElements = CostElement::whereNull('chart_of_account_id')->get();
 
         foreach ($costElements as $costElement) {
-            $chartOfAccount = ChartOfAccount::where('code', $costElement->code)->first();
-
-            if ($chartOfAccount) {
+            if ($chartOfAccount = $costElement->coaSuggestion()) {
                 $costElement->update(['chart_of_account_id' => $chartOfAccount->id]);
             }
         }

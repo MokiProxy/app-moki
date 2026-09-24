@@ -194,38 +194,38 @@ class ReportGenerator {
 ## 4.5 Implementation Tasks Checklist
 
 ### Dashboard Widgets
-- [ ] Cash Flow Position widget (Executive)
-- [ ] Risk Appetite Meter widget (Risk)
-- [ ] Risk Trend widget (Risk)
-- [ ] Gantt Chart widget (Program) - with frappe-gantt
-- [ ] Dependency Map widget (Program) - with cytoscape.js
-- [ ] Cost Center Heatmap widget (Budget)
-- [ ] Variance Top 10 widget (Budget)
-- [ ] Revenue Breakdown widget (P&L)
-- [ ] Expense Breakdown widget (P&L)
-- [ ] Scenario Comparison widget (P&L)
+- [x] Cash Flow Position widget (Executive)
+- [x] Risk Appetite Meter widget (Risk)
+- [x] Risk Trend widget (Risk)
+- [x] Gantt Chart widget (Program) - berbasis tabel (frappe-gantt tidak dipakai, sesuai constraint)
+- [x] Dependency Map widget (Program) - berbasis tabel (cytoscape.js tidak dipakai, sesuai constraint)
+- [x] Cost Center Heatmap widget (Budget)
+- [x] Variance Top 10 widget (Budget)
+- [x] Revenue Breakdown widget (P&L)
+- [x] Expense Breakdown widget (P&L)
+- [x] Scenario Comparison widget (P&L)
 
 ### Drill-Down
-- [ ] DrilldownController + routes
-- [ ] DrilldownService with data collectors
-- [ ] UI: Modal with DataTable (server-side)
-- [ ] Export from drill-down
+- [x] DrilldownController + routes
+- [x] DrilldownService with data collectors
+- [x] UI: Modal with DataTable (server-side)
+- [x] Export from drill-down
 
 ### Reporting Engine
-- [ ] ReportGenerator core service
-- [ ] Report templates (Blade views) for 5 report types
-- [ ] PDF generation setup (dompdf)
-- [ ] Consolidated Excel export (Maatwebsite)
-- [ ] Scheduled report command + kernel schedule
-- [ ] Email delivery + storage
-- [ ] Report history/listing UI
+- [x] ReportGenerator core service
+- [x] Report templates (Blade views) for 5 report types
+- [x] PDF generation setup (dompdf)
+- [x] Consolidated Excel export (Maatwebsite)
+- [x] Scheduled report command + kernel schedule
+- [x] Email delivery + storage
+- [x] Report history/listing UI
 
 ### Chart Infrastructure
-- [ ] Install Chart.js + frappe-gantt + cytoscape.js
-- [ ] Create chart Blade components
-- [ ] Create chart JS factory functions
-- [ ] Add chart containers to dashboard views
-- [ ] Wire up data endpoints (API or inline)
+- [x] Integrasi charting via ApexCharts (menggantikan Chart.js); Gantt & Dependency Map berbasis tabel
+- [x] Create chart Blade components
+- [x] Create chart JS factory functions
+- [x] Add chart containers to dashboard views
+- [x] Wire up data endpoints (API or inline)
 
 ---
 

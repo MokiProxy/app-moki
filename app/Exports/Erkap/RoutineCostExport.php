@@ -25,7 +25,8 @@ class RoutineCostExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'No', 'Program Kerja', 'Kebutuhan', 'Elemen Biaya', 'Pusat Biaya',
+            'No', 'Program Kerja', 'Kebutuhan', 'Elemen Biaya', 'Chart of Account', 'Pusat Biaya',
+            'Tipe',
             'Qty', 'Satuan', 'Harga Satuan',
             'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
             'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
@@ -42,7 +43,11 @@ class RoutineCostExport implements FromCollection, WithHeadings, WithMapping
             $routineCost->workProgram->name ?? '-',
             $routineCost->need,
             $routineCost->costElement->name ?? '-',
+            $routineCost->chartOfAccount->code . ' - ' . $routineCost->chartOfAccount->name ?? '-',
             $routineCost->costCenter->name ?? '-',
+            $routineCost->costCenter && $routineCost->costCenter->isCentralized()
+                ? 'Terpusat (' . ($routineCost->costCenter->coordinatingDivision->name ?? '-') . ')'
+                : 'Non-Terpusat',
             $routineCost->qty,
             $routineCost->units,
             $routineCost->unit_price,

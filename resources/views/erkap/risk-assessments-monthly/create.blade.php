@@ -123,10 +123,67 @@
                             @error('risk_owner') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Risk Appetite</label>
+                            <select name="risk_appetite_id" class="form-select @error('risk_appetite_id') is-invalid @enderror">
+                                <option value="">-</option>
+                                @foreach($riskAppetites as $appetite)
+                                    <option value="{{ $appetite->id }}" {{ old('risk_appetite_id', $riskAppetiteId ?? '') == $appetite->id ? 'selected' : '' }}>
+                                        {{ $appetite->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('risk_appetite_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Target Tanggal Selesai</label>
+                            <input type="date" name="target_date" class="form-control @error('target_date') is-invalid @enderror" value="{{ old('target_date') }}">
+                            @error('target_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Rencana Mitigasi</label>
                             <textarea name="mitigation_plan" class="form-control @error('mitigation_plan') is-invalid @enderror" rows="3" placeholder="Keterangan rencana mitigasi">{{ old('mitigation_plan') }}</textarea>
                             @error('mitigation_plan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h6 class="text-uppercase fw-bold text-muted mb-0"><i class="mdi mdi-cog me-1"></i> Business Process</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-process"><i class="mdi mdi-plus me-1"></i> Tambah Proses</button>
+                        </div>
+                        <small class="text-muted d-block mb-2">Pemetaan proses bisnis yang terdampak risiko ini.</small>
+                        <div id="business-processes">
+                            @php $oldProcesses = old('business_processes', []); @endphp
+                            @forelse($oldProcesses as $idx => $proc)
+                            <div class="border rounded p-2 mb-2 bg-light process-row">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <input type="text" name="business_processes[{{ $idx }}][process_name]" class="form-control form-control-sm" placeholder="Nama proses" value="{{ $proc['process_name'] ?? '' }}" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" name="business_processes[{{ $idx }}][description]" class="form-control form-control-sm" placeholder="Deskripsi" value="{{ $proc['description'] ?? '' }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="text" name="business_processes[{{ $idx }}][owner]" class="form-control form-control-sm" placeholder="Owner" value="{{ $proc['owner'] ?? '' }}">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <select name="business_processes[{{ $idx }}][risk_level]" class="form-select form-select-sm">
+                                            @foreach(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High', 'critical' => 'Critical'] as $val => $label)
+                                                <option value="{{ $val }}" {{ ($proc['risk_level'] ?? 'medium') == $val ? 'selected' : '' }}>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1 d-flex align-items-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-process"><i class="mdi mdi-close"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="process-empty text-muted small">Belum ada business process yang ditambahkan.</div>
+                            @endforelse
                         </div>
                     </div>
 
@@ -141,4 +198,52 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('plugin')
+<script>
+    $(document).ready(function() {
+        var processIndex = {{ (int) (count(old('business_processes', []))) }};
+
+        function addProcess() {
+            var html =
+                '<div class="border rounded p-2 mb-2 bg-light process-row">' +
+                '    <div class="row g-2">' +
+                '        <div class="col-md-4">' +
+                '            <input type="text" name="business_processes[' + processIndex + '][process_name]" class="form-control form-control-sm" placeholder="Nama proses" required>' +
+                '        </div>' +
+                '        <div class="col-md-4">' +
+                '            <input type="text" name="business_processes[' + processIndex + '][description]" class="form-control form-control-sm" placeholder="Deskripsi">' +
+                '        </div>' +
+                '        <div class="col-md-2">' +
+                '            <input type="text" name="business_processes[' + processIndex + '][owner]" class="form-control form-control-sm" placeholder="Owner">' +
+                '        </div>' +
+                '        <div class="col-md-1">' +
+                '            <select name="business_processes[' + processIndex + '][risk_level]" class="form-select form-select-sm">' +
+                '                <option value="low">Low</option>' +
+                '                <option value="medium" selected>Medium</option>' +
+                '                <option value="high">High</option>' +
+                '                <option value="critical">Critical</option>' +
+                '            </select>' +
+                '        </div>' +
+                '        <div class="col-md-1 d-flex align-items-center">' +
+                '            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-process"><i class="mdi mdi-close"></i></button>' +
+                '        </div>' +
+                '    </div>' +
+                '</div>';
+            $('#business-processes').append(html);
+            $('#business-processes .process-empty').remove();
+            processIndex++;
+        }
+
+        $('#btn-add-process').on('click', addProcess);
+
+        $(document).on('click', '.btn-remove-process', function() {
+            $(this).closest('.process-row').remove();
+            if ($('#business-processes .process-row').length === 0 && !$('#business-processes .process-empty').length) {
+                $('#business-processes').append('<div class="process-empty text-muted small">Belum ada business process yang ditambahkan.</div>');
+            }
+        });
+    });
+</script>
 @endsection

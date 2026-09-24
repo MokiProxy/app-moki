@@ -58,7 +58,7 @@
                                 <td>
                                     @if($costElement->chartOfAccount)
                                         <span class="badge bg-{{ $costElement->chartOfAccount->type === 'revenue' ? 'success' : 'danger' }}">
-                                            {{ $costElement->chartOfAccount->code }} - {{ $costElement->chartOfAccount->name }}
+                                            {{ $costElement->chartOfAccount->formattedCode }} - {{ $costElement->chartOfAccount->name }}
                                         </span>
                                     @else
                                         <span class="text-muted">-</span>

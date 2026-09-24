@@ -82,6 +82,12 @@
                             @error('erkap_rating_criteria_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Prioritas <span class="text-muted">(opsional)</span></label>
+                            <input type="number" name="priority" min="1" class="form-control @error('priority') is-invalid @enderror" value="{{ old('priority') }}" placeholder="1 = prioritas tertinggi">
+                            @error('priority') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Target <span class="text-danger">*</span></label>
                             <textarea name="target" class="form-control @error('target') is-invalid @enderror" rows="3" required>{{ old('target') }}</textarea>

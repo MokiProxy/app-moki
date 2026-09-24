@@ -13,7 +13,18 @@ class DepartmentTarget extends Model
 
     protected $table = 'erkap_department_targets';
 
-    protected $fillable = ['target', 'division_id', 'erkap_rating_criteria_id', 'erkap_company_target_id'];
+    protected $fillable = ['target', 'division_id', 'erkap_rating_criteria_id', 'erkap_company_target_id', 'priority'];
+
+    public function priorityLabel(): string
+    {
+        $rating = $this->ratingCriteria?->rating ?? '-';
+
+        if ($this->priority === null) {
+            return $rating;
+        }
+
+        return sprintf('%s (%d)', $rating, $this->priority);
+    }
 
     public function division()
     {

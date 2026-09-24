@@ -114,6 +114,7 @@ $statusColors = [
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Program Kerja</th>
                                 <th>Nama Investasi</th>
+                                <th class="text-center">Prioritas</th>
                                 <th>Kategori</th>
                                 <th>Tipe</th>
                                 <th class="text-center">Qty</th>
@@ -130,6 +131,13 @@ $statusColors = [
                                 <td class="text-center">{{ $key + 1 }}</td>
                                 <td>{{ $plan->workProgram->name ?? '-' }}</td>
                                 <td class="fw-bold">{{ $plan->name }}</td>
+                                <td class="text-center">
+                                    @if($plan->priority_order)
+                                        <span class="badge bg-soft-primary text-primary">{{ $plan->priority_order }}</span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                                 <td>{{ $plan->investattionCategory->name ?? '-' }}</td>
                                 <td>{{ $plan->investationType->name ?? '-' }}</td>
                                 <td class="text-center">{{ $plan->qty }}</td>
@@ -141,14 +149,14 @@ $statusColors = [
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="{{ 7 + count($months) }}" class="text-center text-muted">Belum ada data rencana investasi untuk divisi ini.</td>
+                                <td colspan="{{ 9 + count($months) }}" class="text-center text-muted">Belum ada data rencana investasi untuk divisi ini.</td>
                             </tr>
                             @endforelse
                         </tbody>
                         @if($investmentPlans->isNotEmpty())
                         <tfoot class="table-light">
                             <tr class="fw-bold">
-                                <td colspan="6" class="text-end">Total per Bulan:</td>
+                                <td colspan="7" class="text-end">Total per Bulan:</td>
                                 <td></td>
                                 @foreach($months as $field)
                                     <td class="text-center">{{ number_format($totalByMonth[$field], 0, ',', '.') }}</td>

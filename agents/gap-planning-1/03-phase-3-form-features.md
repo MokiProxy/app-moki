@@ -163,37 +163,37 @@ $table->timestamps();
 ## 3.6 Implementation Tasks Checklist
 
 ### Form 1
-- [ ] Create Form1ImportExportService
-- [ ] Add import route/controller (POST /erkap/form1/import)
-- [ ] Add export route/controller (GET /erkap/form1/export)
-- [ ] Create Excel template file for download
-- [ ] Write import validation tests
+- [x] Create Form1ImportExportService
+- [x] Add import route/controller (POST /erkap/form1/import)
+- [x] Add export route/controller (GET /erkap/form1/export)
+- [x] Create Excel template file for download
+- [x] Write import validation tests
 
 ### Form 2
-- [ ] Create WorkScheduleController
-- [ ] Implement auto-populate logic in create/edit
-- [ ] Add monthly validation (FE + BE)
-- [ ] Add budget reference linkage UI
-- [ ] Update routes
+- [x] Create WorkScheduleController
+- [x] Implement auto-populate logic in create/edit
+- [x] Add monthly validation (FE + BE)
+- [x] Add budget reference linkage UI
+- [x] Update routes
 
 ### Form 3
-- [ ] Add subtotal computation to RoutineCostController
-- [ ] Create reactive subtotal component (Alpine.js/Vue)
-- [ ] Integrate BudgetRealization preview in form
-- [ ] Test with large datasets
+- [x] Add subtotal computation to RoutineCostController
+- [x] Create reactive subtotal component (Alpine.js/Vue)
+- [x] Integrate BudgetRealization preview in form
+- [x] Test with large datasets
 
 ### Form 4/5
-- [ ] Enhance BudgetCapexController with summary view
-- [ ] Create payment distribution view
-- [ ] Add payment schedule validation
-- [ ] Update InvestmentPlan model
+- [x] Enhance BudgetCapexController with summary view
+- [x] Create payment distribution view
+- [x] Add payment schedule validation
+- [x] Update InvestmentPlan model
 
 ### Form 6
-- [ ] Create risk_business_processes migration + model
-- [ ] Add mitigation_status enum migration
-- [ ] Add risk_appetite_id FK to risk_assessment_monthlies
-- [ ] Update Form 6 views with new sections
-- [ ] Add overdue scheduler job
+- [x] Create risk_business_processes migration + model
+- [x] Add mitigation_status enum migration
+- [x] Add risk_appetite_id FK to risk_assessment_monthlies
+- [x] Update Form 6 views with new sections
+- [x] Add overdue scheduler job
 
 ---
 

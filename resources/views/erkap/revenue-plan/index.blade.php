@@ -16,6 +16,9 @@
                 </div>
             </div>
             <div class="card-body">
+                @php $moduleName = 'Rencana pendapatan'; @endphp
+                @include('erkap.partials.locked-rkaps-banner')
+
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
@@ -63,7 +66,7 @@
                                 <td class="fw-bold">{{ $revenuePlan->rkap->year ?? '-' }}</td>
                                 <td>{{ $revenuePlan->division->name ?? '-' }}</td>
                                 <td>
-                                    {{ $revenuePlan->chartOfAccount->code ?? '-' }} - {{ $revenuePlan->chartOfAccount->name ?? '-' }}
+                                    {{ $revenuePlan->chartOfAccount->formattedCode ?? '-' }} - {{ $revenuePlan->chartOfAccount->name ?? '-' }}
                                 </td>
                                 <td>{{ $revenuePlan->description ?? '-' }}</td>
                                 <td class="text-center">{{ number_format($revenuePlan->jan_plan, 0, ',', '.') }}</td>

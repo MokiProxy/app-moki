@@ -31,6 +31,13 @@ class StoreCostCenterRequest extends FormRequest
             'owner' => ['required', 'string', 'max:255'],
             'division_id' => ['required', 'integer', 'exists:divisions,id'],
             'is_swakelola' => ['sometimes', 'boolean'],
+            'is_centralized' => ['sometimes', 'boolean'],
+            'coordinating_division_id' => [
+                'nullable',
+                'integer',
+                'exists:divisions,id',
+                'required_if:is_centralized,1',
+            ],
         ];
     }
 }

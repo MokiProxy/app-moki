@@ -6,14 +6,19 @@ use App\Exports\Erkap\RoutineCostExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoutineCostRequest;
 use App\Http\Requests\UpdateRoutineCostRequest;
+use App\Models\ChartOfAccount;
 use App\Models\Division;
+use App\Models\Erkap\BudgetRealization;
 use App\Models\Erkap\CostCenter;
 use App\Models\Erkap\CostElement;
 use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RoutineCost;
 use App\Models\Erkap\WorkProgram;
 use App\Services\ApprovalService;
+use App\Services\Erkap\CentralizedCostService;
 use App\Services\ErkapAccess;
+use App\Services\Erkap\RKAPLifecycleService;
+use App\Services\Erkap\ZBBReviewService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
@@ -31,7 +36,8 @@ class RoutineCostController extends Controller
     public function index()
     {
         $pageName = 'Biaya Rutin';
-        $routineCosts = RoutineCost::with(['workProgram', 'costElement', 'costCenter'])
+        $lockedRkaps = RKAP::lockedForInput()->orderByDesc('year')->get();
+        $routineCosts = RoutineCost::with(['workProgram', 'costElement', 'costCenter.coordinatingDivision', 'chartOfAccount'])
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds());
             })
@@ -54,6 +60,12 @@ class RoutineCostController extends Controller
             ->groupBy('erkap_work_program_id')
             ->get();
 
+        $subtotalByCostCenter = (clone $baseQuery)
+            ->select('cost_center_id', 'cost_center_owner', DB::raw('SUM(total) as subtotal'))
+            ->with('costCenter')
+            ->groupBy('cost_center_id', 'cost_center_owner')
+            ->get();
+
         $grandTotal = (clone $baseQuery)->sum('total');
 
         $submittableCount = RoutineCost::query()
@@ -63,13 +75,13 @@ class RoutineCostController extends Controller
 
         return view(
             'erkap.routine-cost.index',
-            compact('pageName', 'routineCosts', 'subtotalByElement', 'subtotalByProgram', 'grandTotal', 'submittableCount')
+            compact('pageName', 'routineCosts', 'subtotalByElement', 'subtotalByProgram', 'subtotalByCostCenter', 'grandTotal', 'submittableCount', 'lockedRkaps')
         );
     }
 
     public function export()
     {
-        $routineCosts = RoutineCost::with(['workProgram', 'costElement', 'costCenter'])
+        $routineCosts = RoutineCost::with(['workProgram', 'costElement', 'costCenter.coordinatingDivision', 'chartOfAccount'])
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds());
             })
@@ -81,7 +93,7 @@ class RoutineCostController extends Controller
 
     public function exportPdf()
     {
-        $routineCosts = RoutineCost::with(['workProgram', 'costElement', 'costCenter'])
+        $routineCosts = RoutineCost::with(['workProgram', 'costElement', 'costCenter.coordinatingDivision', 'chartOfAccount'])
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds());
             })
@@ -98,19 +110,35 @@ class RoutineCostController extends Controller
     {
         $pageName = 'Buat Biaya Rutin';
         $workPrograms = WorkProgram::whereIn('id', ErkapAccess::workProgramIds())->get();
-        $costElements = CostElement::all();
+        $costElements = CostElement::with('chartOfAccount')->get();
+        $chartOfAccounts = ChartOfAccount::expense()->orderBy('code')->get();
         [$swakelolaCostCenters, $nonSwakelolaCostCenters] = $this->groupedCostCenters($costElements);
 
-        return view('erkap.routine-cost.create', compact('pageName', 'workPrograms', 'costElements', 'swakelolaCostCenters', 'nonSwakelolaCostCenters'));
+        $subtotalByProgram = $this->subtotalMap('erkap_work_program_id');
+        $subtotalByElement = $this->subtotalMap('erkap_cost_element_id');
+        $subtotalByCostCenter = $this->subtotalByCostCenterMap();
+        $budgetPreview = $this->budgetPreviewByProgram();
+
+        return view(
+            'erkap.routine-cost.create',
+            compact('pageName', 'workPrograms', 'costElements', 'chartOfAccounts', 'swakelolaCostCenters', 'nonSwakelolaCostCenters', 'subtotalByProgram', 'subtotalByElement', 'subtotalByCostCenter', 'budgetPreview')
+        );
     }
 
     public function store(StoreRoutineCostRequest $request)
     {
         try {
             ErkapAccess::assertWorkProgramAccess($request->integer('erkap_work_program_id'));
+            RKAPLifecycleService::assertNotLocked(
+                RKAPLifecycleService::resolveForWorkProgram($request->integer('erkap_work_program_id')),
+                'Biaya rutin'
+            );
 
             $data = $request->validated();
+            $data['chart_of_account_id'] = $this->resolveChartOfAccountId($data);
             $data['is_kumulatif'] = $request->boolean('is_kumulatif');
+
+            $this->assertCentralizedCostInput($data, $request->integer('erkap_work_program_id'));
 
             if (! $this->validateTotal($data, $data['is_kumulatif'])) {
                 return redirect()->route('erkap.routine-costs.create')
@@ -125,6 +153,8 @@ class RoutineCostController extends Controller
                 : $this->sumMonths($data);
 
             RoutineCost::create($data);
+
+            $this->rebuildZbb($request->integer('erkap_work_program_id'));
 
             return redirect()->route('erkap.routine-costs.index')
                 ->with('success', 'Biaya rutin baru berhasil disimpan!');
@@ -146,10 +176,19 @@ class RoutineCostController extends Controller
 
         $pageName = 'Edit Biaya Rutin';
         $workPrograms = WorkProgram::whereIn('id', ErkapAccess::workProgramIds())->get();
-        $costElements = CostElement::all();
+        $costElements = CostElement::with('chartOfAccount')->get();
+        $chartOfAccounts = ChartOfAccount::expense()->orderBy('code')->get();
         [$swakelolaCostCenters, $nonSwakelolaCostCenters] = $this->groupedCostCenters($costElements);
 
-        return view('erkap.routine-cost.edit', compact('pageName', 'routineCost', 'workPrograms', 'costElements', 'swakelolaCostCenters', 'nonSwakelolaCostCenters'));
+        $subtotalByProgram = $this->subtotalMap('erkap_work_program_id');
+        $subtotalByElement = $this->subtotalMap('erkap_cost_element_id');
+        $subtotalByCostCenter = $this->subtotalByCostCenterMap();
+        $budgetPreview = $this->budgetPreviewByProgram();
+
+        return view(
+            'erkap.routine-cost.edit',
+            compact('pageName', 'routineCost', 'workPrograms', 'costElements', 'chartOfAccounts', 'swakelolaCostCenters', 'nonSwakelolaCostCenters', 'subtotalByProgram', 'subtotalByElement', 'subtotalByCostCenter', 'budgetPreview')
+        );
     }
 
     public function update(UpdateRoutineCostRequest $request, RoutineCost $routineCost)
@@ -158,8 +197,20 @@ class RoutineCostController extends Controller
             ErkapAccess::assertWorkProgramAccess($routineCost->erkap_work_program_id);
             ErkapAccess::assertWorkProgramAccess($request->integer('erkap_work_program_id'));
 
+            $targetWorkProgramId = $request->filled('erkap_work_program_id')
+                ? $request->integer('erkap_work_program_id')
+                : $routineCost->erkap_work_program_id;
+
+            RKAPLifecycleService::assertNotLocked(
+                RKAPLifecycleService::resolveForWorkProgram($targetWorkProgramId),
+                'Biaya rutin'
+            );
+
             $data = $request->validated();
+            $data['chart_of_account_id'] = $this->resolveChartOfAccountId($data, $routineCost);
             $data['is_kumulatif'] = $request->boolean('is_kumulatif');
+
+            $this->assertCentralizedCostInput($data, $targetWorkProgramId, $routineCost);
 
             if (! $this->validateTotal($data, $data['is_kumulatif'])) {
                 return redirect()->route('erkap.routine-costs.edit', $routineCost->id)
@@ -174,6 +225,8 @@ class RoutineCostController extends Controller
                 : $this->sumMonths($data);
 
             $routineCost->update($data);
+
+            $this->rebuildZbb($targetWorkProgramId);
 
             return redirect()->route('erkap.routine-costs.index')
                 ->with('success', 'Biaya rutin berhasil diperbarui!');
@@ -264,7 +317,7 @@ class RoutineCostController extends Controller
             });
         $divisions = $divisionQuery->get();
 
-        $query = RoutineCost::with(['costElement', 'workProgram.riskIdentification.departmentTarget.division']);
+        $query = RoutineCost::with(['costElement', 'costCenter.coordinatingDivision', 'workProgram.riskIdentification.departmentTarget.division']);
 
         if ($request->filled('division_id')) {
             $query->whereHas('workProgram.riskIdentification.departmentTarget', function ($q) use ($request) {
@@ -286,15 +339,21 @@ class RoutineCostController extends Controller
                     $monthly[$month] = $items->sum($month);
                 }
 
+                $costCenter = $items->first()?->costCenter;
+
                 return [
                     'erkap_cost_element_id' => $elementId,
                     'cost_element' => $items->first()->costElement,
                     'total_qty' => $items->sum('qty'),
                     'total_cost' => $items->sum('total'),
                     'monthly' => $monthly,
+                    'is_centralized' => $costCenter?->isCentralized() ?? false,
+                    'coordinator' => $costCenter?->coordinatingDivision?->name,
                 ];
             })
             ->values();
+
+        $centralizedGroups = CentralizedCostService::groupCentralized($routineCosts);
 
         $grandTotal = $consolidated->sum('total_cost');
         $totalByMonth = [];
@@ -304,8 +363,37 @@ class RoutineCostController extends Controller
 
         return view(
             'erkap.routine-cost.consolidate',
-            compact('pageName', 'consolidated', 'grandTotal', 'totalByMonth', 'rkapList', 'divisions')
+            compact('pageName', 'consolidated', 'grandTotal', 'totalByMonth', 'rkapList', 'divisions', 'centralizedGroups')
         );
+    }
+
+    private function assertCentralizedCostInput(array $data, ?int $workProgramId, ?RoutineCost $routineCost = null): void
+    {
+        $costCenterId = $data['cost_center_id'] ?? $routineCost?->cost_center_id;
+
+        $costCenter = $costCenterId ? CostCenter::find($costCenterId) : null;
+
+        if (! $costCenter) {
+            return;
+        }
+
+        $workProgram = WorkProgram::with('riskIdentification.departmentTarget')->find($workProgramId);
+        $divisionId = $workProgram?->riskIdentification?->departmentTarget?->division_id;
+
+        CentralizedCostService::assertCanInput($costCenter, $divisionId);
+    }
+
+    private function resolveChartOfAccountId(array $data, ?RoutineCost $routineCost = null): ?int
+    {
+        if (filled($data['chart_of_account_id'] ?? null)) {
+            return (int) $data['chart_of_account_id'];
+        }
+
+        if ($routineCost?->chart_of_account_id) {
+            return (int) $routineCost->chart_of_account_id;
+        }
+
+        return CostElement::find($data['erkap_cost_element_id'])?->coaSuggestion()?->id;
     }
 
     private function groupedCostCenters(Collection $costElements): array
@@ -348,5 +436,77 @@ class RoutineCostController extends Controller
         return array_sum(
             array_map(fn ($month) => (float) ($data[$month] ?? 0), self::MONTHS)
         );
+    }
+
+    private function subtotalMap(string $groupBy): array
+    {
+        return RoutineCost::query()
+            ->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds())
+            ->select($groupBy, DB::raw('SUM(total) as subtotal'))
+            ->groupBy($groupBy)
+            ->get()
+            ->pluck('subtotal', $groupBy)
+            ->map(fn ($value) => (float) $value)
+            ->all();
+    }
+
+    private function subtotalByCostCenterMap(): array
+    {
+        return RoutineCost::query()
+            ->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds())
+            ->select('cost_center_id', DB::raw('SUM(total) as subtotal'))
+            ->groupBy('cost_center_id')
+            ->get()
+            ->pluck('subtotal', 'cost_center_id')
+            ->map(fn ($value) => (float) $value)
+            ->all();
+    }
+
+    public function budgetPreviewByProgram(): array
+    {
+        $workProgramIds = ErkapAccess::workProgramIds();
+
+        $costsByProgram = RoutineCost::query()
+            ->whereIn('erkap_work_program_id', $workProgramIds)
+            ->select('id', 'erkap_work_program_id', 'total')
+            ->get()
+            ->groupBy('erkap_work_program_id');
+
+        $routineCostIds = $costsByProgram->flatten()->pluck('id')->all();
+
+        $realizedByCost = BudgetRealization::query()
+            ->whereIn('erkap_routine_cost_id', $routineCostIds)
+            ->select('erkap_routine_cost_id', DB::raw('SUM(realized) as realized'))
+            ->groupBy('erkap_routine_cost_id')
+            ->get()
+            ->pluck('realized', 'erkap_routine_cost_id')
+            ->map(fn ($value) => (float) $value)
+            ->all();
+
+        $preview = [];
+
+        foreach ($costsByProgram as $programId => $rows) {
+            $budget = (float) $rows->sum('total');
+            $realized = collect($rows)->sum(fn ($row) => $realizedByCost[$row->id] ?? 0);
+            $variance = $budget - $realized;
+
+            $preview[$programId] = [
+                'budget' => $budget,
+                'realized' => $realized,
+                'variance' => $variance,
+                'variance_pct' => $budget > 0 ? round(($variance / $budget) * 100, 2) : 0,
+            ];
+        }
+
+        return $preview;
+    }
+
+    private function rebuildZbb(?int $workProgramId): void
+    {
+        $rkap = RKAPLifecycleService::resolveForWorkProgram($workProgramId);
+
+        if ($rkap) {
+            ZBBReviewService::buildReviews($rkap);
+        }
     }
 }

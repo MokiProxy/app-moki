@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateRiskIdentificationReasonRequest;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskIdentificationReason;
 use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
 use Exception;
 
 class RiskIdentificationReasonController extends Controller
@@ -36,6 +37,7 @@ class RiskIdentificationReasonController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id')));
 
             RiskIdentificationReason::create($request->validated());
 
@@ -57,6 +59,13 @@ class RiskIdentificationReasonController extends Controller
     {
         ErkapAccess::assertRiskIdentificationAccess($riskIdentificationReason->erkap_risk_identification_id);
 
+        try {
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskIdentificationReason->erkap_risk_identification_id));
+        } catch (Exception $err) {
+            return redirect()->route('erkap.risk-identification-reasons.index')
+                ->with('error', $err->getMessage());
+        }
+
         $pageName = 'Edit Alasan Identifikasi Risiko';
         $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
@@ -68,6 +77,8 @@ class RiskIdentificationReasonController extends Controller
         try {
             ErkapAccess::assertRiskIdentificationAccess($riskIdentificationReason->erkap_risk_identification_id);
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskIdentificationReason->erkap_risk_identification_id));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($request->integer('erkap_risk_identification_id')));
 
             $riskIdentificationReason->update($request->validated());
 
@@ -89,6 +100,7 @@ class RiskIdentificationReasonController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($riskIdentificationReason->erkap_risk_identification_id);
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskIdentificationReason->erkap_risk_identification_id));
 
             $riskIdentificationReason->delete();
 

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Erkap\InvestmentPlan;
+use App\Models\Erkap\WorkProgram;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreInvestmentPlanRequest extends FormRequest
@@ -17,6 +19,8 @@ class StoreInvestmentPlanRequest extends FormRequest
 
         return [
             'erkap_work_program_id' => ['required', 'integer', 'exists:erkap_work_programs,id'],
+            'cost_center_id' => ['nullable', 'integer', 'exists:cost_centers,id'],
+            'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
             'erkap_investattion_category_id' => ['required', 'integer', 'exists:erkap_investattion_categories,id'],
             'erkap_investation_type_id' => ['required', 'integer', 'exists:erkap_investation_types,id'],
             'erkap_investation_criteria_id' => ['required', 'integer', 'exists:erkap_investation_criterias,id'],
@@ -39,6 +43,13 @@ class StoreInvestmentPlanRequest extends FormRequest
             'dec_plan' => $monthRules,
             'total' => ['required', 'numeric'],
             'is_kumulatif' => ['nullable', 'boolean'],
+            'priority_order' => ['nullable', 'integer', 'min:1'],
+            'proposal' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,zip', 'max:20480'],
+            'cba_attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx,zip', 'max:20480'],
+            'cba_npv' => ['nullable', 'numeric'],
+            'cba_irr' => ['nullable', 'numeric'],
+            'cba_payback' => ['nullable', 'numeric'],
+            'cba_justification' => ['nullable', 'string', 'max:4000'],
         ];
     }
 
@@ -46,6 +57,7 @@ class StoreInvestmentPlanRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $this->validateTotals($validator);
+            $this->validatePriorityUniqueness($validator);
         });
     }
 
@@ -69,6 +81,34 @@ class StoreInvestmentPlanRequest extends FormRequest
 
         if (abs($totalMonthly - $expectedTotal) > 0.01) {
             $validator->errors()->add('total', 'Total harus sama dengan qty × harga satuan dan jumlah bulanan.');
+        }
+    }
+
+    private function validatePriorityUniqueness($validator): void
+    {
+        if (! $this->filled('priority_order') || ! $this->filled('erkap_work_program_id')) {
+            return;
+        }
+
+        $divisionId = WorkProgram::query()
+            ->with('riskIdentification.departmentTarget')
+            ->find($this->integer('erkap_work_program_id'))
+            ?->riskIdentification
+            ?->departmentTarget
+            ?->division_id;
+
+        if (! $divisionId) {
+            return;
+        }
+
+        $exists = InvestmentPlan::query()
+            ->where('priority_order', $this->integer('priority_order'))
+            ->whereHas('workProgram.riskIdentification.departmentTarget', fn ($query) => $query->where('division_id', $divisionId))
+            ->when($this->route('investmentPlan')?->id, fn ($query, $id) => $query->whereKeyNot($id))
+            ->exists();
+
+        if ($exists) {
+            $validator->errors()->add('priority_order', 'Urutan prioritas sudah dipakai pada divisi ini.');
         }
     }
 }

@@ -68,6 +68,8 @@ class Approval extends Model
             'erkap-cost-owner' => 'Cost Owner',
             'erkap-ppk' => 'PPK',
             'erkap-controller' => 'Controller',
+            'erkap-manajemen-aset' => 'Dept. Manajemen Aset',
+            'erkap-gate-review' => 'Gate Review PT BMI',
             'erkap-direksi-keuangan' => 'Direksi Keuangan',
             'erkap-direksi' => 'Direksi',
             'erkap-komisaris' => 'Komisaris',

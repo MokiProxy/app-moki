@@ -30,6 +30,7 @@
                 <th>Program Kerja</th>
                 <th>Kebutuhan</th>
                 <th>Elemen Biaya</th>
+                <th>Chart of Account</th>
                 <th>Pusat Biaya</th>
                 <th>Qty</th>
                 <th>Satuan</th>
@@ -47,6 +48,7 @@
                 <td>{{ $routineCost->workProgram->name ?? '-' }}</td>
                 <td>{{ $routineCost->need }}</td>
                 <td>{{ $routineCost->costElement->name ?? '-' }}</td>
+                <td>{{ $routineCost->chartOfAccount ? $routineCost->chartOfAccount->formattedCode . ' - ' . $routineCost->chartOfAccount->name : '-' }}</td>
                 <td>{{ $routineCost->costCenter->name ?? '-' }}</td>
                 <td style="text-align: right;">{{ number_format($routineCost->qty, 0, ',', '.') }}</td>
                 <td>{{ $routineCost->units }}</td>
@@ -70,13 +72,13 @@
             </tr>
             @empty
             <tr>
-                <td colspan="22" style="text-align: center;">Tidak ada biaya rutin</td>
+                <td colspan="23" style="text-align: center;">Tidak ada biaya rutin</td>
             </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr>
-                <th colspan="20" style="text-align: right;">GRAND TOTAL</th>
+                <th colspan="21" style="text-align: right;">GRAND TOTAL</th>
                 <th style="text-align: right;">{{ number_format($routineCosts->sum('total'), 0, ',', '.') }}</th>
                 <th></th>
             </tr>

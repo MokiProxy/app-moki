@@ -143,6 +143,11 @@ foreach ($riskIdentifications as $riskIdentificationItem) {
                         <small class="text-muted"><i class="mdi mdi-calculator me-1"></i>Total Rencana Bulanan: <strong id="monthly-total">0</strong></small>
                     </div>
 
+                    <div class="mt-3">
+                        <small class="text-muted fw-bold"><i class="mdi mdi-percent me-1"></i>Kumulatif Rencana (%)</small>
+                        <div class="d-flex flex-wrap gap-2 mt-2" id="cumulative-preview"></div>
+                    </div>
+
                     <div class="mt-4 border-top pt-3">
                         <button type="submit" class="btn btn-primary">
                             <i class="mdi mdi-content-save me-1"></i> Update
@@ -160,6 +165,7 @@ foreach ($riskIdentifications as $riskIdentificationItem) {
 <script>
     $(document).ready(function() {
         var months = ['jan_plan','feb_plan','mar_plan','apr_plan','may_plan','jun_plan','jul_plan','aug_plan','sep_plan','oct_plan','nov_plan','dec_plan'];
+        var monthShorts = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
         var riskInfoMap = @json($riskInfoMap);
         var allowedRatings = ['AAA', 'AA', 'A'];
 
@@ -174,6 +180,20 @@ foreach ($riskIdentifications as $riskIdentificationItem) {
 
         function updateTotal() {
             $('#monthly-total').text(monthlyTotal().toFixed(2));
+            updateCumulativePreview();
+        }
+
+        function updateCumulativePreview() {
+            var yearPlan = parseFloat($('#input-year-plan').val());
+            var running = 0;
+            var html = '';
+            months.forEach(function(m, i) {
+                var val = parseFloat($('input[name="' + m + '"]').val());
+                if (!isNaN(val)) { running += val; }
+                var pct = (!isNaN(yearPlan) && yearPlan > 0) ? ((running / yearPlan) * 100).toFixed(2) : '0.00';
+                html += '<span class="badge bg-primary-subtle text-primary border">' + monthShorts[i] + ': ' + pct + '%</span>';
+            });
+            $('#cumulative-preview').html(html);
         }
 
         function updateRiskInfo() {
@@ -190,6 +210,7 @@ foreach ($riskIdentifications as $riskIdentificationItem) {
         }
 
         $('.monthly-plan').on('input', updateTotal);
+        $('#input-year-plan').on('input', updateTotal);
         $('#risk-identification-select').on('change', updateRiskInfo);
 
         $('#form-work-program').on('submit', function(e) {

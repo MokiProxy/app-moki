@@ -63,7 +63,7 @@
                                 <td class="fw-bold">{{ $expensePlan->rkap->year ?? '-' }}</td>
                                 <td>{{ $expensePlan->division->name ?? '-' }}</td>
                                 <td>
-                                    {{ $expensePlan->chartOfAccount->code ?? '-' }} - {{ $expensePlan->chartOfAccount->name ?? '-' }}
+                                    {{ $expensePlan->chartOfAccount->formattedCode ?? '-' }} - {{ $expensePlan->chartOfAccount->name ?? '-' }}
                                 </td>
                                 <td>{{ $expensePlan->description ?? '-' }}</td>
                                 <td class="text-center">{{ number_format($expensePlan->jan_plan, 0, ',', '.') }}</td>

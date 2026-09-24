@@ -63,7 +63,10 @@
                                 <th class="text-center">Status Mitigasi</th>
                                 <th>Mitigasi</th>
                                 <th>Risk Owner</th>
-                                <th style="width: 80px" class="text-center">Aksi</th>
+                                <th>Risk Appetite</th>
+                                <th class="text-center">Target Selesai</th>
+                                <th class="text-center">Business Process</th>
+                                <th style="width: 145px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -110,7 +113,30 @@
                                 </td>
                                 <td title="{{ $assessment->mitigation_plan }}">{{ Str::limit($assessment->mitigation_plan, 50) ?: '-' }}</td>
                                 <td>{{ $assessment->risk_owner ?: '-' }}</td>
+                                <td>{{ $assessment->riskAppetite->name ?? '-' }}</td>
                                 <td class="text-center">
+                                    @if($assessment->target_date)
+                                        {{ $assessment->target_date->format('d/m/Y') }}
+                                        @if($assessment->mitigation_status !== 'done' && $assessment->target_date->isPast())
+                                            <span class="badge bg-danger">Lewat</span>
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($assessment->businessProcesses->isNotEmpty())
+                                        @foreach($assessment->businessProcesses as $bp)
+                                            <span class="badge bg-info d-block mb-1">{{ Str::limit($bp->process_name, 30) }}</span>
+                                        @endforeach
+                                    @else
+                                        <span class="badge bg-secondary">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route('erkap.risk-assessments-monthly.edit', $assessment->id) }}" class="btn btn-warning btn-sm" title="Edit">
+                                        <i class="mdi mdi-pencil"></i>
+                                    </a>
                                     <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="{{ $assessment->id }}" title="Hapus">
                                         <i class="mdi mdi-delete"></i>
                                     </button>
@@ -118,7 +144,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="11" class="text-center text-muted">Belum ada data risk assessment bulanan.</td>
+                                <td colspan="14" class="text-center text-muted">Belum ada data risk assessment bulanan.</td>
                             </tr>
                             @endforelse
                         </tbody>

@@ -11,6 +11,7 @@ use App\Models\Erkap\RiskImpact;
 use App\Models\Erkap\RiskProbability;
 use App\Models\Erkap\RiskScoreLevel;
 use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
 use Exception;
 use Illuminate\Http\JsonResponse;
 
@@ -42,6 +43,7 @@ class RiskAnalysisController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id')));
 
             RiskAnalysis::create($request->validated());
 
@@ -63,6 +65,13 @@ class RiskAnalysisController extends Controller
     {
         ErkapAccess::assertRiskIdentificationAccess($riskAnalysis->erkap_risk_identification_id);
 
+        try {
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskAnalysis->erkap_risk_identification_id));
+        } catch (Exception $err) {
+            return redirect()->route('erkap.risk-analysis.index')
+                ->with('error', $err->getMessage());
+        }
+
         $pageName = 'Edit Analisis Risiko';
         $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
         $riskProbabilities = RiskProbability::all();
@@ -76,6 +85,8 @@ class RiskAnalysisController extends Controller
         try {
             ErkapAccess::assertRiskIdentificationAccess($riskAnalysis->erkap_risk_identification_id);
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskAnalysis->erkap_risk_identification_id));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($request->integer('erkap_risk_identification_id')));
 
             $riskAnalysis->update($request->validated());
 
@@ -97,6 +108,7 @@ class RiskAnalysisController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($riskAnalysis->erkap_risk_identification_id);
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskAnalysis->erkap_risk_identification_id));
 
             $riskAnalysis->delete();
 

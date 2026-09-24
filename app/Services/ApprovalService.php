@@ -5,11 +5,13 @@ namespace App\Services;
 use App\Models\Division;
 use App\Models\Erkap\Approval;
 use App\Models\Erkap\InvestmentPlan;
+use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RoutineCost;
 use App\Models\Erkap\WorkProgram;
 use App\Models\User;
 use App\Notifications\ApprovalNotification;
+use App\Services\Erkap\InvestmentGateReviewService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -29,12 +31,16 @@ class ApprovalService
             ],
             'investment_plan' => [
                 1 => 'erkap-ppk',
-                2 => 'erkap-direksi-keuangan',
+                2 => 'erkap-manajemen-aset',
+                3 => 'erkap-direksi-keuangan',
+                4 => 'erkap-gate-review',
             ],
             'rkap' => [
-                1 => 'erkap-controller',
+                1 => 'erkap-komisaris',
                 2 => 'erkap-direksi',
-                3 => 'erkap-komisaris',
+            ],
+            'risk_register' => [
+                1 => 'erkap-risk-manager',
             ],
         ];
     }
@@ -61,6 +67,11 @@ class ApprovalService
                 'model' => RKAP::class,
                 'label' => 'Periode RKAP',
                 'title' => fn ($model) => 'RKAP '.$model->year,
+            ],
+            'risk_register' => [
+                'model' => RiskIdentification::class,
+                'label' => 'Register Risiko',
+                'title' => fn ($model) => $model->risk,
             ],
         ];
     }
@@ -97,6 +108,14 @@ class ApprovalService
             throw new \RuntimeException('Dokumen sudah diajukan dan tidak dapat diajukan ulang dalam status saat ini.');
         }
 
+        if ($type === 'investment_plan' && method_exists($model, 'hasProposal') && ! $model->hasProposal()) {
+            throw new \RuntimeException('Usulan investasi wajib melampirkan proposal sebelum dapat diajukan.');
+        }
+
+        if ($type === 'risk_register' && method_exists($model, 'validateHasStrategyAndWorkProgram')) {
+            $model->validateHasStrategyAndWorkProgram();
+        }
+
         $matrix = static::getApprovalMatrix()[$type];
         $divisionId = static::divisionIdFor($model);
 
@@ -105,6 +124,10 @@ class ApprovalService
         DB::beginTransaction();
 
         try {
+            if ($type === 'investment_plan' && method_exists($model, 'stageGates')) {
+                InvestmentGateReviewService::initialize($model, true);
+            }
+
             $model->update(['status' => 'submitted']);
             $model->approvals()->delete();
 
@@ -159,6 +182,11 @@ class ApprovalService
     public static function approve(Model $model, User $user, ?string $notes = null): void
     {
         $approval = static::requireTurn($model, $user);
+        $type = static::typeFor($model);
+
+        if ($type === 'investment_plan' && method_exists($model, 'stageGates')) {
+            static::assertGateForRoleApproved($model, $approval->role);
+        }
 
         DB::beginTransaction();
 
@@ -228,6 +256,16 @@ class ApprovalService
             });
     }
 
+    protected static function assertGateForRoleApproved(Model $model, string $role): void
+    {
+        $groupTotal = $model->stageGates()->where('reviewer_role', $role)->count();
+        $groupApproved = $model->stageGates()->where('reviewer_role', $role)->where('status', 'approved')->count();
+
+        if ($groupTotal === 0 || $groupApproved < $groupTotal) {
+            throw new \RuntimeException('Stage Gate untuk level ini belum disetujui. Selesaikan Gate Review terlebih dahulu.');
+        }
+    }
+
     protected static function requireTurn(Model $model, User $user): Approval
     {
         if (! in_array($model->status, ['submitted'], true)) {
@@ -277,6 +315,10 @@ class ApprovalService
             return null;
         }
 
+        if ($model instanceof RiskIdentification) {
+            return $model->departmentTarget?->division_id;
+        }
+
         $workProgram = $model instanceof WorkProgram
             ? $model
             : (method_exists($model, 'workProgram') ? $model->workProgram : null);
@@ -288,6 +330,10 @@ class ApprovalService
     {
         if ($model instanceof RKAP) {
             return null;
+        }
+
+        if ($model instanceof RiskIdentification) {
+            return $model->departmentTarget?->division;
         }
 
         $workProgram = $model instanceof WorkProgram

@@ -32,6 +32,7 @@ class RevenuePlan extends Model
         'nov_plan',
         'dec_plan',
         'total',
+        'prior_year_amount',
         'status',
         'created_by',
         'updated_by',

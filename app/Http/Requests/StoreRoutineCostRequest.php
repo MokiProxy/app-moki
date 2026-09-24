@@ -24,6 +24,7 @@ class StoreRoutineCostRequest extends FormRequest
             'units' => ['required', 'string', 'max:50'],
             'unit_price' => ['required', 'numeric'],
             'erkap_cost_element_id' => ['required', 'integer', 'exists:erkap_cost_elements,id'],
+            'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
             'jan_cost' => $monthRules,
             'feb_cost' => $monthRules,
             'mar_cost' => $monthRules,

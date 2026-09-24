@@ -34,6 +34,9 @@
                 </div>
             </div>
             <div class="card-body">
+                @php $moduleName = 'Rencana investasi'; @endphp
+                @include('erkap.partials.locked-rkaps-banner')
+
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
@@ -55,15 +58,26 @@
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Program Kerja</th>
                                 <th>Nama Investasi</th>
+                                <th>
+                                    @php $priorityNext = request('sort') === 'priority' && request('order') === 'asc' ? 'desc' : 'asc'; @endphp
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'priority', 'order' => $priorityNext]) }}" class="text-white text-decoration-none">
+                                        Prioritas
+                                        @if(request('sort') === 'priority')
+                                            <i class="mdi mdi-arrow-{{ request('order') === 'desc' ? 'down' : 'up' }}"></i>
+                                        @endif
+                                    </a>
+                                </th>
                                 <th>Kategori</th>
                                 <th>Tipe</th>
+                                <th>Chart of Account</th>
                                 <th>Kriteria</th>
                                 <th class="text-center">Qty</th>
                                 <th>Satuan</th>
                                 <th class="text-end">Harga Satuan</th>
                                 <th class="text-end">Total</th>
                                 <th style="width: 180px" class="text-center">Status</th>
-                                <th style="width: 170px" class="text-center">Aksi</th>
+                                <th style="width: 140px" class="text-center">Gate Review</th>
+                                <th style="width: 190px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -72,8 +86,22 @@
                                 <td class="text-center">{{ $investmentPlans->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $investmentPlan->workProgram->name ?? '-' }}</td>
                                 <td>{{ $investmentPlan->name }}</td>
+                                <td class="text-center">
+                                    @if($investmentPlan->priority_order)
+                                        <span class="badge bg-soft-primary text-primary">{{ $investmentPlan->priority_order }}</span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                                 <td>{{ $investmentPlan->investattionCategory->name ?? '-' }}</td>
                                 <td>{{ $investmentPlan->investationType->name ?? '-' }}</td>
+                                <td>
+                                    @if($investmentPlan->chartOfAccount)
+                                        {{ $investmentPlan->chartOfAccount->formattedCode }}<small class="d-block text-muted">{{ $investmentPlan->chartOfAccount->name }}</small>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                                 <td>{{ $investmentPlan->investationCriteria->name ?? '-' }}</td>
                                 <td class="text-center">{{ $investmentPlan->qty }}</td>
                                 <td>{{ $investmentPlan->unit }}</td>
@@ -81,8 +109,26 @@
                                 <td class="text-end fw-bold">{{ number_format($investmentPlan->total, 0, ',', '.') }}</td>
                                 <td class="text-center">
                                     <span class="badge bg-{{ $investmentPlan->statusClass() }}">{{ $investmentPlan->statusLabel() }}</span>
+                                    <div class="mt-1">
+                                        <small class="badge bg-soft-{{ $investmentPlan->gateReviewStatusClass() }} text-{{ $investmentPlan->gateReviewStatusClass() }}">{{ $investmentPlan->gateReviewStatusLabel() }}</small>
+                                    </div>
                                 </td>
                                 <td class="text-center">
+                                    @if($investmentPlan->stageGates->isNotEmpty())
+                                    <span class="badge bg-primary">{{ $investmentPlan->stageGates->where('status', 'approved')->count() }}/{{ $investmentPlan->stageGates->count() }}</span>
+                                    <a href="{{ route('erkap.investment-gates.show', $investmentPlan->stageGates->first()->id) }}" class="btn btn-outline-primary btn-sm" title="Lihat Gate Review">
+                                        <i class="mdi mdi-check-decagram"></i>
+                                    </a>
+                                    @else
+                                    <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($investmentPlan->proposal_file_path && auth()->user()->can('erkap.investment-plans.download'))
+                                    <a href="{{ route('erkap.investment-plans.proposal-download', $investmentPlan->id) }}" class="btn btn-outline-secondary btn-sm" title="Download Proposal">
+                                        <i class="mdi mdi-download"></i>
+                                    </a>
+                                    @endif
                                     @if($investmentPlan->canBeSubmitted() && auth()->user()->can('erkap.investment-plans.submit'))
                                     <form method="POST" action="{{ route('erkap.investment-plans.submit', $investmentPlan->id) }}" class="d-inline" onsubmit="return confirm('Ajukan rencana investasi ini untuk persetujuan?')">
                                         @csrf
@@ -101,7 +147,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="12" class="text-center text-muted">Belum ada data rencana investasi.</td>
+                                <td colspan="15" class="text-center text-muted">Belum ada data rencana investasi.</td>
                             </tr>
                             @endforelse
                         </tbody>

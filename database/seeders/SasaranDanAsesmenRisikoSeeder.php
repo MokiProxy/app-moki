@@ -137,11 +137,11 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
                     }
 
                     $strategies = [
-                        ["erkap_risk_identification_id" => 1, "strategy" => "reduce"],
-                        ["erkap_risk_identification_id" => 1, "strategy" => "reduce"],
-                        ["erkap_risk_identification_id" => 2, "strategy" => "reduce"],
-                        ["erkap_risk_identification_id" => 3, "strategy" => "reduce"],
-                        ["erkap_risk_identification_id" => 3, "strategy" => "reduce"],
+                        ["erkap_risk_identification_id" => 1, "strategy" => "reduction"],
+                        ["erkap_risk_identification_id" => 1, "strategy" => "reduction"],
+                        ["erkap_risk_identification_id" => 2, "strategy" => "reduction"],
+                        ["erkap_risk_identification_id" => 3, "strategy" => "reduction"],
+                        ["erkap_risk_identification_id" => 3, "strategy" => "reduction"],
                     ];
                     foreach ($strategies as $strategy) {
                         if($strategy['erkap_risk_identification_id'] == $riskIdentification->id) {

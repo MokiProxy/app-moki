@@ -92,6 +92,7 @@ class AuditLog extends Model
             \App\Models\Erkap\RiskAssessmentMonthly::class => 'Risk Assessment Bulanan',
             \App\Models\Erkap\PerformanceScorecard::class => 'Performance Scorecard',
             \App\Models\Erkap\Approval::class => 'Persetujuan (Approval)',
+            \App\Models\Erkap\InvestmentStageGate::class => 'Gate Review Investasi',
         ];
 
         return $map[$type] ?? class_basename($type);

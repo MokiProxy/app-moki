@@ -15,7 +15,7 @@ class CostCenterController extends Controller
     public function index()
     {
         $pageName = 'Pusat Biaya (Cost Center)';
-        $costCenters = CostCenter::with('division')
+        $costCenters = CostCenter::with('division', 'coordinatingDivision')
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->where('division_id', ErkapAccess::divisionId());
             })
@@ -41,6 +41,12 @@ class CostCenterController extends Controller
         try {
             $data = $request->validated();
             $data['is_swakelola'] = $request->boolean('is_swakelola');
+            $data['is_centralized'] = $request->boolean('is_centralized');
+
+            if (! $data['is_centralized']) {
+                $data['coordinating_division_id'] = null;
+            }
+
             $data['created_by'] = auth()->id();
 
             CostCenter::create($data);
@@ -76,6 +82,12 @@ class CostCenterController extends Controller
         try {
             $data = $request->validated();
             $data['is_swakelola'] = $request->boolean('is_swakelola');
+            $data['is_centralized'] = $request->boolean('is_centralized');
+
+            if (! $data['is_centralized']) {
+                $data['coordinating_division_id'] = null;
+            }
+
             $data['updated_by'] = auth()->id();
 
             $costCenter->update($data);

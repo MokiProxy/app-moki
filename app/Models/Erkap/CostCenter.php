@@ -15,15 +15,21 @@ class CostCenter extends Model
 
     protected $table = 'cost_centers';
 
-    protected $fillable = ['code', 'is_swakelola', 'name', 'owner', 'division_id', 'created_by', 'updated_by'];
+    protected $fillable = ['code', 'is_swakelola', 'is_centralized', 'coordinating_division_id', 'name', 'owner', 'division_id', 'created_by', 'updated_by'];
 
     protected $casts = [
         'is_swakelola' => 'boolean',
+        'is_centralized' => 'boolean',
     ];
 
     public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class, 'division_id');
+    }
+
+    public function coordinatingDivision(): BelongsTo
+    {
+        return $this->belongsTo(Division::class, 'coordinating_division_id');
     }
 
     public function costElementCode(): ?string
@@ -39,6 +45,11 @@ class CostCenter extends Model
     public function isSwakelola(): bool
     {
         return $this->is_swakelola ?? $this->costCenterCode() === '510';
+    }
+
+    public function isCentralized(): bool
+    {
+        return (bool) ($this->is_centralized ?? false);
     }
 
     public function costElement()

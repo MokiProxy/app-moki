@@ -82,7 +82,7 @@
                                     <tbody>
                                         @forelse($revenueRows as $plan)
                                         <tr>
-                                            <td>{{ $plan->chartOfAccount->code ?? '-' }} - {{ $plan->chartOfAccount->name ?? '-' }}</td>
+                                            <td>{{ $plan->chartOfAccount->formattedCode ?? '-' }} - {{ $plan->chartOfAccount->name ?? '-' }}</td>
                                             <td class="text-end fw-bold">Rp {{ number_format($plan->total, 0, ',', '.') }}</td>
                                         </tr>
                                         @empty
@@ -107,7 +107,7 @@
                                     <tbody>
                                         @forelse($expenseRows as $plan)
                                         <tr>
-                                            <td>{{ $plan->chartOfAccount->code ?? '-' }} - {{ $plan->chartOfAccount->name ?? '-' }}</td>
+                                            <td>{{ $plan->chartOfAccount->formattedCode ?? '-' }} - {{ $plan->chartOfAccount->name ?? '-' }}</td>
                                             <td class="text-end fw-bold">Rp {{ number_format($plan->total, 0, ',', '.') }}</td>
                                         </tr>
                                         @empty

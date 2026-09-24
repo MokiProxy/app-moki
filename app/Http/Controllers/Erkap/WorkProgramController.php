@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erkap;
 
 use App\Exports\Erkap\WorkProgramExport;
+use App\Enums\ErkapRatingLevel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWorkProgramRequest;
 use App\Http\Requests\UpdateWorkProgramRequest;
@@ -10,6 +11,7 @@ use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\WorkProgram;
 use App\Services\ApprovalService;
 use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
@@ -17,8 +19,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class WorkProgramController extends Controller
 {
-    private const ALLOWED_RATINGS = ['AAA', 'AA', 'A'];
-
     public function index()
     {
         $pageName = 'Program Kerja';
@@ -46,7 +46,7 @@ class WorkProgramController extends Controller
             ->orderBy('id')
             ->get();
 
-        return Excel::download(new WorkProgramExport($workPrograms), 'program-kerja-' . date('Y-m-d-Hi') . '.xlsx');
+        return Excel::download(new WorkProgramExport($workPrograms), 'program-kerja-'.date('Y-m-d-Hi').'.xlsx');
     }
 
     public function exportPdf()
@@ -61,7 +61,7 @@ class WorkProgramController extends Controller
         $pdf = Pdf::loadView('erkap.exports.work-program-pdf', compact('workPrograms'));
         $pdf->setOption('isRemoteEnabled', true);
 
-        return $pdf->download('program-kerja-' . date('Y-m-d-Hi') . '.pdf');
+        return $pdf->download('program-kerja-'.date('Y-m-d-Hi').'.pdf');
     }
 
     public function create(Request $request)
@@ -105,6 +105,8 @@ class WorkProgramController extends Controller
             $riskIdentification = RiskIdentification::with('departmentTarget.ratingCriteria')
                 ->findOrFail($request->integer('erkap_risk_identification_id'));
 
+            ErkapEvaluationLock::assertRiskEditable($riskIdentification);
+
             if (! $this->checkRating($riskIdentification)) {
                 return redirect()->route('erkap.work-programs.create')
                     ->withInput()
@@ -137,6 +139,13 @@ class WorkProgramController extends Controller
     {
         ErkapAccess::assertRiskIdentificationAccess($workProgram->erkap_risk_identification_id);
 
+        try {
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($workProgram->erkap_risk_identification_id));
+        } catch (Exception $err) {
+            return redirect()->route('erkap.work-programs.index')
+                ->with('error', $err->getMessage());
+        }
+
         $pageName = 'Edit Program Kerja';
         $riskIdentifications = RiskIdentification::with('departmentTarget.ratingCriteria')
             ->whereIn('id', ErkapAccess::riskIdentificationIds())
@@ -150,6 +159,8 @@ class WorkProgramController extends Controller
         try {
             ErkapAccess::assertRiskIdentificationAccess($workProgram->erkap_risk_identification_id);
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($workProgram->erkap_risk_identification_id));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($request->integer('erkap_risk_identification_id')));
 
             $riskIdentification = RiskIdentification::with('departmentTarget.ratingCriteria')
                 ->findOrFail($request->integer('erkap_risk_identification_id'));
@@ -180,6 +191,7 @@ class WorkProgramController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($workProgram->erkap_risk_identification_id);
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($workProgram->erkap_risk_identification_id));
 
             $workProgram->delete();
 
@@ -244,6 +256,6 @@ class WorkProgramController extends Controller
     {
         $rating = optional(optional($riskIdentification->departmentTarget)->ratingCriteria)->rating;
 
-        return in_array($rating, self::ALLOWED_RATINGS, true);
+        return in_array($rating, ErkapRatingLevel::allowedForWorkProgram(), true);
     }
 }

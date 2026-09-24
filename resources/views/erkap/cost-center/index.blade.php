@@ -63,6 +63,9 @@
                                     @else
                                         <span class="badge bg-secondary">Non Swakelola</span>
                                     @endif
+                                    @if($costCenter->isCentralized())
+                                        <span class="badge bg-info d-block mt-1">Terpusat: {{ $costCenter->coordinatingDivision->name ?? '-' }}</span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <a href="{{ route('erkap.cost-centers.edit', $costCenter->id) }}" class="btn btn-warning btn-sm btn-edit" title="Edit">

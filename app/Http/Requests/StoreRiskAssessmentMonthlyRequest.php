@@ -28,6 +28,8 @@ class StoreRiskAssessmentMonthlyRequest extends FormRequest
             'mitigation_plan' => ['nullable', 'string'],
             'mitigation_status' => ['sometimes', 'in:on_progress,done,overdue'],
             'risk_owner' => ['nullable', 'string', 'max:255'],
+            'target_date' => ['nullable', 'date'],
+            'risk_appetite_id' => ['nullable', 'integer', 'exists:erkap_risk_appetites,id'],
         ];
     }
 }

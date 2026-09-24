@@ -40,7 +40,7 @@
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label class="form-label fw-bold text-muted small">Kode Akun</label>
-                                <p class="fw-bold mb-0 fs-5">{{ $chartOfAccount->code }}</p>
+                                <p class="fw-bold mb-0 fs-5">{{ $chartOfAccount->formattedCode }}</p>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-muted small">Nama Akun</label>

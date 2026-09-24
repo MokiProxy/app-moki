@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateRiskIdentificationImpactRequest;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskIdentificationImpact;
 use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
 use Exception;
 
 class RiskIdentificationImpactController extends Controller
@@ -36,6 +37,7 @@ class RiskIdentificationImpactController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id')));
 
             RiskIdentificationImpact::create($request->validated());
 
@@ -57,6 +59,13 @@ class RiskIdentificationImpactController extends Controller
     {
         ErkapAccess::assertRiskIdentificationAccess($riskIdentificationImpact->erkap_risk_identification_id);
 
+        try {
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskIdentificationImpact->erkap_risk_identification_id));
+        } catch (Exception $err) {
+            return redirect()->route('erkap.risk-identification-impacts.index')
+                ->with('error', $err->getMessage());
+        }
+
         $pageName = 'Edit Dampak Identifikasi Risiko';
         $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
@@ -68,6 +77,8 @@ class RiskIdentificationImpactController extends Controller
         try {
             ErkapAccess::assertRiskIdentificationAccess($riskIdentificationImpact->erkap_risk_identification_id);
             ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskIdentificationImpact->erkap_risk_identification_id));
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($request->integer('erkap_risk_identification_id')));
 
             $riskIdentificationImpact->update($request->validated());
 
@@ -89,6 +100,7 @@ class RiskIdentificationImpactController extends Controller
     {
         try {
             ErkapAccess::assertRiskIdentificationAccess($riskIdentificationImpact->erkap_risk_identification_id);
+            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskIdentificationImpact->erkap_risk_identification_id));
 
             $riskIdentificationImpact->delete();
 

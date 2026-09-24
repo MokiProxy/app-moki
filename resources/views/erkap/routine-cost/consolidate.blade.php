@@ -62,6 +62,22 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card border-0 bg-dark text-white shadow-sm">
+                            <div class="card-body py-3">
+                                <small class="text-white-50 text-uppercase fw-bold">Biaya Terpusat</small>
+                                <h5 class="mb-0 mt-1">Rp {{ number_format($centralizedGroups['centralized']->sum('total'), 0, ',', '.') }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card border-0 bg-secondary text-white shadow-sm">
+                            <div class="card-body py-3">
+                                <small class="text-white-50 text-uppercase fw-bold">Biaya Non-Terpusat</small>
+                                <h5 class="mb-0 mt-1">Rp {{ number_format($centralizedGroups['non_centralized']->sum('total'), 0, ',', '.') }}</h5>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -70,6 +86,7 @@
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Elemen Biaya</th>
+                                <th class="text-center">Tipe</th>
                                 <th class="text-center">Total Qty</th>
                                 <th class="text-center">Jan</th>
                                 <th class="text-center">Feb</th>
@@ -91,6 +108,13 @@
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
                                 <td class="fw-bold">{{ $item['cost_element']->name ?? '-' }}</td>
+                                <td class="text-center">
+                                    @if($item['is_centralized'])
+                                        <span class="badge bg-info">Terpusat: {{ $item['coordinator'] ?? '-' }}</span>
+                                    @else
+                                        <span class="badge bg-secondary">Non-Terpusat</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">{{ $item['total_qty'] }}</td>
                                 @foreach($item['monthly'] as $month => $value)
                                     <td class="text-end">{{ number_format($value, 0, ',', '.') }}</td>
@@ -99,13 +123,13 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="16" class="text-center text-muted">Belum ada data biaya rutin.</td>
+                                <td colspan="17" class="text-center text-muted">Belum ada data biaya rutin.</td>
                             </tr>
                             @endforelse
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
-                                <th colspan="3" class="text-end">Total Bulanan</th>
+                                <th colspan="4" class="text-end">Total Bulanan</th>
                                 @foreach($totalByMonth as $month => $value)
                                     <th class="text-end">Rp {{ number_format($value, 0, ',', '.') }}</th>
                                 @endforeach

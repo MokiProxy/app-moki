@@ -21,7 +21,7 @@ $roleColor = "primary-it-admin";
                                     <div>
                                         <span class="text-{{ $roleColor }} m-0 p-0">E-RKAP</span>
                                     </div>
-                                    <p class="fs-6 m-0 p-0 fw-normal">RKAP Elektronik</p>
+                                    <p class="fs-6 m-0 p-0 fw-normal">Manajemen RKAP Digital</p>
                                 </div>
                             </h3>
                         </div>

@@ -25,7 +25,11 @@
             @endphp
             <tr>
                 <td class="fw-bold">{{ $program->name ?? '-' }}</td>
-                <td>{{ $cost->need ?? $cost->name ?? '-' }}</td>
+                <td>{{ $cost->need ?? $cost->name ?? '-' }}
+                                @if($realization->routineCost && $realization->routineCost->costCenter && $realization->routineCost->costCenter->isCentralized())
+                                    <span class="badge bg-info d-block mt-1" style="font-size:10px">Terpusat: {{ $realization->routineCost->costCenter->coordinatingDivision->name ?? '-' }}</span>
+                                @endif
+                            </td>
                 <td>{{ $division->name ?? '-' }}</td>
                 <td class="text-end">{{ number_format($realization->budgeted, 0, ',', '.') }}</td>
                 <td class="text-end">{{ number_format($realization->realized, 0, ',', '.') }}</td>

@@ -71,12 +71,26 @@ $months = [
                             <select name="erkap_cost_element_id" class="form-select @error('erkap_cost_element_id') is-invalid @enderror" required>
                                 <option value="" disabled selected>Pilih Elemen Biaya</option>
                                 @foreach($costElements as $costElement)
-                                    <option value="{{ $costElement->id }}" {{ old('erkap_cost_element_id') == $costElement->id ? 'selected' : '' }}>
+                                    <option value="{{ $costElement->id }}" data-coa-id="{{ $costElement->chart_of_account_id }}" {{ old('erkap_cost_element_id') == $costElement->id ? 'selected' : '' }}>
                                         {{ $costElement->code }} {{ $costElement->name }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('erkap_cost_element_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Chart of Account</label>
+                            <select name="chart_of_account_id" class="form-select @error('chart_of_account_id') is-invalid @enderror">
+                                <option value="" selected>Ikuti Elemen Biaya</option>
+                                @foreach($chartOfAccounts as $chartOfAccount)
+                                    <option value="{{ $chartOfAccount->id }}" {{ old('chart_of_account_id') == $chartOfAccount->id ? 'selected' : '' }}>
+                                        {{ $chartOfAccount->formattedCode }} - {{ $chartOfAccount->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Kosongkan untuk otomatis mengikuti COA elemen biaya.</div>
+                            @error('chart_of_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-md-12">
@@ -167,6 +181,52 @@ $months = [
                         @endforeach
                     </div>
 
+                    <div class="mt-4 border rounded p-3 bg-light" id="subtotal-panel">
+                        <h6 class="text-uppercase fw-bold text-muted mb-3"><i class="mdi mdi-chart-pie me-1"></i> Subtotal Reaktif (Termasuk Baris Ini)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <small class="text-muted text-uppercase fw-bold">Per Elemen Biaya</small>
+                                <div class="fs-5 fw-bold" id="subtotal-element">-</div>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted text-uppercase fw-bold">Per Program Kerja</small>
+                                <div class="fs-5 fw-bold" id="subtotal-program">-</div>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted text-uppercase fw-bold">Per Pusat Biaya</small>
+                                <div class="fs-5 fw-bold" id="subtotal-cost-center">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 border rounded p-3 bg-light" id="realization-preview">
+                        <h6 class="text-uppercase fw-bold text-muted mb-3"><i class="mdi mdi-chart-line me-1"></i> Budget vs Realisasi (Program Kerja Terpilih)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <small class="text-muted text-uppercase fw-bold">Total Anggaran</small>
+                                <div class="fw-bold" id="preview-budget">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted text-uppercase fw-bold">Realisasi YTD</small>
+                                <div class="fw-bold text-primary" id="preview-realized">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted text-uppercase fw-bold">Variance (Sisa)</small>
+                                <div class="fw-bold" id="preview-variance">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted text-uppercase fw-bold">% Sisa</small>
+                                <div class="fw-bold" id="preview-variance-pct">-</div>
+                            </div>
+                        </div>
+                        <div class="mt-2" id="preview-bar">
+                            <div class="progress" style="height: 12px;">
+                                <div class="progress-bar bg-success" id="preview-bar-ok" role="progressbar" style="width:0%"></div>
+                                <div class="progress-bar bg-danger" id="preview-bar-over" role="progressbar" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mt-4 border-top pt-3">
                         <button type="submit" class="btn btn-primary">
                             <i class="mdi mdi-content-save me-1"></i> Simpan
@@ -183,12 +243,22 @@ $months = [
 @section('plugin')
 @include('erkap.partials.rupiah')
 <script>
+    var subtotalByElement = @json($subtotalByElement);
+    var subtotalByProgram = @json($subtotalByProgram);
+    var subtotalByCostCenter = @json($subtotalByCostCenter);
+    var budgetPreview = @json($budgetPreview);
+    var ORIGINAL_TOTAL = 0;
+
     function monthTotal() {
         var total = 0;
         $('.month-cost').each(function() {
             total += Rupiah.parse($(this).val());
         });
         return total;
+    }
+
+    function currentTotal() {
+        return Rupiah.parse($('#total').val()) || monthTotal();
     }
 
     function updateCostPreview() {
@@ -206,6 +276,65 @@ $months = [
             $('#cost-preview').removeClass('text-danger fw-bold').addClass('text-success');
         }
         $('#cost-preview').text(msg);
+        updateSubtotals();
+    }
+
+    function updateSubtotals() {
+        var total = currentTotal();
+        var programId = $('select[name="erkap_work_program_id"]').val();
+        var elementId = $('select[name="erkap_cost_element_id"]').val();
+        var costCenterId = $('#cost_center_id').val();
+
+        var baseElement = (subtotalByElement[elementId] || 0) - ORIGINAL_TOTAL;
+        var baseProgram = (subtotalByProgram[programId] || 0) - ORIGINAL_TOTAL;
+        var baseCostCenter = (subtotalByCostCenter[costCenterId] || subtotalByCostCenter[costCenterId || ''] || 0) - ORIGINAL_TOTAL;
+
+        $('#subtotal-element').text(Rupiah.format(baseElement + total));
+        $('#subtotal-program').text(Rupiah.format(baseProgram + total));
+        $('#subtotal-cost-center').text(Rupiah.format(baseCostCenter + total));
+    }
+
+    function updateRealizationPreview() {
+        var programId = $('select[name="erkap_work_program_id"]').val();
+        var preview = programId ? (budgetPreview[programId] || null) : null;
+
+        if (!preview) {
+            $('#preview-budget').text('-');
+            $('#preview-realized').text('-');
+            $('#preview-variance').text('-');
+            $('#preview-variance-pct').text('-');
+            $('#preview-bar-ok').css('width', '0%');
+            $('#preview-bar-over').css('width', '0%');
+            return;
+        }
+
+        $('#preview-budget').text(Rupiah.format(preview.budget));
+        $('#preview-realized').text(Rupiah.format(preview.realized));
+        $('#preview-variance').text(Rupiah.format(preview.variance));
+        $('#preview-variance-pct').text(preview.variance_pct + '%');
+
+        var over = preview.variance < 0;
+        $('#preview-budget, #preview-realized, #preview-variance, #preview-variance-pct')
+            .removeClass('text-success text-danger text-primary');
+        $('#preview-variance, #preview-variance-pct')
+            .addClass(over ? 'text-danger' : 'text-success');
+        $('#preview-budget').addClass('text-dark');
+
+        if (preview.budget > 0) {
+            var pct = Math.min(Math.abs((preview.realized / preview.budget) * 100), 100);
+            if (over) {
+                $('#preview-bar-ok').css('width', '100%');
+                $('#preview-bar-over').css('width', pct + '%');
+                $('#preview-bar-over').removeClass('bg-success').addClass('bg-danger');
+            } else {
+                $('#preview-bar-ok').css('width', pct + '%');
+                $('#preview-bar-ok').removeClass('bg-danger').addClass('bg-success');
+                $('#preview-bar-over').css('width', '0%');
+            }
+        } else {
+            $('#preview-bar-ok').css('width', '0%');
+            $('#preview-bar-over').css('width', '0%');
+        }
     }
 
     function syncCostCenter($select) {
@@ -218,11 +347,24 @@ $months = [
             $('select[name="erkap_cost_element_id"]').val(costElementId).trigger('change.select2');
         }
         $('#cost_center_id').val($select.val() || '');
+        updateSubtotals();
+    }
+
+    function syncCoaFromElement() {
+        var coaId = $('select[name="erkap_cost_element_id"] option:selected').data('coa-id');
+        if (coaId && ! $('select[name="chart_of_account_id"]').val()) {
+            $('select[name="chart_of_account_id"]').val(coaId).trigger('change.select2');
+        }
     }
 
     $(document).ready(function() {
         $(document).on('input', '.month-cost, input[name="qty"], input[name="unit_price"]', updateCostPreview);
         $('#is_kumulatif').on('change', updateCostPreview);
+        $(document).on('change', 'select[name="erkap_work_program_id"], select[name="erkap_cost_element_id"]', function() {
+            syncCoaFromElement();
+            updateSubtotals();
+            updateRealizationPreview();
+        });
         $(document).on('change', '#cost_center_swakelola', function() {
             if ($(this).val()) {
                 $('#cost_center_non_swakelola').val('').trigger('change.select2');
@@ -236,6 +378,7 @@ $months = [
             syncCostCenter($(this));
         });
         updateCostPreview();
+        updateRealizationPreview();
     });
 </script>
 @endsection

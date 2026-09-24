@@ -49,7 +49,7 @@ $months = [
                 </div>
                 @endif
 
-                <form action="{{ route('erkap.investment-plans.update', $investmentPlan->id) }}" method="POST">
+                <form action="{{ route('erkap.investment-plans.update', $investmentPlan->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
@@ -65,6 +65,32 @@ $months = [
                                 @endforeach
                             </select>
                             @error('erkap_work_program_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Pusat Biaya (Cost Center)</label>
+                            <select name="cost_center_id" class="form-select @error('cost_center_id') is-invalid @enderror">
+                                <option value="">Pilih Cost Center (opsional)</option>
+                                @foreach($costCenters as $costCenter)
+                                    <option value="{{ $costCenter->id }}" {{ old('cost_center_id', $investmentPlan->cost_center_id) == $costCenter->id ? 'selected' : '' }}>
+                                        {{ $costCenter->code }} - {{ $costCenter->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('cost_center_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Chart of Account</label>
+                            <select name="chart_of_account_id" class="form-select @error('chart_of_account_id') is-invalid @enderror">
+                                <option value="" {{ old('chart_of_account_id', $investmentPlan->chart_of_account_id) ? '' : 'selected' }}>Pilih Chart of Account</option>
+                                @foreach($chartOfAccounts as $chartOfAccount)
+                                    <option value="{{ $chartOfAccount->id }}" {{ old('chart_of_account_id', $investmentPlan->chart_of_account_id) == $chartOfAccount->id ? 'selected' : '' }}>
+                                        {{ $chartOfAccount->formattedCode }} - {{ $chartOfAccount->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('chart_of_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-md-6">
@@ -142,6 +168,13 @@ $months = [
                             @error('total') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             <div id="investment-preview" class="form-text"></div>
                         </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Urutan Prioritas</label>
+                            <input type="number" min="1" step="1" name="priority_order" id="priority_order" class="form-control @error('priority_order') is-invalid @enderror" value="{{ old('priority_order', $investmentPlan->priority_order) }}" placeholder="1 = tertinggi">
+                            @error('priority_order') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Prioritas per divisi (opsional).</small>
+                        </div>
                     </div>
 
                     <div class="mt-4">
@@ -162,6 +195,58 @@ $months = [
                             @error($field) <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         @endforeach
+                    </div>
+
+                    @php
+    $cba = $investmentPlan->cba_json ?? [];
+@endphp
+                    <div class="mt-4">
+                        <h6 class="text-uppercase fw-bold text-muted mb-3">
+                            <i class="mdi mdi-file-document-outline me-1"></i> Proposal & Kajian Kelayakan (CBA)
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Proposal (PDF/DOC) <span class="text-muted fw-normal">- wajib untuk submit</span></label>
+                                @if($investmentPlan->proposal_file_path)
+                                <div class="mb-2">
+                                    <a href="{{ route('erkap.investment-plans.proposal-download', $investmentPlan->id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="mdi mdi-download me-1"></i> {{ $investmentPlan->proposal_original_name ?: 'Proposal saat ini' }}
+                                    </a>
+                                </div>
+                                @endif
+                                <input type="file" name="proposal" class="form-control @error('proposal') is-invalid @enderror" accept=".pdf,.doc,.docx">
+                                @error('proposal') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <small class="text-muted">Maks. 20MB. Kosongkan jika tidak mengganti file.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Lampiran CBA (opsional)</label>
+                                @if($investmentPlan->cba_attachment_path)
+                                <div class="mb-2">
+                                    <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($investmentPlan->cba_attachment_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="mdi mdi-file-document-outline me-1"></i> Lampiran saat ini
+                                    </a>
+                                </div>
+                                @endif
+                                <input type="file" name="cba_attachment" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+                                <small class="text-muted">Kosongkan jika tidak mengganti file.</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">NPV</label>
+                                <input type="number" step="0.01" name="cba_npv" class="form-control" value="{{ old('cba_npv', $cba['npv'] ?? '') }}" placeholder="0,00">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">IRR (%)</label>
+                                <input type="number" step="0.01" name="cba_irr" class="form-control" value="{{ old('cba_irr', $cba['irr'] ?? '') }}" placeholder="0,00">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Payback Period (tahun)</label>
+                                <input type="number" step="0.01" name="cba_payback" class="form-control" value="{{ old('cba_payback', $cba['payback'] ?? '') }}" placeholder="0,00">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Justifikasi / Rekomendasi</label>
+                                <textarea name="cba_justification" class="form-control" rows="2" placeholder="Justifikasi kelayakan investasi (opsional)">{{ old('cba_justification', $cba['justification'] ?? '') }}</textarea>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-4 border-top pt-3">

@@ -43,7 +43,7 @@
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Target</th>
                                 <th>Divisi</th>
-                                <th>Rating Criteria</th>
+                                <th>Prioritas</th>
                                 <th>Sasaran Perusahaan</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
@@ -54,7 +54,7 @@
                                 <td class="text-center">{{ $departmentTargets->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $departmentTarget->target }}</td>
                                 <td>{{ $departmentTarget->division->name ?? '-' }}</td>
-                                <td>{{ $departmentTarget->ratingCriteria->rating ?? '-' }}</td>
+                                <td>{{ $departmentTarget->priorityLabel() }}</td>
                                 <td>{{ $departmentTarget->companyTarget->target ?? '-' }}</td>
                                 <td class="text-center">
                                     <a href="{{ route('erkap.department-targets.edit', $departmentTarget->id) }}" class="btn btn-warning btn-sm btn-edit" title="Edit">

@@ -37,6 +37,9 @@
                 </div>
             </div>
             <div class="card-body">
+                @php $moduleName = 'Biaya rutin'; @endphp
+                @include('erkap.partials.locked-rkaps-banner')
+
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
@@ -70,7 +73,7 @@
                 <div class="mb-4">
                     <h6 class="text-uppercase fw-bold text-muted mb-2"><i class="mdi mdi-chart-pie me-1"></i> Ringkasan Anggaran</h6>
                     <div class="row">
-                        <div class="col-lg-6 mb-3">
+                        <div class="col-lg-4 mb-3">
                             <div class="card border shadow-sm h-100">
                                 <div class="card-header bg-light py-2 fw-bold">Per Elemen Biaya</div>
                                 <div class="card-body py-2 table-responsive p-0">
@@ -89,7 +92,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-6 mb-3">
+                        <div class="col-lg-4 mb-3">
                             <div class="card border shadow-sm h-100">
                                 <div class="card-header bg-light py-2 fw-bold">Per Program Kerja</div>
                                 <div class="card-body py-2 table-responsive p-0">
@@ -98,6 +101,31 @@
                                             @forelse($subtotalByProgram as $item)
                                             <tr>
                                                 <td>{{ $item->workProgram->name ?? '-' }}</td>
+                                                <td class="text-end fw-bold">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                                            </tr>
+                                            @empty
+                                            <tr><td colspan="2" class="text-center text-muted p-2">Belum ada data.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 mb-3">
+                            <div class="card border shadow-sm h-100">
+                                <div class="card-header bg-light py-2 fw-bold">Per Pusat Biaya (Satuan Kerja)</div>
+                                <div class="card-body py-2 table-responsive p-0">
+                                    <table class="table table-sm table-striped mb-0">
+                                        <tbody>
+                                            @forelse($subtotalByCostCenter as $item)
+                                            <tr>
+                                                <td>
+                                                    @if($item->costCenter)
+                                                        {{ $item->costCenter->code }} - {{ $item->costCenter->name }}
+                                                    @else
+                                                        {{ $item->cost_center_owner ?? '-' }}
+                                                    @endif
+                                                </td>
                                                 <td class="text-end fw-bold">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
                                             </tr>
                                             @empty
@@ -129,6 +157,7 @@
                                 <th>Satuan</th>
                                 <th class="text-end">Harga Satuan</th>
                                 <th>Elemen Biaya</th>
+                                <th>Chart of Account</th>
                                 <th class="text-center">Jan</th>
                                 <th class="text-center">Feb</th>
                                 <th class="text-center">Mar</th>
@@ -156,6 +185,9 @@
                                     @if($routineCost->costCenter)
                                         {{ $routineCost->costCenter->code }} - {{ $routineCost->costCenter->name }}
                                         <small class="d-block text-muted">{{ $routineCost->cost_center_owner }}</small>
+                                        @if($routineCost->costCenter->isCentralized())
+                                            <span class="badge bg-info mt-1">Terpusat: {{ $routineCost->costCenter->coordinatingDivision->name ?? '-' }}</span>
+                                        @endif
                                     @else
                                         {{ $routineCost->cost_center_owner }}
                                     @endif
@@ -164,6 +196,13 @@
                                 <td class="text-center">{{ $routineCost->units }}</td>
                                 <td class="text-end">{{ number_format($routineCost->unit_price, 0, ',', '.') }}</td>
                                 <td>{{ $routineCost->costElement->name ?? '-' }}</td>
+                                <td>
+                                    @if($routineCost->chartOfAccount)
+                                        {{ $routineCost->chartOfAccount->formattedCode }}<small class="d-block text-muted">{{ $routineCost->chartOfAccount->name }}</small>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">{{ $routineCost->jan_cost ?? '-' }}</td>
                                 <td class="text-center">{{ $routineCost->feb_cost ?? '-' }}</td>
                                 <td class="text-center">{{ $routineCost->mar_cost ?? '-' }}</td>
@@ -199,7 +238,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="23" class="text-center text-muted">Belum ada data biaya rutin.</td>
+                                <td colspan="24" class="text-center text-muted">Belum ada data biaya rutin.</td>
                             </tr>
                             @endforelse
                         </tbody>
