@@ -16,7 +16,7 @@
                 <h5 class="mb-0 card-title text-dark fw-bold">{{ $pageName }}</h5>
                 <div class="d-flex gap-1">
                     <a href="{{ route('erkap.risk-identification-reasons.create') }}" class="btn btn-primary">
-                        <i class="mdi mdi-plus me-1"></i> Tambah Alasan
+                        <i class="mdi mdi-plus me-1"></i> Tambah Penyebab
                     </a>
                     <a href="#!" class="btn btn-light" id="btn-refresh"><i class="mdi mdi-refresh"></i></a>
                 </div>
@@ -41,7 +41,7 @@
                         <thead class="table-dark">
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
-                                <th>Alasan</th>
+                                <th>Penyebab</th>
                                 <th>Identifikasi Risiko</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
@@ -63,7 +63,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted">Belum ada data alasan identifikasi risiko.</td>
+                                <td colspan="4" class="text-center text-muted">Belum ada data penyebab identifikasi risiko.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -94,8 +94,8 @@
             var id = $(this).data('id');
             var name = $(this).data('name');
             Swal.fire({
-                title: 'Hapus Alasan?',
-                text: 'Alasan "' + name + '" akan dihapus permanen.',
+                title: 'Hapus Penyebab?',
+                text: 'Penyebab "' + name + '" akan dihapus permanen.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',

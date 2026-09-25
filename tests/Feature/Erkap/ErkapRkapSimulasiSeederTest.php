@@ -18,7 +18,6 @@ use App\Models\Erkap\PerformanceScorecard;
 use App\Models\Erkap\ProgramRealization;
 use App\Models\Erkap\RiskAssessmentMonthly;
 use App\Models\Erkap\RiskIdentification;
-use App\Models\Erkap\RiskTreatment;
 use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RoutineCost;
 use App\Models\Erkap\WorkProgram;
@@ -48,7 +47,6 @@ class ErkapRkapSimulasiSeederTest extends TestCase
         // End-state periode RKAP.
         $this->assertSame('approved', $rkap->status);
         $this->assertSame('archived', $rkap->phase);
-        $this->assertSame('aligned', $rkap->bmi_alignment_status);
         $this->assertSame('distributed', $rkap->distribution_status);
         $this->assertNotNull($rkap->resolution_date);
 
@@ -58,7 +56,7 @@ class ErkapRkapSimulasiSeederTest extends TestCase
         $this->assertTrue(InvestmentPlan::where('status', '!=', 'approved')->doesntExist());
         $this->assertTrue(RiskIdentification::where('status', '!=', 'approved')->doesntExist());
 
-        // Jumlah approval bertingkat: 2/WP, 2/RC, 4/IP, 2/RKAP, 1/risiko.
+        // Jumlah approval bertingkat: 2/WP, 2/RC, 3/IP, 2/RKAP, 1/risiko.
         foreach (WorkProgram::all() as $doc) {
             $this->assertSame(2, $this->approvedApprovals($doc));
         }
@@ -66,18 +64,18 @@ class ErkapRkapSimulasiSeederTest extends TestCase
             $this->assertSame(2, $this->approvedApprovals($doc));
         }
         foreach (InvestmentPlan::all() as $doc) {
-            $this->assertSame(4, $this->approvedApprovals($doc));
+            $this->assertSame(3, $this->approvedApprovals($doc));
         }
         foreach (RiskIdentification::all() as $doc) {
             $this->assertSame(1, $this->approvedApprovals($doc));
         }
         $this->assertSame(2, $this->approvedApprovals($rkap));
 
-        // Stage gate: 5 gate per IP, semua approved.
+        // Stage gate: 4 gate per IP, semua approved.
         $this->assertSame(2, InvestmentPlan::count());
         foreach (InvestmentPlan::all() as $plan) {
             $gates = $plan->stageGates()->get();
-            $this->assertCount(5, $gates);
+            $this->assertCount(4, $gates);
             $this->assertTrue($gates->every(fn ($gate) => $gate->status === 'approved'));
         }
 
@@ -100,7 +98,6 @@ class ErkapRkapSimulasiSeederTest extends TestCase
         $this->assertTrue(CompanyTarget::where('erkap_rkap_id', $rkap->id)->exists());
         $this->assertTrue(DepartmentTarget::where('division_id', $division->id)->exists());
         $this->assertTrue(DepartmentRiskStrategy::count() >= 1);
-        $this->assertTrue(RiskTreatment::count() >= 1);
 
         // Semua data ber-pengisi: created_by/updated_by terisi user yang tepat.
         $this->assertSemuaDataBerPengisi();

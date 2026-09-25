@@ -10,12 +10,13 @@ use App\Models\Erkap\RiskIdentificationReason;
 use App\Services\ErkapAccess;
 use App\Services\ErkapEvaluationLock;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class RiskIdentificationReasonController extends Controller
 {
     public function index()
     {
-        $pageName = 'Alasan Identifikasi Risiko';
+        $pageName = 'Penyebab Identifikasi Risiko';
         $reasons = RiskIdentificationReason::with('riskIdentification')
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->whereIn('erkap_risk_identification_id', ErkapAccess::riskIdentificationIds());
@@ -27,7 +28,7 @@ class RiskIdentificationReasonController extends Controller
 
     public function create()
     {
-        $pageName = 'Buat Alasan Identifikasi Risiko';
+        $pageName = 'Buat Penyebab Identifikasi Risiko';
         $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.risk-identification-reason.create', compact('pageName', 'riskIdentifications'));
@@ -36,13 +37,33 @@ class RiskIdentificationReasonController extends Controller
     public function store(StoreRiskIdentificationReasonRequest $request)
     {
         try {
-            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
-            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id')));
+            $riskIdentification = RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id'));
+            ErkapAccess::assertRiskIdentificationAccess($riskIdentification->id);
+            ErkapEvaluationLock::assertRiskEditable($riskIdentification);
 
-            RiskIdentificationReason::create($request->validated());
+            $reasonTexts = collect($request->input('reasons', []))
+                ->map(fn ($value) => trim((string) $value))
+                ->filter()
+                ->push(trim((string) $request->input('reason', '')))
+                ->filter()
+                ->values();
+
+            if ($reasonTexts->isEmpty()) {
+                return redirect()->route('erkap.risk-identification-reasons.create')
+                    ->withInput()
+                    ->with('error', 'Minimal satu penyebab identifikasi risiko wajib diisi.');
+            }
+
+            DB::transaction(function () use ($riskIdentification, $reasonTexts) {
+                foreach ($reasonTexts as $text) {
+                    $riskIdentification->reasons()->create(['reason' => $text]);
+                }
+            });
+
+            $count = $reasonTexts->count();
 
             return redirect()->route('erkap.risk-identification-reasons.index')
-                ->with('success', 'Alasan identifikasi risiko baru berhasil disimpan!');
+                ->with('success', "{$count} penyebab identifikasi risiko berhasil disimpan!");
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-reasons.create')
                 ->withInput()
@@ -66,7 +87,7 @@ class RiskIdentificationReasonController extends Controller
                 ->with('error', $err->getMessage());
         }
 
-        $pageName = 'Edit Alasan Identifikasi Risiko';
+        $pageName = 'Edit Penyebab Identifikasi Risiko';
         $riskIdentifications = RiskIdentification::whereIn('id', ErkapAccess::riskIdentificationIds())->get();
 
         return view('erkap.risk-identification-reason.edit', compact('pageName', 'riskIdentificationReason', 'riskIdentifications'));
@@ -83,7 +104,7 @@ class RiskIdentificationReasonController extends Controller
             $riskIdentificationReason->update($request->validated());
 
             return redirect()->route('erkap.risk-identification-reasons.index')
-                ->with('success', 'Alasan identifikasi risiko berhasil diperbarui!');
+                ->with('success', 'Penyebab identifikasi risiko berhasil diperbarui!');
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-reasons.edit', $riskIdentificationReason->id)
                 ->withInput()
@@ -105,7 +126,7 @@ class RiskIdentificationReasonController extends Controller
             $riskIdentificationReason->delete();
 
             return redirect()->route('erkap.risk-identification-reasons.index')
-                ->with('success', 'Alasan identifikasi risiko berhasil dihapus!');
+                ->with('success', 'Penyebab identifikasi risiko berhasil dihapus!');
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-reasons.index')->with('error', $err->getMessage());
         }

@@ -15,9 +15,11 @@
             <div class="card-body border-bottom bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 card-title text-dark fw-bold">{{ $pageName }}</h5>
                 <div class="d-flex gap-1">
+                    @can('erkap.company-targets.create')
                     <a href="{{ route('erkap.company-targets.create') }}" class="btn btn-primary">
                         <i class="mdi mdi-plus me-1"></i> Tambah Sasaran Perusahaan
                     </a>
+                    @endcan
                     <a href="#!" class="btn btn-light" id="btn-refresh"><i class="mdi mdi-refresh"></i></a>
                 </div>
             </div>
@@ -53,12 +55,16 @@
                                 <td class="fw-bold">{{ $companyTarget->target }}</td>
                                 <td>{{ $companyTarget->rkap->year ?? '-' }}</td>
                                 <td class="text-center">
+                                    @can('erkap.company-targets.edit')
                                     <a href="{{ route('erkap.company-targets.edit', $companyTarget->id) }}" class="btn btn-warning btn-sm btn-edit" title="Edit">
                                         <i class="mdi mdi-pencil"></i>
                                     </a>
+                                    @endcan
+                                    @can('erkap.company-targets.delete')
                                     <button type="button" class="btn btn-danger btn-sm btn-delete" data-id="{{ $companyTarget->id }}" data-name="{{ $companyTarget->target }}" title="Hapus">
                                         <i class="mdi mdi-delete"></i>
                                     </button>
+                                    @endcan
                                 </td>
                             </tr>
                             @empty

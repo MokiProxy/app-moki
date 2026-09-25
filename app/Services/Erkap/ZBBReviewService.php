@@ -6,7 +6,6 @@ use App\Models\Erkap\InvestmentPlan;
 use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RevenuePlan;
 use App\Models\Erkap\RoutineCost;
-use App\Models\Erkap\WorkProgram;
 use App\Models\Erkap\ZBBReview;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
@@ -286,25 +285,6 @@ class ZBBReviewService
                 ];
             });
 
-        WorkProgram::query()
-            ->with('riskIdentification.departmentTarget.division')
-            ->whereHas('riskIdentification.departmentTarget.companyTarget', function ($query) use ($rkap) {
-                $query->where('erkap_rkap_id', $rkap->id);
-            })
-            ->get()
-            ->each(function (WorkProgram $item) use (&$rows) {
-                $divisionId = $item->riskIdentification?->departmentTarget?->division_id;
-                $identifier = $item->code ?: $item->name;
-                $rows[] = [
-                    'type' => 'work_program',
-                    'id' => $item->id,
-                    'division_id' => $divisionId,
-                    'display_name' => $item->name ?: 'Program Kerja',
-                    'proposed' => (float) $item->year_plan,
-                    'key' => static::key($divisionId, 'wp', $identifier),
-                ];
-            });
-
         return $rows;
     }
 
@@ -345,18 +325,6 @@ class ZBBReviewService
         RevenuePlan::query()->where('erkap_rkap_id', $previous->id)->get()
             ->each(function (RevenuePlan $item) use (&$accumulate) {
                 $accumulate(static::key($item->division_id, 'rv', $item->chart_of_account_id), (float) $item->total);
-            });
-
-        WorkProgram::query()
-            ->with('riskIdentification.departmentTarget')
-            ->whereHas('riskIdentification.departmentTarget.companyTarget', function ($query) use ($previous) {
-                $query->where('erkap_rkap_id', $previous->id);
-            })
-            ->get()
-            ->each(function (WorkProgram $item) use (&$accumulate) {
-                $divisionId = $item->riskIdentification?->departmentTarget?->division_id;
-                $identifier = $item->code ?: $item->name;
-                $accumulate(static::key($divisionId, 'wp', $identifier), (float) $item->year_plan);
             });
 
         return $map;

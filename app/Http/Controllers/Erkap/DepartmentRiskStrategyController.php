@@ -10,6 +10,7 @@ use App\Models\Erkap\RiskIdentification;
 use App\Services\ErkapAccess;
 use App\Services\ErkapEvaluationLock;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class DepartmentRiskStrategyController extends Controller
 {
@@ -36,13 +37,33 @@ class DepartmentRiskStrategyController extends Controller
     public function store(StoreDepartmentRiskStrategyRequest $request)
     {
         try {
-            ErkapAccess::assertRiskIdentificationAccess($request->integer('erkap_risk_identification_id'));
-            ErkapEvaluationLock::assertRiskEditable(RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id')));
+            $riskIdentification = RiskIdentification::findOrFail($request->integer('erkap_risk_identification_id'));
+            ErkapAccess::assertRiskIdentificationAccess($riskIdentification->id);
+            ErkapEvaluationLock::assertRiskEditable($riskIdentification);
 
-            DepartmentRiskStrategy::create($request->validated());
+            $strategyTexts = collect($request->input('strategies', []))
+                ->map(fn ($value) => trim((string) $value))
+                ->filter()
+                ->push(trim((string) $request->input('strategy', '')))
+                ->filter()
+                ->values();
+
+            if ($strategyTexts->isEmpty()) {
+                return redirect()->route('erkap.department-risk-strategies.create')
+                    ->withInput()
+                    ->with('error', 'Minimal satu strategi mitigasi wajib diisi.');
+            }
+
+            DB::transaction(function () use ($riskIdentification, $strategyTexts) {
+                foreach ($strategyTexts as $text) {
+                    $riskIdentification->departmentRiskStrategies()->create(['strategy' => $text]);
+                }
+            });
+
+            $count = $strategyTexts->count();
 
             return redirect()->route('erkap.department-risk-strategies.index')
-                ->with('success', 'Strategi risiko departemen baru berhasil disimpan!');
+                ->with('success', "{$count} strategi risiko departemen berhasil disimpan!");
         } catch (Exception $err) {
             return redirect()->route('erkap.department-risk-strategies.create')
                 ->withInput()

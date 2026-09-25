@@ -53,14 +53,7 @@
 
                         <div class="col-md-12">
                             <label class="form-label fw-bold">Strategi <span class="text-danger">*</span></label>
-                            <select name="strategy" class="form-select @error('strategy') is-invalid @enderror" required>
-                                <option value="" disabled {{ old('strategy', $departmentRiskStrategy->strategy) ? '' : 'selected' }}>Pilih Strategi</option>
-                                @foreach(\App\Models\Erkap\DepartmentRiskStrategy::getStrategies() as $key => $strategyLabel)
-                                    <option value="{{ $key }}" {{ old('strategy', $departmentRiskStrategy->strategy) == $key ? 'selected' : '' }}>
-                                        {{ $strategyLabel }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <input type="text" name="strategy" class="form-control @error('strategy') is-invalid @enderror" value="{{ old('strategy', $departmentRiskStrategy->strategy) }}" maxlength="255" required>
                             @error('strategy') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>

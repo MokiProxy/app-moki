@@ -16,7 +16,6 @@ class InvestmentGateReviewService
         'cba' => ['order' => 2, 'role' => 'erkap-ppk'],
         'aset' => ['order' => 3, 'role' => 'erkap-manajemen-aset'],
         'direksi_keuangan' => ['order' => 4, 'role' => 'erkap-direksi-keuangan'],
-        'gate_review_bmi' => ['order' => 5, 'role' => 'erkap-gate-review'],
     ];
 
     public static function roleForStage(string $stage): ?string

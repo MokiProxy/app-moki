@@ -155,7 +155,7 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
         </li>
         @endcan
 
-        @can('erkap.department-targets.view')
+        @canany(['erkap.department-targets.view', 'erkap.company-targets.view'])
         <li>
             <a href="javascript: void(0);" class="d-flex">
                 <i class='bx bx-file'></i>
@@ -175,7 +175,9 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
                             @can('erkap.company-targets.view')
                             <li><a href="{{ route('erkap.company-targets.index') }}">Sasaran Perusahaan</a></li>
                             @endcan
+                            @can('erkap.department-targets.view')
                             <li><a href="{{ route('erkap.department-targets.index') }}">Sasaran Departemen</a></li>
+                            @endcan
                         </ul>
                     </li>
                 </ul>
@@ -186,9 +188,15 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
                             <span key="t-master-data">Identifikasi Risiko</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
+                            @can('erkap.risk-identifications.view')
                             <li><a href="{{ route('erkap.risk-identifications.index') }}">Identifikasi Risiko</a></li>
-                            <li><a href="{{ route('erkap.risk-identification-reasons.index') }}">Alasan Identifikasi</a></li>
+                            @endcan
+                            @can('erkap.risk-identification-reasons.view')
+                            <li><a href="{{ route('erkap.risk-identification-reasons.index') }}">Penyebab Identifikasi</a></li>
+                            @endcan
+                            @can('erkap.risk-identification-impacts.view')
                             <li><a href="{{ route('erkap.risk-identification-impacts.index') }}">Dampak Identifikasi</a></li>
+                            @endcan
                             @can('erkap.risk-identifications.view')
                             <li><a href="{{ route('erkap.form1.index') }}">Form 1 (Import/Export)</a></li>
                             @endcan
@@ -202,8 +210,9 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
                             <span key="t-master-data">Analisis Risiko</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
+                            @can('erkap.risk-analysis.view')
                             <li><a href="{{ route('erkap.risk-analysis.index') }}">Analisis Risiko</a></li>
-                            <li><a href="{{ route('erkap.risk-rankings.index') }}">Peringkat Risiko</a></li>
+                            @endcan
                         </ul>
                     </li>
                 </ul>
@@ -214,16 +223,15 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
                             <span key="t-master-data">Strategi Risiko</span>
                         </a>
                         <ul class="sub-menu" aria-expanded="false">
+                            @can('erkap.department-risk-strategies.view')
                             <li><a href="{{ route('erkap.department-risk-strategies.index') }}">Strategi Risiko Departemen</a></li>
-                            @can('erkap.risk-treatments.view')
-                            <li><a href="{{ route('erkap.risk-treatments.index') }}">Perlakuan Risiko</a></li>
                             @endcan
                         </ul>
                     </li>
                 </ul>
             </ul>
         </li>
-        @endcan
+        @endcanany
 
         @can('erkap.work-programs.view')
         <li>

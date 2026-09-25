@@ -11,7 +11,6 @@ use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RiskAppetite;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskTaxonomy;
-use App\Models\Erkap\RiskTreatment;
 use App\Models\Erkap\RiskType;
 use App\Models\Erkap\WorkProgram;
 
@@ -51,36 +50,24 @@ trait BuildsErkapChain
             'strategy' => $options['strategy'] ?? 'reduction',
         ]);
 
-        if (($options['treatment'] ?? true) === true) {
-            RiskTreatment::create([
-                'erkap_risk_identification_id' => $risk->id,
-                'erkap_department_risk_strategy_id' => DepartmentRiskStrategy::where('erkap_risk_identification_id', $risk->id)->value('id'),
-                'treatment_type' => $options['treatment_type'] ?? 'reduction',
-                'description' => $options['treatment_description'] ?? 'Rencana perlakuan risiko uji otomatis',
-                'responsible_party' => 'PIC Uji',
-                'target_date' => now()->addMonths(3)->format('Y-m-d'),
-                'status' => 'planned',
-            ]);
-        }
-
         $workProgram = WorkProgram::create([
             'erkap_risk_identification_id' => $risk->id,
             'code' => $options['code'] ?? 'WP-CHAIN',
             'name' => $options['program_name'] ?? 'Program Kerja Uji',
             'units' => 'Unit',
-            'year_plan' => 120,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-            'apr_plan' => 10,
-            'may_plan' => 10,
-            'jun_plan' => 10,
-            'jul_plan' => 10,
-            'aug_plan' => 10,
-            'sep_plan' => 10,
-            'oct_plan' => 10,
-            'nov_plan' => 10,
-            'dec_plan' => 10,
+            'year_plan' => 100,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
             'status' => 'draft',
             'depends_on_work_program_id' => $options['depends_on'] ?? null,
         ]);

@@ -58,15 +58,6 @@ class InvestmentStageGateFactory extends Factory
         ]);
     }
 
-    public function gateReview(): static
-    {
-        return $this->state(fn () => [
-            'stage' => 'gate_review_bmi',
-            'stage_order' => 5,
-            'reviewer_role' => 'erkap-gate-review',
-        ]);
-    }
-
     public function approved(): static
     {
         return $this->state(fn () => [

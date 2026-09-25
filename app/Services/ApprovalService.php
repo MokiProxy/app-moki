@@ -33,7 +33,6 @@ class ApprovalService
                 1 => 'erkap-ppk',
                 2 => 'erkap-manajemen-aset',
                 3 => 'erkap-direksi-keuangan',
-                4 => 'erkap-gate-review',
             ],
             'rkap' => [
                 1 => 'erkap-komisaris',
@@ -114,6 +113,10 @@ class ApprovalService
 
         if ($type === 'risk_register' && method_exists($model, 'validateHasStrategyAndWorkProgram')) {
             $model->validateHasStrategyAndWorkProgram();
+        }
+
+        if ($type === 'work_program') {
+            $model->canSubmitForApproval();
         }
 
         $matrix = static::getApprovalMatrix()[$type];

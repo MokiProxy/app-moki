@@ -33,6 +33,16 @@ class EmployeeSeeder extends Seeder
             ["name" => "MOKODEV", "email" => "superadmin@sistem.com", "hp" => "087893244578", "jabatan" => "SUPER ADMIN", "address" => null],
             ["name" => "HIDDEV", "email" => "admin@sistem.com", "hp" => "087893244578", "jabatan" => "ADMIN", "address" => null],
 
+            // Test For Erkap
+            ["name" => "Dev Erkap Cost Owner", "email" => "costowner@deverkap.com", "hp" => "087893244578", "jabatan" => "Staff", "address" => null],
+            ["name" => "Dev Erkap PPK", "email" => "ppk@deverkap.com", "hp" => "087893244578", "jabatan" => "Staff", "address" => null],
+            ["name" => "Dev Erkap Controller", "email" => "controller@deverkap.com", "hp" => "087893244578", "jabatan" => "Staff", "address" => null],
+            ["name" => "Dev Erkap Manajemen Aset", "email" => "manajemenaset@deverkap.com", "hp" => "087893244578", "jabatan" => "Staff", "address" => null],
+            ["name" => "Dev Erkap Keuangan", "email" => "keuangan@deverkap.com", "hp" => "087893244578", "jabatan" => "Staff", "address" => null],
+            ["name" => "Dev Erkap Komisaris", "email" => "komisaris@deverkap.com", "hp" => "087893244578", "jabatan" => "Staff", "address" => null],
+            ["name" => "Dev Erkap Direksi", "email" => "direksi@deverkap.com", "hp" => "087893244578", "jabatan" => "Staff", "address" => null],
+            ["name" => "Dev Erkap Risk Manager", "email" => "riskmanager@deverkap.com", "hp" => "087893244578", "jabatan" => "Staff", "address" => null],
+
             ["name" => "Prasojo Utomo", "email" => "prasojo.utomo@tpm-facility.com", "hp" => null, "jabatan" => "STAFF", "address" => null],
             ["name" => "Arvita Tiarawati", "email" => "arvitatiarawati@tpm-facility.com", "hp" => null, "jabatan" => "STAFF", "address" => null],
             ["name" => "Rekha Kisnawaty", "email" => "rekha.kisnawaty@tpm-facility.com", "hp" => null, "jabatan" => "STAFF", "address" => null],

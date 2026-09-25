@@ -30,10 +30,8 @@ use App\Models\Erkap\RiskIdentificationImpact;
 use App\Models\Erkap\RiskIdentificationReason;
 use App\Models\Erkap\RiskImpact;
 use App\Models\Erkap\RiskProbability;
-use App\Models\Erkap\RiskRanking;
 use App\Models\Erkap\RiskScoreLevel;
 use App\Models\Erkap\RiskTaxonomy;
-use App\Models\Erkap\RiskTreatment;
 use App\Models\Erkap\RiskType;
 use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RoutineCost;
@@ -332,9 +330,7 @@ class RkapSimulasi
             'erkap-direksi-keuangan' => ['name' => 'Direksi Keuangan', 'jabatan' => 'Direktur Keuangan'],
             'erkap-komisaris' => ['name' => 'Komisaris', 'jabatan' => 'Komisaris'],
             'erkap-direksi' => ['name' => 'Direksi', 'jabatan' => 'Direktur Utama'],
-            'erkap-gate-review' => ['name' => 'Gate Review PT BMI', 'jabatan' => 'Kepala Unit Gate Review'],
             'erkap-risk-manager' => ['name' => 'Risk Manager '.static::$divisionName, 'jabatan' => 'Manajer Risiko'],
-            'erkap-bmi-admin' => ['name' => 'BMI Admin', 'jabatan' => 'Administrator PT BMI'],
             'erkap-cost-owner' => ['name' => 'Cost Owner '.static::$divisionName, 'jabatan' => 'Pemilik Anggaran (Pengisi Form 1-4)'],
         ];
     }
@@ -354,8 +350,6 @@ class RkapSimulasi
                 'kickoff_date' => now()->toDateString(),
                 'kickoff_notes' => 'Kick-off penyusunan RKAP '.static::$year.' divisi '.static::$divisionName.'.',
                 'direction_notes' => 'Arahan direksi: wujudkan efisiensi dan percepatan pengadaan melalui skenario simulasi.',
-                'bmi_alignment_status' => 'none',
-                'bmi_notes' => null,
                 'distribution_status' => 'not_distributed',
                 'resolution_date' => null,
             ]
@@ -445,28 +439,9 @@ class RkapSimulasi
                 ['erkap_risk_score_value_id' => static::$ref['scoreLevel']->id]
             );
 
-            RiskRanking::updateOrCreate(
-                ['erkap_risk_identification_id' => $risk->id, 'ranking' => $riskData['ranking']],
-                []
-            );
-
             $strategy = DepartmentRiskStrategy::updateOrCreate(
                 ['erkap_risk_identification_id' => $risk->id, 'strategy' => $riskData['strategy']],
                 []
-            );
-
-            RiskTreatment::updateOrCreate(
-                [
-                    'erkap_risk_identification_id' => $risk->id,
-                    'erkap_department_risk_strategy_id' => $strategy->id,
-                    'treatment_type' => $riskData['treatment_type'],
-                    'description' => $riskData['treatment_desc'],
-                ],
-                [
-                    'responsible_party' => static::$divisionName,
-                    'target_date' => now()->addMonths(6)->toDateString(),
-                    'status' => 'in_progress',
-                ]
             );
 
             foreach ($riskData['programs'] as $programData) {
@@ -677,7 +652,7 @@ class RkapSimulasi
     }
 
     /**
-     * Tahap 6 - Finalisasi, pengesahan, BMI, distribusi, arsip.
+     * Tahap 6 - Finalisasi, pengesahan, distribusi, arsip.
      */
 protected static function finaliseRkap(): void
     {
@@ -698,13 +673,6 @@ protected static function finaliseRkap(): void
 
         static::fillAs('erkap-direksi', function () {
             ApprovalService::approve(static::$rkap, static::$users['erkap-direksi'], 'Disetujui otomatis oleh seeder simulasi RKAP '.static::$year.'.');
-        });
-
-        static::fillAs('erkap-bmi-admin', function () {
-            RKAPLifecycleService::markBmiAligned(static::$rkap, static::$users['erkap-bmi-admin'], [
-                'bmi_alignment_status' => 'aligned',
-                'bmi_notes' => 'Selaras dengan arah PT BMI (seed simulasi).',
-            ]);
         });
 
         static::fillAs('erkap-ppk', function () {
@@ -857,10 +825,7 @@ protected static function finaliseRkap(): void
                 'risk_direction' => 'negative',
                 'reason' => 'Proses lelang dan persetujuan multi-level memakan waktu lama',
                 'impact' => 'Target operasional divisi tidak tercapai tepat waktu',
-                'ranking' => 1,
-                'strategy' => 'reduction',
-                'treatment_type' => 'reduction',
-                'treatment_desc' => 'Percepatan koordinasi review dan pemantauan jadwal pengadaan secara berkala',
+                'strategy' => 'Percepatan koordinasi review dan pemantauan jadwal pengadaan secara berkala',
                 'programs' => [
                     [
                         'code' => 'WP-SIM/'.static::$year.'-01',
@@ -901,10 +866,7 @@ protected static function finaliseRkap(): void
                 'risk_direction' => 'negative',
                 'reason' => 'Fluktuasi harga material dan jasa pendukung',
                 'impact' => 'Efisiensi anggaran menurun dan realisasi melebihi pagu',
-                'ranking' => 2,
-                'strategy' => 'sharing',
-                'treatment_type' => 'sharing',
-                'treatment_desc' => 'Kerja sama pemasok dan peninjauan harga secara berkala',
+                'strategy' => 'Kerja sama pemasok dan peninjauan harga secara berkala',
                 'programs' => [
                     [
                         'code' => 'WP-SIM/'.static::$year.'-02',

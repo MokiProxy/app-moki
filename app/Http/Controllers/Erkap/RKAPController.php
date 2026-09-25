@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Erkap;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Erkap\StoreRKAPDirectionRequest;
 use App\Http\Requests\Erkap\StoreRKAPKickoffRequest;
-use App\Http\Requests\Erkap\UpdateRKAPBmiRequest;
 use App\Http\Requests\StoreRKAPRequest;
 use App\Http\Requests\UpdateRKAPRequest;
 use App\Models\Division;
@@ -138,19 +137,6 @@ class RKAPController extends Controller
 
             return redirect()->route('erkap.rkap.show', $rkap->id)
                 ->with('success', 'Arahan direksi / memo holding berhasil disimpan!');
-        } catch (Exception $err) {
-            return redirect()->route('erkap.rkap.show', $rkap->id)
-                ->with('error', $err->getMessage());
-        }
-    }
-
-    public function bmi(UpdateRKAPBmiRequest $request, RKAP $rkap)
-    {
-        try {
-            RKAPLifecycleService::markBmiAligned($rkap, auth()->user(), $request->validated());
-
-            return redirect()->route('erkap.rkap.show', $rkap->id)
-                ->with('success', 'Status alignment PT BMI berhasil diperbarui!');
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.show', $rkap->id)
                 ->with('error', $err->getMessage());

@@ -56,7 +56,7 @@
                                 <option value="" disabled selected>Pilih Probabilitas</option>
                                 @foreach($riskProbabilities as $riskProbability)
                                     <option value="{{ $riskProbability->id }}" {{ old('erkap_risk_probability_id') == $riskProbability->id ? 'selected' : '' }}>
-                                        {{ $riskProbability->name }}
+                                        {{ $riskProbability->point }} - {{ $riskProbability->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -69,7 +69,7 @@
                                 <option value="" disabled selected>Pilih Dampak</option>
                                 @foreach($riskImpacts as $riskImpact)
                                     <option value="{{ $riskImpact->id }}" {{ old('erkap_risk_impact_id') == $riskImpact->id ? 'selected' : '' }}>
-                                        {{ $riskImpact->name }}
+                                        {{ $riskImpact->point }} - {{ $riskImpact->name }}
                                     </option>
                                 @endforeach
                             </select>

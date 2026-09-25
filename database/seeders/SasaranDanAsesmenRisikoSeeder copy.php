@@ -12,7 +12,7 @@ use App\Models\Erkap\RiskIdentificationReason;
 use App\Models\Erkap\RKAP;
 use Illuminate\Database\Seeder;
 
-class SasaranDanAsesmenRisikoSeeder extends Seeder
+class SasaranDanAsesmenRisikoSeederTest extends Seeder
 {
     /**
      * Run the database seeds.
@@ -26,7 +26,7 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
 
         $companyTargets = [
             [
-                "target" => "Tercapainya produksi batubara sebesar 49 juta bcp dengan melakukan optimalisasi seluruh tambang yang saat ini sudah beroperasi maupun yang direncanakan akan beroperasi dalam Tahun 2027",
+                "target" => "Test Sasaran Perusahaan",
                 "erkap_rkap_id" => $rkap->id
             ]
         ];
@@ -36,9 +36,9 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
 
             $departmentTargets = [
                 [
-                    "target" => "Tercapainya produksi BB dilokasi Banl Tenga sebesar 26 juta bcm",
-                    "division_id" => 49,
-                    "erkap_rating_criteria_id" => 1,
+                    "target" => "Tersedianya infrastruktur IT, jaringan, dan kelengkapan perangkat IT, serta software berlisensi guna menunjang kelancaran proses bisnis perusahaan",
+                    "division_id" => 2,
+                    "erkap_rating_criteria_id" => 3,
                     "erkap_company_target_id" => $companyTarget->id
                 ]
             ];
@@ -48,11 +48,25 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
 
                 $risks = [
                     [
-                        "risk" => "Terdapat deviasi antara volume asil joint survey",
+                        "risk" => "Terganggunya bisnis proses perusahaan yang memanfaatkan teknologi IT",
                         "risk_direction" => "negative",
                         "erkap_department_target_id" => $deptTarget->id,
-                        "erkap_risk_type_id" => 29,
+                        "erkap_risk_type_id" => 32,
                         "erkap_risk_taxonomy_id" => 5,
+                    ],
+                    [
+                        "risk" => "Perangkat tidak memenuhi kebutuhan pengguna (user)",
+                        "risk_direction" => "negative",
+                        "erkap_department_target_id" => $deptTarget->id,
+                        "erkap_risk_type_id" => 34,
+                        "erkap_risk_taxonomy_id" => 6,
+                    ],
+                    [
+                        "risk" => "Terkena Pinalti",
+                        "risk_direction" => "negative",
+                        "erkap_department_target_id" => $deptTarget->id,
+                        "erkap_risk_type_id" => 35,
+                        "erkap_risk_taxonomy_id" => 3,
                     ]
                 ];
 
@@ -122,7 +136,6 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
                             $createdStrategy = DepartmentRiskStrategy::create($strategy);
                         }
                     }
-
                 }
             }
         }

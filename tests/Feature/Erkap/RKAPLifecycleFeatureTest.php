@@ -30,14 +30,13 @@ class RKAPLifecycleFeatureTest extends TestCase
         Notification::fake();
         $this->setUpSuperAdmin();
 
-        foreach (['erkap-admin', 'erkap-gate-review', 'erkap-bmi-admin', 'erkap-ppk'] as $name) {
+        foreach (['erkap-admin', 'erkap-ppk'] as $name) {
             Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
 
         $permissions = [
             'erkap.rkap.view',
             'erkap.rkap.edit',
-            'erkap.rkap.bmi',
             'erkap.routine-costs.view',
         ];
 
@@ -45,8 +44,6 @@ class RKAPLifecycleFeatureTest extends TestCase
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
 
-        Role::findByName('erkap-gate-review', 'web')->givePermissionTo(['erkap.rkap.view', 'erkap.rkap.bmi']);
-        Role::findByName('erkap-bmi-admin', 'web')->givePermissionTo(['erkap.rkap.view', 'erkap.rkap.bmi']);
         Role::findByName('erkap-ppk', 'web')->givePermissionTo(['erkap.rkap.view', 'erkap.rkap.edit']);
     }
 
@@ -135,35 +132,6 @@ class RKAPLifecycleFeatureTest extends TestCase
         Storage::disk('public')->assertExists($rkap->direction_file_path);
     }
 
-    public function test_bmi_update_requires_bmi_permission(): void
-    {
-        $rkap = RKAP::factory()->create();
-        $ppk = $this->roleUser('erkap-ppk');
-
-        $this->actingAs($ppk)
-            ->post(route('erkap.rkap.bmi', $rkap->id), [
-                'bmi_alignment_status' => 'aligned',
-                'bmi_notes' => 'Selaras.',
-            ])
-            ->assertForbidden();
-
-        $this->assertSame('none', $rkap->refresh()->bmi_alignment_status);
-    }
-
-    public function test_bmi_update_works_for_gate_review(): void
-    {
-        $rkap = RKAP::factory()->create();
-
-        $this->actingAs($this->roleUser('erkap-gate-review'))
-            ->post(route('erkap.rkap.bmi', $rkap->id), [
-                'bmi_alignment_status' => 'aligned',
-                'bmi_notes' => 'Selaras dengan arah holding.',
-            ])
-            ->assertRedirect(route('erkap.rkap.show', $rkap->id));
-
-        $this->assertSame('aligned', $rkap->refresh()->bmi_alignment_status);
-    }
-
     public function test_distribute_marks_distributed(): void
     {
         $rkap = RKAP::factory()->create(['phase' => 'approved']);
@@ -234,7 +202,6 @@ class RKAPLifecycleFeatureTest extends TestCase
         $this->actingAs($this->roleUser('erkap-ppk'))
             ->get(route('erkap.rkap.index'))
             ->assertOk()
-            ->assertSee('Fase Lifecycle')
-            ->assertSee('Alignment PT BMI');
+            ->assertSee('Fase Lifecycle');
     }
 }

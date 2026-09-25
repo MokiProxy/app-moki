@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ErkapRiskTreatmentType;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateDepartmentRiskStrategyRequest extends FormRequest
 {
@@ -17,7 +15,7 @@ class UpdateDepartmentRiskStrategyRequest extends FormRequest
     {
         return [
             'erkap_risk_identification_id' => ['required', 'integer', 'exists:erkap_risk_identifications,id'],
-            'strategy' => ['required', Rule::in(ErkapRiskTreatmentType::values())],
+            'strategy' => ['required', 'string', 'max:255'],
         ];
     }
 }

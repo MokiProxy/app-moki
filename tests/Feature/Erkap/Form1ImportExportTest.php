@@ -97,7 +97,7 @@ class Form1ImportExportTest extends TestCase
         $this->assertSame(12, $analysis->riskScoreValue->score);
         $this->assertSame('High', $analysis->riskScoreValue->level);
 
-        $this->assertSame('reduction', $risk->departmentRiskStrategies->first()->strategy);
+        $this->assertSame('Kurangi', $risk->departmentRiskStrategies->first()->strategy);
         $this->assertSame('Program pemeliharaan', $risk->workPrograms->first()->name);
     }
 

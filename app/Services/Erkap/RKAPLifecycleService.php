@@ -11,13 +11,10 @@ use Illuminate\Validation\ValidationException;
 
 class RKAPLifecycleService
 {
-    public const BMI_ROLES = ['erkap-gate-review', 'erkap-bmi-admin'];
-
     public const META_FIELDS = [
         'kickoff_date',
         'kickoff_notes',
         'direction_notes',
-        'bmi_notes',
     ];
 
     public static function advance(RKAP $rkap, ?array $meta = null): RKAP
@@ -63,33 +60,10 @@ class RKAPLifecycleService
         $rkap->update([
             'phase' => 'initiation',
             'phase_started_at' => now(),
-            'bmi_alignment_status' => 'none',
-            'bmi_notes' => null,
             'distribution_status' => 'not_distributed',
         ]);
 
         return $rkap->refresh();
-    }
-
-    public static function markBmiAligned(RKAP $rkap, User $user, array $payload): RKAP
-    {
-        static::assertBmiRole($user);
-
-        $rkap->update([
-            'bmi_alignment_status' => $payload['bmi_alignment_status'],
-            'bmi_notes' => $payload['bmi_notes'] ?? null,
-        ]);
-
-        return $rkap->refresh();
-    }
-
-    public static function assertBmiRole(User $user): void
-    {
-        if (! $user->hasAnyRole(static::BMI_ROLES)) {
-            throw ValidationException::withMessages([
-                'bmi_alignment_status' => 'Hanya role Gate Review PT BMI atau BMI Admin yang dapat mengisi alignment PT BMI.',
-            ]);
-        }
     }
 
     public static function distribute(RKAP $rkap, User $user): RKAP

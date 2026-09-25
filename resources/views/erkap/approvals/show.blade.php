@@ -114,8 +114,8 @@
                                             <p class="mb-0">{{ $model->units }}</p>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold text-muted small">Rencana Tahunan</label>
-                                            <p class="mb-0">{{ $model->year_plan !== null ? number_format($model->year_plan, 0, ',', '.') : '-' }}</p>
+                                            <label class="form-label fw-bold text-muted small">Rencana Tahunan (%)</label>
+                                            <p class="mb-0">{{ $model->year_plan !== null ? number_format((float) $model->year_plan, 2, ',', '.') . '%' : '-' }}</p>
                                         </div>
                                     @elseif($type === 'routine_cost')
                                         <div class="col-md-6">
@@ -262,7 +262,7 @@
                                             <label class="form-label fw-bold text-muted small">Strategi Mitigasi</label>
                                             <p class="mb-0">
                                                 @forelse($model->departmentRiskStrategies as $strategy)
-                                                    <span class="badge bg-primary me-1">{{ \App\Models\Erkap\DepartmentRiskStrategy::getStrategies()[$strategy->strategy] ?? $strategy->strategy }}</span>
+                                                    <span class="badge bg-primary me-1">{{ $strategy->strategy }}</span>
                                                 @empty
                                                     -
                                                 @endforelse

@@ -154,10 +154,14 @@ class ZBBReviewServiceTest extends TestCase
 
         $this->assertSame($rkap2026->id, $result['rkap_id']);
         $this->assertSame('2025', $result['previous_year']);
-        $this->assertSame(2, $result['total']);
+        $this->assertSame(1, $result['total']);
         $this->assertSame(1, $result['increase']);
-        $this->assertSame(1, $result['skipped']);
+        $this->assertSame(0, $result['skipped']);
         $this->assertSame(1, $result['blocking']);
+        $this->assertDatabaseMissing('erkap_zbb_reviews', [
+            'erkap_rkap_id' => $rkap2026->id,
+            'subject_type' => 'work_program',
+        ]);
 
         $review = ZBBReview::where('erkap_rkap_id', $rkap2026->id)->where('subject_type', 'routine_cost')->first();
         $this->assertSame(100000.0, $review->prior_year_amount);
@@ -179,7 +183,7 @@ class ZBBReviewServiceTest extends TestCase
         $result = ZBBReviewService::buildReviews($rkap2026);
 
         $this->assertSame(0, $result['increase']);
-        $this->assertSame(2, $result['skipped']);
+        $this->assertSame(1, $result['skipped']);
         $this->assertSame(0, $result['blocking']);
 
         $review = ZBBReview::where('erkap_rkap_id', $rkap2026->id)->first();
@@ -198,7 +202,7 @@ class ZBBReviewServiceTest extends TestCase
         $result = ZBBReviewService::buildReviews($rkap2026);
 
         $this->assertSame(0, $result['increase']);
-        $this->assertSame(2, $result['skipped']);
+        $this->assertSame(1, $result['skipped']);
 
         $review = ZBBReview::where('erkap_rkap_id', $rkap2026->id)->first();
         $this->assertSame(0.0, $review->delta_percent);
@@ -356,7 +360,7 @@ class ZBBReviewServiceTest extends TestCase
 
         $result = ZBBReviewService::buildReviews($rkap2026);
 
-        $this->assertSame(2, $result['total']);
+        $this->assertSame(1, $result['total']);
         $this->assertSame(1, $result['increase']);
 
         $review = ZBBReview::where('erkap_rkap_id', $rkap2026->id)->where('subject_type', 'routine_cost')->first();

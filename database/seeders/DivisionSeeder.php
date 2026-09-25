@@ -58,6 +58,7 @@ class DivisionSeeder extends Seeder
             ["name" => "LOGISTIK", "company_id" => 1, "regional_id" => 29],
             ["name" => "OFFICE SUPPORT", "company_id" => 2, "regional_id" => 25],
             ["name" => "OFFICE SUPPORT", "company_id" => 1, "regional_id" => 25],
+            ["name" => "PENAMBANGAN", "company_id" => 1, "regional_id" => 25],
         ];
 
         foreach ($divisions as $data) {

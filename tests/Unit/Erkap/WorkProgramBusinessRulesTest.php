@@ -80,19 +80,19 @@ class WorkProgramBusinessRulesTest extends TestCase
                 'code' => 'WP-001',
                 'name' => 'Test Program',
                 'units' => 'Unit',
-                'year_plan' => 120,
-                'jan_plan' => 10,
-                'feb_plan' => 10,
-                'mar_plan' => 10,
-                'apr_plan' => 10,
-                'may_plan' => 10,
-                'jun_plan' => 10,
-                'jul_plan' => 10,
-                'aug_plan' => 10,
-                'sep_plan' => 10,
-                'oct_plan' => 10,
-                'nov_plan' => 10,
-                'dec_plan' => 10,
+                'year_plan' => 100,
+                'jan_plan' => 8,
+                'feb_plan' => 8,
+                'mar_plan' => 8,
+                'apr_plan' => 8,
+                'may_plan' => 8,
+                'jun_plan' => 8,
+                'jul_plan' => 8,
+                'aug_plan' => 8,
+                'sep_plan' => 8,
+                'oct_plan' => 8,
+                'nov_plan' => 8,
+                'dec_plan' => 12,
                 'status' => 'draft',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -108,19 +108,19 @@ class WorkProgramBusinessRulesTest extends TestCase
             'code' => 'WP-001',
             'name' => 'Test Program',
             'units' => 'Unit',
-            'year_plan' => 120,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-            'apr_plan' => 10,
-            'may_plan' => 10,
-            'jun_plan' => 10,
-            'jul_plan' => 10,
-            'aug_plan' => 10,
-            'sep_plan' => 10,
-            'oct_plan' => 10,
-            'nov_plan' => 10,
-            'dec_plan' => 10,
+            'year_plan' => 100,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
             'status' => 'draft',
         ]);
 
@@ -134,19 +134,19 @@ class WorkProgramBusinessRulesTest extends TestCase
             'code' => 'WP-002',
             'name' => 'Test Program',
             'units' => 'Unit',
-            'year_plan' => 120,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-            'apr_plan' => 10,
-            'may_plan' => 10,
-            'jun_plan' => 10,
-            'jul_plan' => 10,
-            'aug_plan' => 10,
-            'sep_plan' => 10,
-            'oct_plan' => 10,
-            'nov_plan' => 10,
-            'dec_plan' => 10,
+            'year_plan' => 100,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
             'status' => 'draft',
         ]);
 
@@ -167,19 +167,19 @@ class WorkProgramBusinessRulesTest extends TestCase
             'code' => 'WP-003',
             'name' => 'Test Program',
             'units' => 'Unit',
-            'year_plan' => 120,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-            'apr_plan' => 10,
-            'may_plan' => 10,
-            'jun_plan' => 10,
-            'jul_plan' => 10,
-            'aug_plan' => 10,
-            'sep_plan' => 10,
-            'oct_plan' => 10,
-            'nov_plan' => 10,
-            'dec_plan' => 10,
+            'year_plan' => 100,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
             'status' => 'draft',
         ]);
 
@@ -221,19 +221,19 @@ class WorkProgramBusinessRulesTest extends TestCase
             'code' => 'WP-004',
             'name' => 'Test Program',
             'units' => 'Unit',
-            'year_plan' => 120,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-            'apr_plan' => 10,
-            'may_plan' => 10,
-            'jun_plan' => 10,
-            'jul_plan' => 10,
-            'aug_plan' => 10,
-            'sep_plan' => 10,
-            'oct_plan' => 10,
-            'nov_plan' => 10,
-            'dec_plan' => 10,
+            'year_plan' => 100,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
             'status' => 'draft',
         ]);
 
@@ -273,19 +273,19 @@ class WorkProgramBusinessRulesTest extends TestCase
             'code' => 'WP-005',
             'name' => 'Test Program',
             'units' => 'Unit',
-            'year_plan' => 120,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-            'apr_plan' => 10,
-            'may_plan' => 10,
-            'jun_plan' => 10,
-            'jul_plan' => 10,
-            'aug_plan' => 10,
-            'sep_plan' => 10,
-            'oct_plan' => 10,
-            'nov_plan' => 10,
-            'dec_plan' => 10,
+            'year_plan' => 100,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
             'status' => 'draft',
         ]);
 
@@ -298,75 +298,93 @@ class WorkProgramBusinessRulesTest extends TestCase
         try {
             $program->validateMonthlyBreakdown();
         } catch (\Illuminate\Validation\ValidationException $e) {
-            $this->assertStringContainsString('Total bulanan harus sama dengan target tahunan', $e->validator->errors()->first('monthly_breakdown'));
+            $this->assertStringContainsString('Total bulanan harus sama dengan target tahunan persentase', $e->validator->errors()->first('monthly_breakdown'));
             throw $e;
         }
     }
 
-    public function test_monthly_cumulative_percents_matches_yearly_total(): void
-    {
-        $program = new WorkProgram([
-            'year_plan' => 120,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-            'apr_plan' => 10,
-            'may_plan' => 10,
-            'jun_plan' => 10,
-            'jul_plan' => 10,
-            'aug_plan' => 10,
-            'sep_plan' => 10,
-            'oct_plan' => 10,
-            'nov_plan' => 10,
-            'dec_plan' => 10,
-        ]);
-
-        $expected = [
-            'jan_plan' => 8.33,
-            'feb_plan' => 16.67,
-            'mar_plan' => 25.0,
-            'apr_plan' => 33.33,
-            'may_plan' => 41.67,
-            'jun_plan' => 50.0,
-            'jul_plan' => 58.33,
-            'aug_plan' => 66.67,
-            'sep_plan' => 75.0,
-            'oct_plan' => 83.33,
-            'nov_plan' => 91.67,
-            'dec_plan' => 100.0,
-        ];
-
-        $this->assertSame($expected, $program->monthlyCumulativePercents());
-        $this->assertSame(8.33, $program->cumulativePercentAt('jan_plan'));
-        $this->assertSame(100.0, $program->cumulativePercentAt('dec_plan'));
-    }
-
-    public function test_monthly_cumulative_percents_is_zero_when_year_plan_zero(): void
-    {
-        $program = new WorkProgram([
-            'year_plan' => 0,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-        ]);
-
-        $this->assertSame(
-            array_fill_keys(\App\Models\Erkap\WorkProgram::MONTH_COLUMNS, 0.0),
-            $program->monthlyCumulativePercents()
-        );
-    }
-
-    public function test_monthly_cumulative_percents_handles_null_monthly_values(): void
+    public function test_monthly_breakdown_accepts_valid_percentage_distribution(): void
     {
         $program = new WorkProgram([
             'year_plan' => 100,
-            'jan_plan' => 50,
-            'feb_plan' => null,
-            'mar_plan' => 50,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
         ]);
 
-        $this->assertSame(50.0, $program->cumulativePercentAt('jan_plan'));
-        $this->assertSame(50.0, $program->cumulativePercentAt('feb_plan'));
-        $this->assertSame(100.0, $program->cumulativePercentAt('mar_plan'));
+        $program->validateMonthlyBreakdown();
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function test_monthly_breakdown_rejects_year_plan_above_one_hundred(): void
+    {
+        $program = new WorkProgram([
+            'year_plan' => 101,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
+        ]);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        try {
+            $program->validateMonthlyBreakdown();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertSame(
+                'Rencana tahunan harus berupa persentase antara 0 sampai 100.',
+                $e->validator->errors()->first('year_plan')
+            );
+            throw $e;
+        }
+    }
+
+    public function test_monthly_breakdown_rejects_monthly_plan_above_one_hundred(): void
+    {
+        $program = new WorkProgram([
+            'year_plan' => 100,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 101,
+        ]);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        try {
+            $program->validateMonthlyBreakdown();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertSame(
+                'Rencana bulanan harus berupa persentase antara 0 sampai 100.',
+                $e->validator->errors()->first('monthly_breakdown')
+            );
+            throw $e;
+        }
     }
 }

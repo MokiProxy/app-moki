@@ -30,7 +30,6 @@ use App\Http\Controllers\Erkap\RiskAnalysisController;
 use App\Http\Controllers\Erkap\RiskIdentificationController;
 use App\Http\Controllers\Erkap\RiskIdentificationImpactController;
 use App\Http\Controllers\Erkap\RiskIdentificationReasonController;
-use App\Http\Controllers\Erkap\RiskRankingController;
 use App\Http\Controllers\Erkap\RKAPController;
 use App\Http\Controllers\Erkap\RiskAppetiteController;
 use App\Http\Controllers\Erkap\RiskImpactController;
@@ -39,7 +38,6 @@ use App\Http\Controllers\Erkap\RiskScaleController;
 use App\Http\Controllers\Erkap\RiskScoreLevelController;
 use App\Http\Controllers\Erkap\RiskTaxonomyController;
 use App\Http\Controllers\Erkap\RiskTypeController;
-use App\Http\Controllers\Erkap\RiskTreatmentController;
 use App\Http\Controllers\Erkap\RevenuePlanController;
 use App\Http\Controllers\Erkap\RoutineCostController;
 use App\Http\Controllers\Erkap\ReportController;
@@ -207,7 +205,6 @@ Route::prefix("erkap")->name("erkap.")->group(function () {
         Route::post('/{rkap}/kickoff', [RKAPController::class, 'kickoff'])->middleware('permission:erkap.rkap.edit')->name('kickoff');
         Route::post('/{rkap}/direction', [RKAPController::class, 'direction'])->middleware('permission:erkap.rkap.edit')->name('direction');
         Route::get('/{rkap}/direction-download', [RKAPController::class, 'downloadDirection'])->middleware('permission:erkap.rkap.view')->name('direction-download');
-        Route::post('/{rkap}/bmi', [RKAPController::class, 'bmi'])->middleware('permission:erkap.rkap.bmi')->name('bmi');
         Route::post('/{rkap}/distribute', [RKAPController::class, 'distribute'])->middleware('permission:erkap.rkap.edit')->name('distribute');
         Route::post('/{rkap}/reset-phase', [RKAPController::class, 'resetPhase'])->middleware('permission:erkap.rkap.edit')->name('reset-phase');
         Route::get('/{rkap}/edit', [RKAPController::class, 'edit'])->middleware('permission:erkap.rkap.edit')->name('edit');
@@ -276,15 +273,6 @@ Route::prefix("erkap")->name("erkap.")->group(function () {
         Route::delete('/{riskAnalysis}', [RiskAnalysisController::class, 'destroy'])->middleware('permission:erkap.risk-analysis.delete')->name('destroy');
     });
 
-    Route::prefix('risk-rankings')->name('risk-rankings.')->group(function () {
-        Route::get('/', [RiskRankingController::class, 'index'])->middleware('permission:erkap.risk-rankings.view')->name('index');
-        Route::get('/create', [RiskRankingController::class, 'create'])->middleware('permission:erkap.risk-rankings.create')->name('create');
-        Route::post('/', [RiskRankingController::class, 'store'])->middleware('permission:erkap.risk-rankings.create')->name('store');
-        Route::get('/{riskRanking}/edit', [RiskRankingController::class, 'edit'])->middleware('permission:erkap.risk-rankings.edit')->name('edit');
-        Route::put('/{riskRanking}', [RiskRankingController::class, 'update'])->middleware('permission:erkap.risk-rankings.edit')->name('update');
-        Route::delete('/{riskRanking}', [RiskRankingController::class, 'destroy'])->middleware('permission:erkap.risk-rankings.delete')->name('destroy');
-    });
-
     Route::prefix('department-risk-strategies')->name('department-risk-strategies.')->group(function () {
         Route::get('/', [DepartmentRiskStrategyController::class, 'index'])->middleware('permission:erkap.department-risk-strategies.view')->name('index');
         Route::get('/create', [DepartmentRiskStrategyController::class, 'create'])->middleware('permission:erkap.department-risk-strategies.create')->name('create');
@@ -292,15 +280,6 @@ Route::prefix("erkap")->name("erkap.")->group(function () {
         Route::get('/{departmentRiskStrategy}/edit', [DepartmentRiskStrategyController::class, 'edit'])->middleware('permission:erkap.department-risk-strategies.edit')->name('edit');
         Route::put('/{departmentRiskStrategy}', [DepartmentRiskStrategyController::class, 'update'])->middleware('permission:erkap.department-risk-strategies.edit')->name('update');
         Route::delete('/{departmentRiskStrategy}', [DepartmentRiskStrategyController::class, 'destroy'])->middleware('permission:erkap.department-risk-strategies.delete')->name('destroy');
-    });
-
-    Route::prefix('risk-treatments')->name('risk-treatments.')->group(function () {
-        Route::get('/', [RiskTreatmentController::class, 'index'])->middleware('permission:erkap.risk-treatments.view')->name('index');
-        Route::get('/create', [RiskTreatmentController::class, 'create'])->middleware('permission:erkap.risk-treatments.create')->name('create');
-        Route::post('/', [RiskTreatmentController::class, 'store'])->middleware('permission:erkap.risk-treatments.create')->name('store');
-        Route::get('/{riskTreatment}/edit', [RiskTreatmentController::class, 'edit'])->middleware('permission:erkap.risk-treatments.edit')->name('edit');
-        Route::put('/{riskTreatment}', [RiskTreatmentController::class, 'update'])->middleware('permission:erkap.risk-treatments.edit')->name('update');
-        Route::delete('/{riskTreatment}', [RiskTreatmentController::class, 'destroy'])->middleware('permission:erkap.risk-treatments.delete')->name('destroy');
     });
 
     Route::prefix('work-programs')->name('work-programs.')->group(function () {

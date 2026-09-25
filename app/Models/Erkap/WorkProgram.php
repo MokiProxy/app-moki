@@ -112,32 +112,27 @@ class WorkProgram extends Model
 
     public function validateMonthlyBreakdown(): void
     {
-        $monthlySum = collect(self::MONTH_COLUMNS)->sum(fn ($month) => (float) ($this->$month ?? 0));
         $yearPlan = (float) ($this->year_plan ?? 0);
 
-        if ($yearPlan > 0 && abs($monthlySum - $yearPlan) > 0.01) {
+        if ($yearPlan < 0 || $yearPlan > 100) {
             throw ValidationException::withMessages([
-                'monthly_breakdown' => 'Total bulanan harus sama dengan target tahunan',
+                'year_plan' => 'Rencana tahunan harus berupa persentase antara 0 sampai 100.',
             ]);
         }
-    }
 
-    public function monthlyCumulativePercents(): array
-    {
-        $total = (float) ($this->year_plan ?? 0);
-        $running = 0.0;
-        $result = [];
+        $monthlyValues = collect(self::MONTH_COLUMNS)
+            ->map(fn ($month) => (float) ($this->$month ?? 0));
 
-        foreach (self::MONTH_COLUMNS as $month) {
-            $running += (float) ($this->$month ?? 0);
-            $result[$month] = $total > 0 ? round(($running / $total) * 100, 2) : 0.0;
+        if ($monthlyValues->contains(fn ($value) => $value < 0 || $value > 100)) {
+            throw ValidationException::withMessages([
+                'monthly_breakdown' => 'Rencana bulanan harus berupa persentase antara 0 sampai 100.',
+            ]);
         }
 
-        return $result;
-    }
-
-    public function cumulativePercentAt(string $month): float
-    {
-        return $this->monthlyCumulativePercents()[$month] ?? 0.0;
+        if (abs($monthlyValues->sum() - $yearPlan) > 0.01) {
+            throw ValidationException::withMessages([
+                'monthly_breakdown' => 'Total bulanan harus sama dengan target tahunan persentase.',
+            ]);
+        }
     }
 }

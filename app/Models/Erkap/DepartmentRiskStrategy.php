@@ -2,7 +2,6 @@
 
 namespace App\Models\Erkap;
 
-use App\Enums\ErkapRiskTreatmentType;
 use App\Models\Erkap\Traits\HasAuditTrail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,21 +15,9 @@ class DepartmentRiskStrategy extends Model
 
     protected $fillable = ['erkap_risk_identification_id', 'strategy'];
 
-    public static function getStrategies()
-    {
-        return collect(ErkapRiskTreatmentType::cases())
-            ->mapWithKeys(fn (ErkapRiskTreatmentType $type) => [$type->value => $type->label()])
-            ->all();
-    }
-
     public function riskIdentification()
     {
         return $this->belongsTo(RiskIdentification::class, 'erkap_risk_identification_id');
-    }
-
-    public function riskTreatments()
-    {
-        return $this->hasMany(RiskTreatment::class, 'erkap_department_risk_strategy_id');
     }
 
     protected static function booted(): void

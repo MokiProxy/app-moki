@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
                 'email'       => 'agung@satriabahana.co.id',
                 'password'    => Hash::make('password'),
                 'employee_id' => '2025081',
-                'role'        => ['staff', 'erkap-controller', 'erkap-admin'],
+                'role'        => ['staff'],
             ],
             [
                 'name'        => 'Sahlul',
@@ -41,7 +41,7 @@ class UserSeeder extends Seeder
                 'email'       => 'sahlul@satriabahana.co.id',
                 'password'    => Hash::make('password'),
                 'employee_id' => '2025082',
-                'role'        => ['staff', 'erkap-ppk', 'erkap-admin'],
+                'role'        => ['staff', 'erkap-ppk'],
             ],
             [
                 'name'        => 'Fajriwan',
@@ -65,7 +65,7 @@ class UserSeeder extends Seeder
                 'email'       => 'harmoko@satriabahana.co.id',
                 'password'    => Hash::make('password'),
                 'employee_id' => '2025085',
-                'role'        => ["helpdesk-admin", "staff", 'erkap-cost-owner'],
+                'role'        => ["helpdesk-admin", "staff"],
             ],
             [
                 'name'        => 'Vita',
@@ -82,22 +82,6 @@ class UserSeeder extends Seeder
                 'password'    => Hash::make('password'),
                 'employee_id' => '2025087',
                 'role'        => ["eqtax-user", "staff", 'erkap-cost-owner'],
-            ],
-            [
-                'name'        => 'ErkapCost',
-                'nopeg'       => '2025088',
-                'email'       => 'erkapcost@satriabahana.co.id',
-                'password'    => Hash::make('password'),
-                'employee_id' => '2025088',
-                'role'        => 'erkap-cost-owner',
-            ],
-            [
-                'name'        => 'ErkapAdmin',
-                'nopeg'       => '2025088',
-                'email'       => 'erkapadmin@satriabahana.co.id',
-                'password'    => Hash::make('password'),
-                'employee_id' => '2025088',
-                'role'        => 'erkap-admin',
             ],
         ];
 

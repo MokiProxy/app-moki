@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\ErkapRatingLevel;
-use App\Enums\ErkapRiskTreatmentType;
 use App\Imports\Erkap\Form1Import;
 use App\Models\Erkap\CompanyTarget;
 use App\Models\Erkap\DepartmentRiskStrategy;
@@ -44,24 +43,6 @@ class Form1ImportExportService
         'Peringkat',
         'Strategi',
         'Program Kerja',
-    ];
-
-    private const STRATEGY_MAP = [
-        'avoidance' => 'avoidance',
-        'avoid' => 'avoidance',
-        'hindari' => 'avoidance',
-        'reduction' => 'reduction',
-        'reduce' => 'reduction',
-        'mitigate' => 'reduction',
-        'kurangi' => 'reduction',
-        'mitigasi' => 'reduction',
-        'sharing' => 'sharing',
-        'transfer' => 'sharing',
-        'transferkan' => 'sharing',
-        'berbagi' => 'sharing',
-        'acceptance' => 'acceptance',
-        'accept' => 'acceptance',
-        'terima' => 'acceptance',
     ];
 
     private const DIRECTION_MAP = [
@@ -345,20 +326,18 @@ class Form1ImportExportService
 
     protected function resolveStrategy(string $value, int $line): string
     {
-        $key = strtolower(trim($value));
+        $text = trim($value);
 
-        if (! isset(self::STRATEGY_MAP[$key])) {
-            $this->fail("Strategi '{$value}' tidak dikenal pada baris {$line}.", 'strategy');
+        if ($text === '') {
+            $this->fail("Strategi wajib diisi pada baris {$line}.", 'strategy');
         }
 
-        return self::STRATEGY_MAP[$key];
+        return $text;
     }
 
     protected function strategyLabel(?string $strategy): string
     {
-        return $strategy
-            ? (ErkapRiskTreatmentType::fromLegacy($strategy)?->label() ?? $strategy)
-            : '-';
+        return $strategy ?: '-';
     }
 
     protected function splitList(string $value): array
