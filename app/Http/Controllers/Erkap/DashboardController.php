@@ -31,7 +31,7 @@ class DashboardController extends Controller
 
     private const ROUTINE_MONTHS = [
         'jan_cost', 'feb_cost', 'mar_cost', 'apr_cost', 'may_cost', 'jun_cost',
-        'jul_cost', 'aug_cost', 'sep_cost', 'oct_cost', 'nov_cost', 'des_cost',
+        'jul_cost', 'aug_cost', 'sep_cost', 'oct_cost', 'nov_cost', 'dec_cost',
     ];
 
     private const PLAN_MONTHS = [

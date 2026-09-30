@@ -3,9 +3,15 @@ $authUserRoleNames = auth()->user()->getRoleNames();
 $authUserRoleId = $authUserRoleNames->first() ?? 'none';
 $roleColor = "primary-it-admin";
 $pendingApprovalCount = \App\Models\Erkap\Approval::query()
-->where('approver_id', auth()->id())
-->where('status', 'pending')
-->count();
+    ->where('approver_id', auth()->id())
+    ->where('status', 'pending')
+    ->get()
+    ->reject(function ($approval) {
+        $model = $approval->approvalable;
+        return $model instanceof \App\Models\Erkap\InvestmentPlan
+            && $model->stageGates()->where('status', 'pending')->exists();
+    })
+    ->count();
 @endphp
 
 <div id="sidebar-menu" class="mt-2">
@@ -48,17 +54,25 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
         </li>
         @endcan
 
-        @can('erkap.approvals.view')
+        @canany(['erkap.approvals.view', 'erkap.investment-gates.view'])
         <li>
-            <a href="{{ route('erkap.approvals.index') }}" class="waves-effect">
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class="bx bx-check-shield"></i>
                 <span key="t-approval">Approval</span>
                 @if($pendingApprovalCount > 0)
                 <span class="badge bg-danger ms-1">{{ $pendingApprovalCount }}</span>
                 @endif
             </a>
+            <ul class="sub-menu" aria-expanded="false">
+                @can('erkap.approvals.view')
+                <li><a href="{{ route('erkap.approvals.index') }}">Approval</a></li>
+                @endcan
+                @can('erkap.investment-gates.view')
+                <li><a href="{{ route('erkap.investment-gates.index') }}">Stage Gate Review</a></li>
+                @endcan
+            </ul>
         </li>
-        @endcan
+        @endcanany
 
         @can('erkap.audit-logs.view')
         <li>
@@ -151,6 +165,24 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
                     </a>
                 </li>
                 @endcan
+            </ul>
+        </li>
+        @endcan
+
+        {{-- Master struktur a..d. Di luar gate `erkap.rkap.view` supaya
+             erkap-admin dan erkap-auditor tetap bisa menjelajahnya. --}}
+        @can('erkap.structure.view')
+        <li>
+            <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <i class='bx bx-git-branch'></i>
+                <span key="t-cost-center-structure">Struktur Pusat Biaya</span>
+            </a>
+            <ul class="sub-menu" aria-expanded="false">
+                <li><a href="{{ route('erkap.cost-centers.index') }}">Pusat Biaya</a></li>
+                <li><a href="{{ route('erkap.business-units.index') }}">Bisnis Unit (a)</a></li>
+                <li><a href="{{ route('erkap.locations.index') }}">Lokasi (b)</a></li>
+                <li><a href="{{ route('erkap.management-areas.index') }}">Manajemen Area (c)</a></li>
+                <li><a href="{{ route('erkap.activities.index') }}">Aktivitas (d)</a></li>
             </ul>
         </li>
         @endcan
@@ -274,11 +306,10 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
             </a>
             <ul class="sub-menu" aria-expanded="false">
                 <li><a href="{{ route('erkap.investment-plans.index') }}">Rencana Investasi</a></li>
+                @can('erkap.budget-capex.view')
                 <li><a href="{{ route('erkap.budget-capex.index') }}">Anggaran Investasi</a></li>
                 <li><a href="{{ route('erkap.budget-capex.summary') }}">Ringkasan Nilai Investasi</a></li>
                 <li><a href="{{ route('erkap.budget-capex.payment-distribution') }}">Distribusi Pembayaran</a></li>
-                @can('erkap.investment-gates.view')
-                <li><a href="{{ route('erkap.investment-gates.index') }}">Stage Gate Review</a></li>
                 @endcan
             </ul>
         </li>
@@ -296,15 +327,13 @@ $pendingApprovalCount = \App\Models\Erkap\Approval::query()
         </li>
         @endcan
 
-        @can('erkap.revenue-plans.view')
+        @can('erkap.profit-loss.view')
         <li>
             <a href="javascript: void(0);" class="has-arrow waves-effect">
                 <i class='bx bx-line-chart'></i>
                 <span key="t-master-data">Financial Projection</span>
             </a>
             <ul class="sub-menu" aria-expanded="false">
-                <li><a href="{{ route('erkap.revenue-plans.index') }}">Rencana Pendapatan</a></li>
-                <li><a href="{{ route('erkap.expense-plans.index') }}">Rencana Beban</a></li>
                 <li><a href="{{ route('erkap.profit-loss.index') }}">Laba Rugi (P&L)</a></li>
                 <li><a href="{{ route('erkap.profit-loss.simulate') }}">Simulasi Skenario</a></li>
             </ul>

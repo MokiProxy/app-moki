@@ -11,6 +11,7 @@ use App\Models\Division;
 use App\Models\Erkap\RKAP;
 use App\Services\ApprovalService;
 use App\Services\Erkap\RKAPLifecycleService;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -42,7 +43,7 @@ class RKAPController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -82,7 +83,7 @@ class RKAPController extends Controller
                 ->with('success', 'Fase RKAP bergerak ke "'.$rkap->phaseLabel().'".');
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.show', $rkap->id)
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -112,7 +113,7 @@ class RKAPController extends Controller
                 ->with('success', 'Jadwal dan peserta kick-off/sosialisasi berhasil disimpan!');
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.show', $rkap->id)
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -139,7 +140,7 @@ class RKAPController extends Controller
                 ->with('success', 'Arahan direksi / memo holding berhasil disimpan!');
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.show', $rkap->id)
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -152,7 +153,7 @@ class RKAPController extends Controller
                 ->with('success', 'Dokumen RKAP ditandai telah didistribusikan!');
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.show', $rkap->id)
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -165,7 +166,7 @@ class RKAPController extends Controller
                 ->with('success', 'Fase lifecycle RKAP direset ke Inisiasi.');
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.show', $rkap->id)
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -196,7 +197,7 @@ class RKAPController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.edit', $rkap->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -223,7 +224,7 @@ class RKAPController extends Controller
             return redirect()->route('erkap.rkap.index')
                 ->with('success', 'Periode RKAP berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.rkap.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.rkap.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -236,7 +237,7 @@ class RKAPController extends Controller
                 ->with('success', 'Periode RKAP berhasil diajukan untuk persetujuan!');
         } catch (Exception $err) {
             return redirect()->route('erkap.rkap.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 }

@@ -79,11 +79,11 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Skor & Level <span class="text-danger">*</span></label>
-                            <select id="erkap_risk_score_value_id" class="form-select" required disabled>
-                                <option value="" disabled selected>Pilih Probabilitas & Dampak terlebih dahulu</option>
-                            </select>
-                            <input type="hidden" name="erkap_risk_score_value_id" id="erkap_risk_score_value_id_hidden" value="{{ old('erkap_risk_score_value_id', $riskAnalysis->erkap_risk_score_value_id) }}">
-                            @error('erkap_risk_score_value_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <select id="erkap_risk_score_value_id" class="form-select" required disabled>
+                                    <option value="" disabled selected>Pilih Probabilitas & Dampak terlebih dahulu</option>
+                                </select>
+                                <input type="hidden" name="erkap_risk_score_value_id" id="erkap_risk_score_value_id_hidden" value="{{ old('erkap_risk_score_value_id', $riskAnalysis->erkap_risk_score_value_id) }}">
+                                @error('erkap_risk_score_value_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
 

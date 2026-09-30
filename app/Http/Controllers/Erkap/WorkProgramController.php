@@ -12,6 +12,7 @@ use App\Models\Erkap\WorkProgram;
 use App\Services\ApprovalService;
 use App\Services\ErkapAccess;
 use App\Services\ErkapEvaluationLock;
+use App\Support\ErrorMessage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
@@ -126,7 +127,7 @@ class WorkProgramController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.work-programs.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -143,7 +144,7 @@ class WorkProgramController extends Controller
             ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($workProgram->erkap_risk_identification_id));
         } catch (Exception $err) {
             return redirect()->route('erkap.work-programs.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
 
         $pageName = 'Edit Program Kerja';
@@ -178,7 +179,7 @@ class WorkProgramController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.work-programs.edit', $workProgram->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -198,7 +199,7 @@ class WorkProgramController extends Controller
             return redirect()->route('erkap.work-programs.index')
                 ->with('success', 'Program kerja berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.work-programs.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.work-programs.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -212,7 +213,7 @@ class WorkProgramController extends Controller
             return redirect()->route('erkap.work-programs.index')
                 ->with('success', 'Program kerja berhasil diajukan untuk persetujuan!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.work-programs.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.work-programs.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -248,7 +249,7 @@ class WorkProgramController extends Controller
             return redirect()->route('erkap.work-programs.index')
                 ->with($results['failed'] > 0 ? 'error' : 'success', $message);
         } catch (Exception $err) {
-            return redirect()->route('erkap.work-programs.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.work-programs.index')->with('error', ErrorMessage::from($err));
         }
     }
 

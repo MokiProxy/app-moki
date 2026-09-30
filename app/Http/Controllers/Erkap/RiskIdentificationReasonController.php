@@ -9,6 +9,7 @@ use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskIdentificationReason;
 use App\Services\ErkapAccess;
 use App\Services\ErkapEvaluationLock;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -67,7 +68,7 @@ class RiskIdentificationReasonController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-reasons.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -84,7 +85,7 @@ class RiskIdentificationReasonController extends Controller
             ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskIdentificationReason->erkap_risk_identification_id));
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-reasons.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
 
         $pageName = 'Edit Penyebab Identifikasi Risiko';
@@ -108,7 +109,7 @@ class RiskIdentificationReasonController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-reasons.edit', $riskIdentificationReason->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -128,7 +129,7 @@ class RiskIdentificationReasonController extends Controller
             return redirect()->route('erkap.risk-identification-reasons.index')
                 ->with('success', 'Penyebab identifikasi risiko berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-identification-reasons.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-identification-reasons.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

@@ -57,11 +57,12 @@ class ZBBReviewFeatureTest extends TestCase
         $taxonomy = RiskTaxonomy::factory()->create(['risk_appetite_id' => $appetite->id]);
         $riskType = RiskType::factory()->create(['risk_taxonomy_id' => $taxonomy->id]);
 
-        $coa = ChartOfAccount::create([
-            'code' => 'COA-F',
-            'name' => 'Beban Feature ZBB',
-            'type' => 'expense',
-        ]);
+        $coa = ChartOfAccount::factory()
+            ->composed($this->costCenter, CostElement::factory()->create([
+                'erkap_cost_element_category_id' => CostElementCategory::factory()->create()->id,
+            ]))
+            ->expense()
+            ->create(['name' => 'Beban Feature ZBB']);
 
         $this->costElement = CostElement::create([
             'code' => 'CE-F',
@@ -69,6 +70,9 @@ class ZBBReviewFeatureTest extends TestCase
             'erkap_cost_element_category_id' => CostElementCategory::factory()->create()->id,
             'chart_of_account_id' => $coa->id,
         ]);
+
+        // Konsolidasi F8 menurunkan COA dari pasangan Pusat Biaya + Elemen Biaya.
+        ChartOfAccount::factory()->composed($this->costCenter, $this->costElement)->expense()->create();
 
         [$this->rkap2025, $this->wp2025] = $this->chain(2025, $rating, $taxonomy, $riskType);
         [$this->rkap2026, $this->wp2026] = $this->chain(2026, $rating, $taxonomy, $riskType);
@@ -136,7 +140,7 @@ class ZBBReviewFeatureTest extends TestCase
             'sep_cost' => 0,
             'oct_cost' => 0,
             'nov_cost' => 0,
-            'des_cost' => 0,
+            'dec_cost' => 0,
             'total' => $total,
             'status' => 'draft',
         ]);
@@ -158,7 +162,7 @@ class ZBBReviewFeatureTest extends TestCase
             'unit_price' => 60000,
             'total' => 120000,
             'is_kumulatif' => false,
-            'status' => 'draft',
+            'status' => 'approved',
         ]);
 
         Permission::firstOrCreate(['name' => 'erkap.zbb-reviews.view', 'guard_name' => 'web']);

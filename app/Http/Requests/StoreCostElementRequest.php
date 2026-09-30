@@ -17,7 +17,7 @@ class StoreCostElementRequest extends FormRequest
             'code' => ['required', 'string', 'max:255', 'unique:erkap_cost_elements,code'],
             'name' => ['required', 'string', 'max:255'],
             'erkap_cost_element_category_id' => ['required', 'integer', 'exists:erkap_cost_element_categories,id'],
-            'chart_of_account_id' => ['required', 'integer', 'exists:chart_of_accounts,id'],
+            'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
         ];
     }
 }

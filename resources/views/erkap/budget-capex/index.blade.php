@@ -37,6 +37,7 @@
                     <div class="card-body bg-light">
                         <h6 class="card-title fw-bold"><i class="mdi mdi-cog me-1"></i> Konsolidasi Anggaran</h6>
                         <p class="text-muted small mb-2">Aggregate total investasi dari semua rencana investasi per divisi.</p>
+                        @can('erkap.budget-capex.create')
                         <form action="{{ route('erkap.budget-capex.consolidate') }}" method="POST" class="d-flex align-items-end gap-2">
                             @csrf
                             <div class="flex-grow-1" style="max-width:250px">
@@ -52,6 +53,11 @@
                                 <i class="mdi mdi-cog-outline me-1"></i> Konsolidasi
                             </button>
                         </form>
+                        @else
+                        <p class="text-muted small mb-0">
+                            <i class="mdi mdi-lock me-1"></i> Anda tidak memiliki hak untuk menjalankan konsolidasi anggaran. Hubungi Departemen Anggaran / Admin ERKAP.
+                        </p>
+                        @endcan
                     </div>
                 </div>
 

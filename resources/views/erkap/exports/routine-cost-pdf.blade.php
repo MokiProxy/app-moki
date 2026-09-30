@@ -47,9 +47,9 @@
                 <td style="text-align: center;">{{ $loop->iteration }}</td>
                 <td>{{ $routineCost->workProgram->name ?? '-' }}</td>
                 <td>{{ $routineCost->need }}</td>
-                <td>{{ $routineCost->costElement->name ?? '-' }}</td>
-                <td>{{ $routineCost->chartOfAccount ? $routineCost->chartOfAccount->formattedCode . ' - ' . $routineCost->chartOfAccount->name : '-' }}</td>
-                <td>{{ $routineCost->costCenter->name ?? '-' }}</td>
+                <td>{{ $routineCost->costElement?->name ?? '-' }}</td>
+                <td>{{ $routineCost->chartOfAccount?->label ?? '-' }}</td>
+                <td>{{ $routineCost->costCenter?->label ?? '-' }}</td>
                 <td style="text-align: right;">{{ number_format($routineCost->qty, 0, ',', '.') }}</td>
                 <td>{{ $routineCost->units }}</td>
                 <td style="text-align: right;">{{ number_format($routineCost->unit_price, 0, ',', '.') }}</td>
@@ -64,7 +64,7 @@
                 <td style="text-align: right;">{{ number_format($routineCost->sep_cost, 0, ',', '.') }}</td>
                 <td style="text-align: right;">{{ number_format($routineCost->oct_cost, 0, ',', '.') }}</td>
                 <td style="text-align: right;">{{ number_format($routineCost->nov_cost, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($routineCost->des_cost, 0, ',', '.') }}</td>
+                <td style="text-align: right;">{{ number_format($routineCost->dec_cost, 0, ',', '.') }}</td>
                 <td style="text-align: right;"><strong>{{ number_format($routineCost->total, 0, ',', '.') }}</strong></td>
                 <td style="text-align: center;">
                     <span class="status bg-{{ $routineCost->statusClass() }}">{{ $routineCost->statusLabel() }}</span>

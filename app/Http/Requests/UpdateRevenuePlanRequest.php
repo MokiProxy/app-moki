@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Erkap\RevenuePlan;
+use App\Rules\ChartOfAccountBelongsToDivision;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,12 @@ class UpdateRevenuePlanRequest extends FormRequest
         return [
             'erkap_rkap_id' => ['required', 'integer', 'exists:erkap_rkap,id'],
             'division_id' => ['required', 'integer', 'exists:divisions,id'],
-            'chart_of_account_id' => ['required', 'integer', Rule::exists('chart_of_accounts', 'id')->where('type', 'revenue')],
+            'chart_of_account_id' => [
+                'required',
+                'integer',
+                Rule::exists('chart_of_accounts', 'id')->where('type', 'revenue'),
+                new ChartOfAccountBelongsToDivision,
+            ],
             'description' => ['nullable', 'string'],
             'jan_plan' => $monthRules,
             'feb_plan' => $monthRules,

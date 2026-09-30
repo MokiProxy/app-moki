@@ -10,6 +10,7 @@ use App\Models\Erkap\CompanyTarget;
 use App\Models\Erkap\DepartmentTarget;
 use App\Models\Erkap\RatingCriteria;
 use App\Services\ErkapAccess;
+use App\Support\ErrorMessage;
 use Exception;
 
 class DepartmentTargetController extends Controller
@@ -65,7 +66,7 @@ class DepartmentTargetController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.department-targets.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -116,7 +117,7 @@ class DepartmentTargetController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.department-targets.edit', $departmentTarget->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -140,7 +141,7 @@ class DepartmentTargetController extends Controller
             return redirect()->route('erkap.department-targets.index')
                 ->with('success', 'Sasaran departemen berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.department-targets.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.department-targets.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

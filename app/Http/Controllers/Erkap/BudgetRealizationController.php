@@ -11,6 +11,7 @@ use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RoutineCost;
 use App\Services\AccountingIntegrationService;
 use App\Services\ErkapAccess;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -100,7 +101,7 @@ class BudgetRealizationController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.budget-realizations.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -131,7 +132,7 @@ class BudgetRealizationController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.budget-realizations.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -148,7 +149,7 @@ class BudgetRealizationController extends Controller
             return redirect()->route('erkap.budget-realizations.index')
                 ->with('success', 'Realisasi anggaran berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.budget-realizations.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.budget-realizations.index')->with('error', ErrorMessage::from($err));
         }
     }
 

@@ -190,6 +190,10 @@ class RolePermissionSeeder extends Seeder
             'department-risk-strategies',
             'work-programs',
             'routine-costs',
+            'business-units',
+            'locations',
+            'management-areas',
+            'activities',
             'cost-centers',
             'investment-plans',
             'investment-gates',
@@ -213,6 +217,11 @@ class RolePermissionSeeder extends Seeder
         }
 
         $permissions[] = ['name' => 'erkap.menu', 'guard_name' => 'web'];
+
+        // Master struktur a..d dikelola wizard struktur COA saja — user
+        // form transaksi cukup `erkap.menu` untuk mengisi dropdown cascading.
+        $permissions[] = ['name' => 'erkap.structure.view', 'guard_name' => 'web'];
+        $permissions[] = ['name' => 'erkap.structure.edit', 'guard_name' => 'web'];
 
         $approvalResourceActions = [
             'submit', 'approve', 'reject',
@@ -359,6 +368,17 @@ class RolePermissionSeeder extends Seeder
             'erkap.zbb-reviews.view',
             'erkap.zbb-reviews.create',
         ]);
+
+        // Read-only untuk merantai a..d dan memilih Pusat Biaya/Elemen Biaya
+        // pada form transaksi. Tidak lewat `$costOwnerResources` karena
+        // `toEkapPermissions()` selalu memberi quartet view/create/edit/delete.
+        $erkapCostOwner->givePermissionTo([
+            'erkap.structure.view',
+            'erkap.cost-centers.view',
+            'erkap.cost-elements.view',
+            'erkap.chart-of-accounts.view',
+        ]);
+
         $erkapCostOwner->revokePermissionTo([
             'erkap.company-targets.view',
             'erkap.company-targets.create',
@@ -370,6 +390,25 @@ class RolePermissionSeeder extends Seeder
         $erkapAdmin->givePermissionTo($approvalPermissions);
         $erkapAdmin->givePermissionTo(['erkap.audit-logs.view']);
         $erkapAdmin->givePermissionTo(['erkap.reports.view', 'erkap.reports.generate']);
+        $erkapAdmin->givePermissionTo(['erkap.structure.view', 'erkap.structure.edit']);
+
+        // Hanya erkap-admin yang boleh mengubah struktur master a..d. Role lain
+        // mengisi form transaksi cukup memakai `erkap.menu` (dropdown API F4).
+        $structureOnlyRoles = [
+            $erkapPpk, $erkapController, $erkapDireksiKeuangan, $erkapDireksi,
+            $erkapKomisaris, $erkapAccounting, $erkapRiskManager,
+            $erkapManajemenAset, $erkapCostOwner,
+        ];
+
+        foreach ($structureOnlyRoles as $role) {
+            $role?->revokePermissionTo([
+                'erkap.structure.edit',
+                'erkap.business-units.create', 'erkap.business-units.edit', 'erkap.business-units.delete',
+                'erkap.locations.create', 'erkap.locations.edit', 'erkap.locations.delete',
+                'erkap.management-areas.create', 'erkap.management-areas.edit', 'erkap.management-areas.delete',
+                'erkap.activities.create', 'erkap.activities.edit', 'erkap.activities.delete',
+            ]);
+        }
 
         $erkapPpk->givePermissionTo([
             'erkap.menu',
@@ -482,8 +521,10 @@ class RolePermissionSeeder extends Seeder
             'erkap.reports.view',
         ]);
 
+        // Query ke DB, bukan filter in-memory: `Collection::where()` tidak
+        // menerapkan semantik SQL LIKE sehingga hasilnya selalu kosong.
         $erkapAuditor->givePermissionTo(
-            $allPermissions->where('name', 'like', 'erkap.%.view')->pluck('name')->all()
+            Permission::where('name', 'like', 'erkap.%.view')->pluck('name')->all()
         );
         $erkapAuditor->givePermissionTo([
             'erkap.menu',

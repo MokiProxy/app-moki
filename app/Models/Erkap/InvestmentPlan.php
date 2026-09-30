@@ -5,6 +5,7 @@ namespace App\Models\Erkap;
 use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\Erkap\Traits\HasApprovalWorkflow;
 use App\Models\ChartOfAccount;
+use App\Models\Erkap\CostElement;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +20,8 @@ class InvestmentPlan extends Model
     protected $fillable = [
         'erkap_work_program_id',
         'cost_center_id',
+        'cost_center_owner',
+        'erkap_cost_element_id',
         'chart_of_account_id',
         'erkap_investattion_category_id',
         'erkap_investation_type_id',
@@ -73,6 +76,11 @@ class InvestmentPlan extends Model
     public function chartOfAccount()
     {
         return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id');
+    }
+
+    public function costElement()
+    {
+        return $this->belongsTo(CostElement::class, 'erkap_cost_element_id');
     }
 
     public function stageGates()

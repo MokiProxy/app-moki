@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Erkap;
 
+use App\Models\ChartOfAccount;
 use App\Models\Erkap\CostCenter;
 use App\Models\Erkap\CostElement;
 use App\Models\Erkap\CostElementCategory;
 use App\Models\Erkap\RKAP;
-use App\Models\Erkap\WorkProgram;
 use App\Models\User;
-use App\Services\Erkap\RKAPLifecycleService;
+use App\Notifications\RkapLifecycleNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
@@ -21,7 +21,7 @@ use Tests\TestCase;
 
 class RKAPLifecycleFeatureTest extends TestCase
 {
-    use RefreshDatabase, ActsAsSuperAdmin, BuildsErkapChain;
+    use ActsAsSuperAdmin, BuildsErkapChain, RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -143,7 +143,7 @@ class RKAPLifecycleFeatureTest extends TestCase
 
         $this->assertSame('distributed', $rkap->refresh()->distribution_status);
 
-        Notification::assertSentTo($admin, \App\Notifications\RkapLifecycleNotification::class);
+        Notification::assertSentTo($admin, RkapLifecycleNotification::class);
     }
 
     public function test_store_routine_cost_blocked_when_lock_phase(): void
@@ -182,6 +182,13 @@ class RKAPLifecycleFeatureTest extends TestCase
             'code' => 'CE-LIFE',
             'erkap_cost_element_category_id' => CostElementCategory::factory()->create()->id,
         ]);
+
+        // Sejak F7, COA diturunkan server-side dari pasangan Pusat Biaya +
+        // Elemen Biaya dan wajib ada, jadi fixture lifecycle ini perlu
+        // menyediakan COA-nya agar tidak berhenti di validasi COA.
+        ChartOfAccount::factory()
+            ->composed($costCenter, $costElement)
+            ->create();
 
         return [
             'erkap_work_program_id' => $workProgramId,

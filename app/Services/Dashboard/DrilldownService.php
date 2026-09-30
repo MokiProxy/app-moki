@@ -51,7 +51,7 @@ class DrilldownService
 
     public function routineCostDetail(int $id): array
     {
-        $item = RoutineCost::with('workProgram.riskIdentification.departmentTarget.division', 'costElement', 'costCenter')
+        $item = RoutineCost::with('workProgram.riskIdentification.departmentTarget.division', 'costElement', 'costCenter', 'chartOfAccount')
             ->findOrFail($id);
 
         ErkapAccess::assertWorkProgramAccess($item->erkap_work_program_id);
@@ -63,8 +63,9 @@ class DrilldownService
             'attributes' => [
                 'Kebutuhan' => $item->need,
                 'Program Kerja' => $item->workProgram->name ?? '-',
-                'Elemen Biaya' => $item->costElement->name ?? '-',
-                'Pusat Biaya' => $item->costCenter->name ?? '-',
+                'Elemen Biaya' => $item->costElement?->label ?? '-',
+                'Pusat Biaya' => $item->costCenter?->label ?? '-',
+                'Chart of Account' => $item->chartOfAccount?->label ?? '-',
                 'Qty x Harga' => sprintf('%s x %s', $item->qty, number_format((float) $item->unit_price, 0, ',', '.')),
                 'Total Anggaran' => $item->total,
                 'Status' => $item->statusLabel(),
@@ -75,7 +76,7 @@ class DrilldownService
 
     public function investmentPlanDetail(int $id): array
     {
-        $item = InvestmentPlan::with('workProgram.riskIdentification.departmentTarget.division', 'investattionCategory')
+        $item = InvestmentPlan::with('workProgram.riskIdentification.departmentTarget.division', 'investattionCategory', 'costCenter', 'chartOfAccount')
             ->findOrFail($id);
 
         ErkapAccess::assertWorkProgramAccess($item->erkap_work_program_id);
@@ -86,6 +87,8 @@ class DrilldownService
                 'Nama Investasi' => $item->name,
                 'Program Kerja' => $item->workProgram->name ?? '-',
                 'Kategori' => $item->investattionCategory?->name ?? '-',
+                'Pusat Biaya' => $item->costCenter?->label ?? '-',
+                'Chart of Account' => $item->chartOfAccount?->label ?? '-',
                 'Deskripsi' => $item->description,
                 'Total Investasi' => $item->total,
                 'Kumulatif' => $item->is_kumulatif ? 'Ya' : 'Tidak',
@@ -148,15 +151,26 @@ class DrilldownService
             'division_id' => $statement->division_id,
         ];
 
-        $revenueRows = RevenuePlan::with('chartOfAccount')
+        $revenueRows = RevenuePlan::with('chartOfAccount', 'division')
             ->where('erkap_rkap_id', $data['erkap_rkap_id'])
             ->when($data['division_id'], fn ($q) => $q->where('division_id', $data['division_id']))
             ->get();
 
-        $expenseRows = ExpensePlan::with('chartOfAccount')
+        $expenseRows = ExpensePlan::with('chartOfAccount', 'division')
             ->where('erkap_rkap_id', $data['erkap_rkap_id'])
             ->when($data['division_id'], fn ($q) => $q->where('division_id', $data['division_id']))
             ->get();
+
+        // Rencana Pendapatan & Rencana Beban digabung dalam satu tabel, jadi
+        // keduanya dinormalkan ke bentuk baris yang sama — kalau tidak, kolom
+        // `chart_of_account_id` pada dua tabel akan bergeser dan angka salah letak.
+        $toRows = fn (Collection $plans, string $kind) => $plans->map(fn ($plan) => [
+            'jenis' => $kind,
+            'divisi' => $plan->division?->name ?? 'Semua Divisi',
+            'chart_of_account' => $plan->chartOfAccount?->label ?? '-',
+            'keterangan' => $plan->description ?: '-',
+            'total' => (float) $plan->total,
+        ]);
 
         return [
             'title' => 'Detail Laba Rugi (P&L)',
@@ -168,7 +182,7 @@ class DrilldownService
                 'Laba Bersih' => $statement->net_profit,
                 'Margin' => $statement->margin . '%',
             ],
-            'rows' => $revenueRows->concat($expenseRows),
+            'rows' => $toRows($revenueRows, 'Pendapatan')->concat($toRows($expenseRows, 'Beban')),
             'meta' => [
                 'revenue_count' => $revenueRows->count(),
                 'expense_count' => $expenseRows->count(),

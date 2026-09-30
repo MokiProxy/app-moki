@@ -81,6 +81,7 @@ $statusColors = [
                     </div>
                 </div>
 
+                @can('erkap.budget-capex.edit')
                 <div class="card mb-4">
                     <div class="card-body">
                         <h6 class="card-title fw-bold"><i class="mdi mdi-cog me-1"></i> Ubah Status</h6>
@@ -104,6 +105,7 @@ $statusColors = [
                         </form>
                     </div>
                 </div>
+                @endif
 
                 <h6 class="fw-bold text-muted mb-3"><i class="mdi mdi-format-list-bulleted me-1"></i> Daftar Rencana Investasi</h6>
 
@@ -158,8 +160,8 @@ $statusColors = [
                             <tr class="fw-bold">
                                 <td colspan="7" class="text-end">Total per Bulan:</td>
                                 <td></td>
-                                @foreach($months as $field)
-                                    <td class="text-center">{{ number_format($totalByMonth[$field], 0, ',', '.') }}</td>
+                                @foreach($months as $field => $label)
+                                    <td class="text-center">{{ number_format($totalByMonth[$field] ?? 0, 0, ',', '.') }}</td>
                                 @endforeach
                                 <td class="text-end">{{ number_format($budgetCapex->total_investment, 0, ',', '.') }}</td>
                             </tr>

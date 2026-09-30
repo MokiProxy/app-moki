@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRiskScaleRequest;
 use App\Http\Requests\UpdateRiskScaleRequest;
 use App\Models\Erkap\RiskScale;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RiskScaleController extends Controller
@@ -35,7 +36,7 @@ class RiskScaleController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-scales.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class RiskScaleController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-scales.edit', $riskScale->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -78,7 +79,7 @@ class RiskScaleController extends Controller
             return redirect()->route('erkap.risk-scales.index')
                 ->with('success', 'Risk scale berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-scales.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-scales.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

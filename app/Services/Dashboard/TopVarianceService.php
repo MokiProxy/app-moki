@@ -25,8 +25,9 @@ class TopVarianceService
 
         foreach ($realizations as $realization) {
             if ($realization->erkap_routine_cost_id !== null) {
-                $key = $realization->routineCost->costElement->id ?? 0;
-                $name = $realization->routineCost->costElement->name ?? 'Tanpa Elemen';
+                $element = $realization->routineCost?->costElement;
+                $key = $element?->id ?? 0;
+                $name = $element?->label ?? 'Tanpa Elemen';
                 $type = 'opex';
             } else {
                 $key = 'capex';

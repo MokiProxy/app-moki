@@ -10,6 +10,7 @@ use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RiskIdentification;
 use App\Services\ErkapAccess;
 use App\Services\Form1ImportExportService;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -75,7 +76,7 @@ class Form1Controller extends Controller
             return Excel::download(new Form1Export($riskIdentifications), 'form1-' . date('Y-m-d-Hi') . '.xlsx');
         } catch (Exception $err) {
             return redirect()->route('erkap.form1.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -109,7 +110,7 @@ class Form1Controller extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.form1.index')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),

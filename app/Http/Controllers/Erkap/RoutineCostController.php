@@ -16,21 +16,25 @@ use App\Models\Erkap\RoutineCost;
 use App\Models\Erkap\WorkProgram;
 use App\Services\ApprovalService;
 use App\Services\Erkap\CentralizedCostService;
-use App\Services\ErkapAccess;
 use App\Services\Erkap\RKAPLifecycleService;
 use App\Services\Erkap\ZBBReviewService;
+use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
+use App\Support\CoaCode;
+use App\Support\ErrorMessage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 
 class RoutineCostController extends Controller
 {
     private const MONTHS = [
         'jan_cost', 'feb_cost', 'mar_cost', 'apr_cost', 'may_cost', 'jun_cost',
-        'jul_cost', 'aug_cost', 'sep_cost', 'oct_cost', 'nov_cost', 'des_cost',
+        'jul_cost', 'aug_cost', 'sep_cost', 'oct_cost', 'nov_cost', 'dec_cost',
     ];
 
     public function index()
@@ -88,7 +92,7 @@ class RoutineCostController extends Controller
             ->orderBy('id')
             ->get();
 
-        return Excel::download(new RoutineCostExport($routineCosts), 'biaya-rutin-' . date('Y-m-d-Hi') . '.xlsx');
+        return Excel::download(new RoutineCostExport($routineCosts), 'biaya-rutin-'.date('Y-m-d-Hi').'.xlsx');
     }
 
     public function exportPdf()
@@ -103,16 +107,14 @@ class RoutineCostController extends Controller
         $pdf = Pdf::loadView('erkap.exports.routine-cost-pdf', compact('routineCosts'));
         $pdf->setOption('isRemoteEnabled', true);
 
-        return $pdf->download('biaya-rutin-' . date('Y-m-d-Hi') . '.pdf');
+        return $pdf->download('biaya-rutin-'.date('Y-m-d-Hi').'.pdf');
     }
 
     public function create()
     {
         $pageName = 'Buat Biaya Rutin';
         $workPrograms = WorkProgram::whereIn('id', ErkapAccess::workProgramIds())->get();
-        $costElements = CostElement::with('chartOfAccount')->get();
-        $chartOfAccounts = ChartOfAccount::expense()->orderBy('code')->get();
-        [$swakelolaCostCenters, $nonSwakelolaCostCenters] = $this->groupedCostCenters($costElements);
+        [$swakelolaCostCenters, $nonSwakelolaCostCenters] = $this->groupedCostCenters();
 
         $subtotalByProgram = $this->subtotalMap('erkap_work_program_id');
         $subtotalByElement = $this->subtotalMap('erkap_cost_element_id');
@@ -121,7 +123,7 @@ class RoutineCostController extends Controller
 
         return view(
             'erkap.routine-cost.create',
-            compact('pageName', 'workPrograms', 'costElements', 'chartOfAccounts', 'swakelolaCostCenters', 'nonSwakelolaCostCenters', 'subtotalByProgram', 'subtotalByElement', 'subtotalByCostCenter', 'budgetPreview')
+            compact('pageName', 'workPrograms', 'swakelolaCostCenters', 'nonSwakelolaCostCenters', 'subtotalByProgram', 'subtotalByElement', 'subtotalByCostCenter', 'budgetPreview')
         );
     }
 
@@ -135,22 +137,13 @@ class RoutineCostController extends Controller
             );
 
             $data = $request->validated();
+            $this->assertPairHasAccount($data);
             $data['chart_of_account_id'] = $this->resolveChartOfAccountId($data);
             $data['is_kumulatif'] = $request->boolean('is_kumulatif');
 
             $this->assertCentralizedCostInput($data, $request->integer('erkap_work_program_id'));
 
-            if (! $this->validateTotal($data, $data['is_kumulatif'])) {
-                return redirect()->route('erkap.routine-costs.create')
-                    ->withInput()
-                    ->withErrors(['total' => $data['is_kumulatif']
-                        ? 'Total harus sama dengan qty × harga satuan.'
-                        : 'Total harus sama dengan qty × harga satuan dan jumlah seluruh bulanan.']);
-            }
-
-            $data['total'] = $data['is_kumulatif']
-                ? (float) $data['qty'] * (float) $data['unit_price']
-                : $this->sumMonths($data);
+            $data['total'] = $this->sumMonths($data);
 
             RoutineCost::create($data);
 
@@ -158,10 +151,22 @@ class RoutineCostController extends Controller
 
             return redirect()->route('erkap.routine-costs.index')
                 ->with('success', 'Biaya rutin baru berhasil disimpan!');
+        } catch (ValidationException $err) {
+            // `ValidationException` adalah turunan `Exception`, jadi tanpa catch
+            // khusus ia akan tertelan blok catch di bawah dan berubah jadi flash
+            // error generik — aturan bisnis (mis. biaya terpusat) jadi tidak
+            // pernah tampil sebagai error di field-nya.
+            //
+            // Redirect ke route form, bukan `back()`: `back()` bergantung pada
+            // header Referer sehingga butuh URL form sebagai asal.
+            return redirect()->route('erkap.routine-costs.create')
+                ->withInput()
+                ->with('error', ErrorMessage::from($err))
+                ->withErrors($err->errors());
         } catch (Exception $err) {
             return redirect()->route('erkap.routine-costs.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -176,9 +181,22 @@ class RoutineCostController extends Controller
 
         $pageName = 'Edit Biaya Rutin';
         $workPrograms = WorkProgram::whereIn('id', ErkapAccess::workProgramIds())->get();
-        $costElements = CostElement::with('chartOfAccount')->get();
-        $chartOfAccounts = ChartOfAccount::expense()->orderBy('code')->get();
-        [$swakelolaCostCenters, $nonSwakelolaCostCenters] = $this->groupedCostCenters($costElements);
+        [$swakelolaCostCenters, $nonSwakelolaCostCenters] = $this->groupedCostCenters();
+
+        // Baris lama bisa menyimpan pasangan Pusat Biaya + Elemen Biaya yang
+        // tidak punya COA (mis. COA-nya dihapus, atau cost center berubah).
+        // Sampaikan ke form daripada membiarkan select elemen terisi kosong tanpa
+        // penjelasan apa pun.
+        $resolvedCoaId = $this->resolveChartOfAccountId([
+            'cost_center_id' => $routineCost->cost_center_id,
+            'erkap_cost_element_id' => $routineCost->erkap_cost_element_id,
+        ]);
+        $staleCoaPair = $routineCost->cost_center_id
+            && $routineCost->erkap_cost_element_id
+            && $resolvedCoaId === null;
+        $storedCoa = $staleCoaPair
+            ? $routineCost->chartOfAccount()->first()
+            : ChartOfAccount::find($resolvedCoaId);
 
         $subtotalByProgram = $this->subtotalMap('erkap_work_program_id');
         $subtotalByElement = $this->subtotalMap('erkap_cost_element_id');
@@ -187,7 +205,7 @@ class RoutineCostController extends Controller
 
         return view(
             'erkap.routine-cost.edit',
-            compact('pageName', 'routineCost', 'workPrograms', 'costElements', 'chartOfAccounts', 'swakelolaCostCenters', 'nonSwakelolaCostCenters', 'subtotalByProgram', 'subtotalByElement', 'subtotalByCostCenter', 'budgetPreview')
+            compact('pageName', 'routineCost', 'workPrograms', 'swakelolaCostCenters', 'nonSwakelolaCostCenters', 'subtotalByProgram', 'subtotalByElement', 'subtotalByCostCenter', 'budgetPreview', 'staleCoaPair', 'storedCoa')
         );
     }
 
@@ -196,6 +214,7 @@ class RoutineCostController extends Controller
         try {
             ErkapAccess::assertWorkProgramAccess($routineCost->erkap_work_program_id);
             ErkapAccess::assertWorkProgramAccess($request->integer('erkap_work_program_id'));
+            ErkapEvaluationLock::assertRoutineCostEditable($routineCost);
 
             $targetWorkProgramId = $request->filled('erkap_work_program_id')
                 ? $request->integer('erkap_work_program_id')
@@ -207,7 +226,8 @@ class RoutineCostController extends Controller
             );
 
             $data = $request->validated();
-            $data['chart_of_account_id'] = $this->resolveChartOfAccountId($data, $routineCost);
+            $this->assertPairHasAccount($data);
+            $data['chart_of_account_id'] = $this->resolveChartOfAccountId($data);
             $data['is_kumulatif'] = $request->boolean('is_kumulatif');
 
             $this->assertCentralizedCostInput($data, $targetWorkProgramId, $routineCost);
@@ -230,10 +250,15 @@ class RoutineCostController extends Controller
 
             return redirect()->route('erkap.routine-costs.index')
                 ->with('success', 'Biaya rutin berhasil diperbarui!');
+        } catch (ValidationException $err) {
+            return redirect()->route('erkap.routine-costs.edit', $routineCost->id)
+                ->withInput()
+                ->with('error', ErrorMessage::from($err))
+                ->withErrors($err->errors());
         } catch (Exception $err) {
             return redirect()->route('erkap.routine-costs.edit', $routineCost->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -246,13 +271,14 @@ class RoutineCostController extends Controller
     {
         try {
             ErkapAccess::assertWorkProgramAccess($routineCost->erkap_work_program_id);
+            ErkapEvaluationLock::assertRoutineCostEditable($routineCost);
 
             $routineCost->delete();
 
             return redirect()->route('erkap.routine-costs.index')
                 ->with('success', 'Biaya rutin berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.routine-costs.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.routine-costs.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -266,7 +292,7 @@ class RoutineCostController extends Controller
             return redirect()->route('erkap.routine-costs.index')
                 ->with('success', 'Biaya rutin berhasil diajukan untuk persetujuan!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.routine-costs.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.routine-costs.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -302,7 +328,7 @@ class RoutineCostController extends Controller
             return redirect()->route('erkap.routine-costs.index')
                 ->with($results['failed'] > 0 ? 'error' : 'success', $message);
         } catch (Exception $err) {
-            return redirect()->route('erkap.routine-costs.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.routine-costs.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -383,32 +409,71 @@ class RoutineCostController extends Controller
         CentralizedCostService::assertCanInput($costCenter, $divisionId);
     }
 
-    private function resolveChartOfAccountId(array $data, ?RoutineCost $routineCost = null): ?int
+    /**
+     * COA diturunkan dari pasangan Pusat Biaya + Elemen Biaya.
+     *
+     * Unique index `chart_of_accounts_composition_unique` menjamin pasangan itu
+     * menghasilkan tepat satu COA, jadi tidak ada lagi alasan pengguna memilih
+     * COA secara bebas — dan tidak mungkin lagi tersimpan COA milik Pusat Biaya
+     * lain. Fallback `coaSuggestion()` yang dulu dipakai di sini justru sumber
+     * ketidakkonsistenan: ia mengambil satu COA sembarang dari elemen biaya.
+     */
+    private function resolveChartOfAccountId(array $data): ?int
     {
-        if (filled($data['chart_of_account_id'] ?? null)) {
-            return (int) $data['chart_of_account_id'];
-        }
-
-        if ($routineCost?->chart_of_account_id) {
-            return (int) $routineCost->chart_of_account_id;
-        }
-
-        return CostElement::find($data['erkap_cost_element_id'])?->coaSuggestion()?->id;
+        return ChartOfAccount::idForPair(
+            $data['cost_center_id'] ?? null,
+            $data['erkap_cost_element_id'] ?? null,
+        );
     }
 
-    private function groupedCostCenters(Collection $costElements): array
+    /**
+     * Pasangan Pusat Biaya + Elemen Biaya harus benar-benar punya COA. Bila
+     * belum, gap-nya di Pokok Biaya & Pusat Biaya → "Sinkron COA" yang perlu
+     * dijalankan lebih dulu, bukan kondisi yang boleh lolos diam-diam.
+     */
+    private function assertPairHasAccount(array $data): void
+    {
+        $costCenterId = $data['cost_center_id'] ?? null;
+        $costElementId = $data['erkap_cost_element_id'] ?? null;
+
+        if (! $costCenterId || ! $costElementId) {
+            return;
+        }
+
+        if (ChartOfAccount::query()->forPair($costCenterId, $costElementId)->exists()) {
+            return;
+        }
+
+        $costCenter = CostCenter::find($costCenterId);
+        $costElement = CostElement::find($costElementId);
+
+        throw ValidationException::withMessages([
+            'cost_center_id' => 'Kombinasi Pusat Biaya dan Elemen Biaya ini belum punya Chart of Account. '
+                .'Jalankan "Sinkron COA" pada menu Chart of Accounts terlebih dahulu. '
+                .sprintf(
+                    'Pusat Biaya %s + Elemen Biaya %s menghasilkan kode %s.',
+                    $costCenter?->code ?? $costCenterId,
+                    $costElement?->code ?? $costElementId,
+                    $costCenter && $costElement ? (CoaCode::compose($costCenter->segments() + ['cost_element' => $costElement->code]) ?? '-') : '-'
+                ),
+        ]);
+    }
+
+    /**
+     * Pusat Biaya untuk form transaksi: cukup daftar Pusat Biaya hasil
+     * komposisi a..d, sudah dibatasi divisi bila pengguna berscope divisi.
+     * Opsi COA & Elemen Biaya diambil lewat `CoaOptionService`, bukan di-render
+     * ke blade, supaya tidak perlu izin CRUD master.
+     */
+    private function groupedCostCenters(): array
     {
         $costCenters = CostCenter::query()
+            ->with(['businessUnit', 'location', 'managementArea', 'activity'])
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->where('division_id', ErkapAccess::divisionId());
             })
-            ->get()
-            ->map(function (CostCenter $costCenter) use ($costElements) {
-                $costCenter->cost_element_id = $costElements
-                    ->firstWhere('code', $costCenter->costElementCode())?->id;
-
-                return $costCenter;
-            });
+            ->orderBy('code')
+            ->get();
 
         return [
             $costCenters->filter(fn (CostCenter $costCenter) => $costCenter->isSwakelola())->values(),
@@ -418,24 +483,24 @@ class RoutineCostController extends Controller
 
     private function validateTotal(array $data, bool $isKumulatif): bool
     {
-        $expectedTotal = (float) $data['qty'] * (float) $data['unit_price'];
-        $total = (float) ($data['total'] ?? 0);
-
-        if ($isKumulatif) {
-            return abs($expectedTotal - $total) <= 0.01;
-        }
-
         $monthlyTotal = $this->sumMonths($data);
+        $total = $this->parseRupiah($data['total'] ?? 0);
 
-        return abs($expectedTotal - $total) <= 0.01
-            && abs($monthlyTotal - $total) <= 0.01;
+        return abs($monthlyTotal - $total) <= 0.01;
     }
 
     private function sumMonths(array $data): float
     {
         return array_sum(
-            array_map(fn ($month) => (float) ($data[$month] ?? 0), self::MONTHS)
+            array_map(fn ($month) => $this->parseRupiah($data[$month] ?? 0), self::MONTHS)
         );
+    }
+
+    private function parseRupiah($value): float
+    {
+        $value = str_replace('.', '', (string) $value);
+        $value = str_replace(',', '.', $value);
+        return (float) $value;
     }
 
     private function subtotalMap(string $groupBy): array

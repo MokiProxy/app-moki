@@ -3,8 +3,16 @@
 namespace Tests\Feature\Erkap;
 
 use App\Exports\Erkap\WorkProgramExport;
+use App\Models\Employee;
+use App\Models\Regional;
+use App\Models\User;
+use App\Support\ErrorMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\Concerns\ActsAsSuperAdmin;
 use Tests\Concerns\BuildsErkapChain;
 use Tests\TestCase;
@@ -115,6 +123,55 @@ class WorkProgramFeatureTest extends TestCase
 
         $this->assertSame(100.0, (float) $workProgram->fresh()->year_plan);
         $this->assertSame(12.0, (float) $workProgram->fresh()->dec_plan);
+    }
+
+    public function test_update_surfaces_lock_reason_instead_of_generic_validation_message(): void
+    {
+        $workProgram = $this->chain['workProgram'];
+        $this->chain['risk']->update(['status' => 'approved']);
+
+        $employee = Employee::create([
+            'employee_id' => 'EMP-WP-'.uniqid(),
+            'name' => 'Cost Owner',
+            'division_id' => $this->chain['division']->id,
+            'regional_id' => Regional::factory()->create()->id,
+        ]);
+
+        $user = User::factory()->create(['employee_id' => $employee->employee_id]);
+        $user->assignRole(Role::firstOrCreate(['name' => 'erkap-cost-owner', 'guard_name' => 'web']));
+        foreach (['erkap.work-programs.view', 'erkap.work-programs.edit'] as $name) {
+            $user->givePermissionTo(Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']));
+        }
+
+        $this->actingAs($user)
+            ->from(route('erkap.work-programs.edit', $workProgram))
+            ->put(route('erkap.work-programs.update', $workProgram), $this->validWorkProgramPayload([
+                'name' => 'Program Kerja Direvisi',
+            ]))
+            ->assertRedirect(route('erkap.work-programs.edit', $workProgram))
+            ->assertSessionHas('error', fn (?string $message): bool => is_string($message)
+                && str_contains($message, 'tidak dapat diubah')
+                && ! str_contains($message, 'The given data was invalid'));
+
+        $this->assertSame('Program Kerja Uji', $workProgram->fresh()->name);
+    }
+
+    public function test_error_message_helper_reads_validation_errors_not_generic_text(): void
+    {
+        $this->assertSame('Total bulanan harus sama dengan target tahunan persentase.', ErrorMessage::from(
+            ValidationException::withMessages([
+                'monthly_breakdown' => 'Total bulanan harus sama dengan target tahunan persentase.',
+            ])
+        ));
+
+        $this->assertSame('a; b', ErrorMessage::from(ValidationException::withMessages([
+            'year_plan' => ['a', 'b'],
+        ])));
+
+        $this->assertSame(
+            'Anda tidak memiliki izin untuk mengakses data ini.',
+            ErrorMessage::from(new HttpException(403))
+        );
     }
 
     private function validWorkProgramPayload(array $overrides = []): array

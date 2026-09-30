@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvestationCriteriaRequest;
 use App\Http\Requests\UpdateInvestationCriteriaRequest;
 use App\Models\Erkap\InvestationCriteria;
+use App\Support\ErrorMessage;
 use Exception;
 
 class InvestationCriteriaController extends Controller
@@ -35,7 +36,7 @@ class InvestationCriteriaController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.investation-criterias.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class InvestationCriteriaController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.investation-criterias.edit', $investationCriteria->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -78,7 +79,7 @@ class InvestationCriteriaController extends Controller
             return redirect()->route('erkap.investation-criterias.index')
                 ->with('success', 'Investation criteria berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.investation-criterias.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.investation-criterias.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

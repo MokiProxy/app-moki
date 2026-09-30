@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Erkap\RiskIdentification;
+use App\Models\Erkap\RoutineCost;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -27,6 +28,32 @@ class ErkapEvaluationLock
             return;
         }
 
+        static::assertStatusEditable($risk->status, 'Form 1', $risk->statusLabel(), $user);
+    }
+
+    /**
+     * Kunci yang sama untuk dokumen lain yang sudah masuk rantai approval.
+     *
+     * Tanpa ini, Biaya Rutin yang sudah disetujui masih bisa diubah atau
+     * dihapus oleh pengajinya: angka yang sudah tervalidasi di Laporan Laba
+     * Rugi bisa berbeda dari angka yang disetujui PPK/Controller.
+     */
+    public static function assertRoutineCostEditable(RoutineCost $routineCost, ?User $user = null): void
+    {
+        if (! in_array($routineCost->status, self::LOCKED_STATUSES, true)) {
+            return;
+        }
+
+        static::assertStatusEditable(
+            $routineCost->status,
+            'Biaya rutin',
+            ucfirst((string) $routineCost->status),
+            $user
+        );
+    }
+
+    protected static function assertStatusEditable(string $status, string $label, string $statusLabel, ?User $user = null): void
+    {
         $user = $user ?: auth()->user();
 
         if (static::canOverride($user)) {
@@ -34,7 +61,7 @@ class ErkapEvaluationLock
         }
 
         throw ValidationException::withMessages([
-            'status' => 'Form 1 dalam status '.$risk->statusLabel().' dan tidak dapat diubah. Hubungi E-RKAP Admin bila diperlukan perbaikan.',
+            'status' => "{$label} dalam status {$statusLabel} dan tidak dapat diubah. Hubungi E-RKAP Admin bila diperlukan perbaikan.",
         ]);
     }
 }

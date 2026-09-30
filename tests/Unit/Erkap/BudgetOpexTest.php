@@ -84,18 +84,21 @@ class BudgetOpexTest extends TestCase
 
         $this->costCenter = \App\Models\Erkap\CostCenter::factory()->create(['code' => 'CC-CONS']);
 
-        $chartOfAccount = ChartOfAccount::create([
-            'code' => 'COA-OPEX',
-            'name' => 'Beban Operasional',
-            'type' => 'expense',
-        ]);
-
         $this->costElement = CostElement::create([
             'code' => 'CE-CONS',
             'name' => 'Elemen Konsolidasi',
             'erkap_cost_element_category_id' => \App\Models\Erkap\CostElementCategory::factory()->create()->id,
-            'chart_of_account_id' => $chartOfAccount->id,
         ]);
+
+        // Konsolidasi F8 mencari COA dari pasangan Pusat Biaya + Elemen Biaya,
+        // bukan dari `CostElement::chart_of_account_id`. Keduanya harus mengisi
+        // COA yang sama agar baris OPEX bisa turun ke indikator anggaran.
+        $chartOfAccount = ChartOfAccount::factory()
+            ->composed($this->costCenter, $this->costElement)
+            ->expense()
+            ->create(['name' => 'Beban Operasional']);
+
+        $this->costElement->update(['chart_of_account_id' => $chartOfAccount->id]);
     }
 
     public function test_budget_opex_can_be_created(): void
@@ -160,7 +163,7 @@ class BudgetOpexTest extends TestCase
             'sep_cost' => 10000,
             'oct_cost' => 10000,
             'nov_cost' => 10000,
-            'des_cost' => 0,
+            'dec_cost' => 0,
             'total' => 100000,
             'status' => 'draft',
         ]);
@@ -202,7 +205,7 @@ class BudgetOpexTest extends TestCase
                 'sep_cost' => 0,
                 'oct_cost' => 0,
                 'nov_cost' => 0,
-                'des_cost' => 0,
+                'dec_cost' => 0,
                 'total' => 50000,
                 'status' => 'draft',
             ]);

@@ -17,6 +17,7 @@ class StoreWorkProgramRequest extends FormRequest
 
         return [
             'erkap_risk_identification_id' => ['required', 'integer', 'exists:erkap_risk_identifications,id'],
+            'code' => ['nullable', 'string', 'max:255', 'unique:erkap_work_programs,code'],
             'name' => ['required', 'string'],
             'units' => ['required', 'string', 'max:255'],
             'year_plan' => $percentageRules,

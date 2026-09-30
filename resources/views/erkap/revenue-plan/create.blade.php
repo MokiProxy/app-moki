@@ -67,28 +67,39 @@ $months = [
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Divisi <span class="text-danger">*</span></label>
-                            <select name="division_id" class="form-select @error('division_id') is-invalid @enderror" required>
-                                <option value="" disabled selected>Pilih Divisi</option>
+                            <label class="form-label fw-bold" for="division_id">Divisi <span class="text-danger">*</span></label>
+                            <select
+                                name="division_id"
+                                id="division_id"
+                                class="form-select @error('division_id') is-invalid @enderror"
+                                required
+                            >
+                                <option value="">Pilih Divisi</option>
                                 @foreach($divisions as $division)
-                                    <option value="{{ $division->id }}" {{ old('division_id') == $division->id ? 'selected' : '' }}>
-                                        {{ $division->name }}
-                                    </option>
+                                    <option
+                                        value="{{ $division->id }}"
+                                        data-code="{{ $division->code }}"
+                                        @selected(old('division_id') == $division->id)
+                                    >{{ $division->name }}</option>
                                 @endforeach
                             </select>
                             @error('division_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Akun Pendapatan <span class="text-danger">*</span></label>
-                            <select name="chart_of_account_id" class="form-select @error('chart_of_account_id') is-invalid @enderror" required>
-                                <option value="" disabled selected>Pilih Akun Pendapatan</option>
-                                @foreach($chartOfAccounts as $coa)
-                                    <option value="{{ $coa->id }}" {{ old('chart_of_account_id') == $coa->id ? 'selected' : '' }}>
-                                        {{ $coa->formattedCode }} - {{ $coa->name }}
-                                    </option>
-                                @endforeach
+                            <label class="form-label fw-bold" for="chart_of_account_id">Akun Pendapatan <span class="text-danger">*</span></label>
+                            <select
+                                name="chart_of_account_id"
+                                id="chart_of_account_id"
+                                class="form-select @error('chart_of_account_id') is-invalid @enderror"
+                                required
+                                disabled
+                            >
+                                <option value="">— Pilih Divisi dahulu —</option>
                             </select>
+                            <div class="form-text">
+                                Hanya COA (a-b-c-d-e) dari Pusat Biaya milik divisi terpilih.
+                            </div>
                             @error('chart_of_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
@@ -134,6 +145,33 @@ $months = [
 
 @section('plugin')
 @include('erkap.partials.rupiah')
+<script>
+    window.ERKAP_COA_OPTIONS_URL = @json(route('erkap.coa-options.index'));
+</script>
+<script src="{{ asset('js/erkap-cascade.js') }}"></script>
+<script>
+    $(document).ready(function () {
+        ErkapCascade.init({
+            chain: ['division', 'account'],
+            selectors: {
+                division: '#division_id',
+                account: '#chart_of_account_id',
+            },
+            preview: '#__none__',
+            // `erkap_revenue_plans` tidak punya cost_center_id, jadi divisi
+            // menjadi parent COA dan hanya akun pendapatan yang ditawarkan.
+            dependsOn: { account: ['division'] },
+            // Setelah validasi gagal, form dirender ulang dengan nilai lama;
+            // select COA tetap kosong karena opsi-nya datang dari API.
+            initialValues: {
+                account: @json(old('chart_of_account_id')),
+            },
+            query: {
+                account: function () { return { type: 'revenue' }; },
+            },
+        });
+    });
+</script>
 <script>
     function monthTotal() {
         var total = 0;

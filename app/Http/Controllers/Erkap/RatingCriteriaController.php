@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRatingCriteriaRequest;
 use App\Http\Requests\UpdateRatingCriteriaRequest;
 use App\Models\Erkap\RatingCriteria;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RatingCriteriaController extends Controller
@@ -35,7 +36,7 @@ class RatingCriteriaController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.rating-criterias.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class RatingCriteriaController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.rating-criterias.edit', $ratingCriteria->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -78,7 +79,7 @@ class RatingCriteriaController extends Controller
             return redirect()->route('erkap.rating-criterias.index')
                 ->with('success', 'Rating criteria berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.rating-criterias.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.rating-criterias.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

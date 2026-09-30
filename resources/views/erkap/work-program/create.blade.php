@@ -133,7 +133,7 @@ foreach ($riskIdentifications as $riskIdentificationItem) {
                         <div class="col-md-2">
                             <label class="form-label fw-bold">{{ $label }} (%) <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="number" step="0.01" min="0" max="100" name="{{ $field }}" class="form-control monthly-plan @error($field) is-invalid @enderror" value="{{ old($field) }}" required>
+                                <input type="number" step="any" min="0" max="100" name="{{ $field }}" class="form-control monthly-plan @error($field) is-invalid @enderror" value="{{ old($field) }}" required>
                                 <span class="input-group-text">%</span>
                             </div>
                             @error($field) <div class="invalid-feedback">{{ $message }}</div> @enderror

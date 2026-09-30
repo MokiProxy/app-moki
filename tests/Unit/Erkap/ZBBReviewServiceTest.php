@@ -127,7 +127,7 @@ class ZBBReviewServiceTest extends TestCase
             'sep_cost' => 0,
             'oct_cost' => 0,
             'nov_cost' => 0,
-            'des_cost' => 0,
+            'dec_cost' => 0,
             'total' => $total,
             'status' => 'draft',
         ]);

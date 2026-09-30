@@ -206,7 +206,7 @@ class WorkProgramBusinessRulesTest extends TestCase
             'sep_cost' => 10000,
             'oct_cost' => 10000,
             'nov_cost' => 10000,
-            'des_cost' => 10000,
+            'dec_cost' => 10000,
             'total' => 120000,
             'status' => 'draft',
         ]);

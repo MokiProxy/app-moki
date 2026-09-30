@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Erkap;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreExpensePlanRequest;
 use App\Http\Requests\UpdateExpensePlanRequest;
-use App\Models\ChartOfAccount;
 use App\Models\Division;
 use App\Models\Erkap\ExpensePlan;
 use App\Models\Erkap\RKAP;
 use App\Services\ErkapAccess;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class ExpensePlanController extends Controller
 {
@@ -33,9 +34,8 @@ class ExpensePlanController extends Controller
         $pageName = 'Buat Rencana Beban';
         $rkaps = RKAP::orderByDesc('year')->get();
         $divisions = $this->availableDivisions();
-        $chartOfAccounts = ChartOfAccount::expense()->orderBy('code')->get();
 
-        return view('erkap.expense-plan.create', compact('pageName', 'rkaps', 'divisions', 'chartOfAccounts'));
+        return view('erkap.expense-plan.create', compact('pageName', 'rkaps', 'divisions'));
     }
 
     public function store(StoreExpensePlanRequest $request)
@@ -52,10 +52,18 @@ class ExpensePlanController extends Controller
 
             return redirect()->route('erkap.expense-plans.index')
                 ->with('success', 'Rencana beban baru berhasil disimpan!');
+        } catch (ValidationException $err) {
+            // `back()` bergantung pada header Referer, jadi pada request tanpa
+            // asal (API, test) ia melompat ke root. Redirect eksplisit ke form
+            // menjaga pesan error tetap terlihat di halaman yang benar.
+            return redirect()->route('erkap.expense-plans.create')
+                ->withInput()
+                ->with('error', ErrorMessage::from($err))
+                ->withErrors($err->errors());
         } catch (Exception $err) {
             return redirect()->route('erkap.expense-plans.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -71,9 +79,8 @@ class ExpensePlanController extends Controller
         $pageName = 'Edit Rencana Beban';
         $rkaps = RKAP::orderByDesc('year')->get();
         $divisions = $this->availableDivisions();
-        $chartOfAccounts = ChartOfAccount::expense()->orderBy('code')->get();
 
-        return view('erkap.expense-plan.edit', compact('pageName', 'expensePlan', 'rkaps', 'divisions', 'chartOfAccounts'));
+        return view('erkap.expense-plan.edit', compact('pageName', 'expensePlan', 'rkaps', 'divisions'));
     }
 
     public function update(UpdateExpensePlanRequest $request, ExpensePlan $expensePlan)
@@ -90,10 +97,15 @@ class ExpensePlanController extends Controller
 
             return redirect()->route('erkap.expense-plans.index')
                 ->with('success', 'Rencana beban berhasil diperbarui!');
+        } catch (ValidationException $err) {
+            return redirect()->route('erkap.expense-plans.edit', $expensePlan->id)
+                ->withInput()
+                ->with('error', ErrorMessage::from($err))
+                ->withErrors($err->errors());
         } catch (Exception $err) {
             return redirect()->route('erkap.expense-plans.edit', $expensePlan->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -112,7 +124,7 @@ class ExpensePlanController extends Controller
             return redirect()->route('erkap.expense-plans.index')
                 ->with('success', 'Rencana beban berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.expense-plans.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.expense-plans.index')->with('error', ErrorMessage::from($err));
         }
     }
 

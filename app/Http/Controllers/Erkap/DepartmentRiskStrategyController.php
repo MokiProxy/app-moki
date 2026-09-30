@@ -9,6 +9,7 @@ use App\Models\Erkap\DepartmentRiskStrategy;
 use App\Models\Erkap\RiskIdentification;
 use App\Services\ErkapAccess;
 use App\Services\ErkapEvaluationLock;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -67,7 +68,7 @@ class DepartmentRiskStrategyController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.department-risk-strategies.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -84,7 +85,7 @@ class DepartmentRiskStrategyController extends Controller
             ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($departmentRiskStrategy->erkap_risk_identification_id));
         } catch (Exception $err) {
             return redirect()->route('erkap.department-risk-strategies.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
 
         $pageName = 'Edit Strategi Risiko Departemen';
@@ -108,7 +109,7 @@ class DepartmentRiskStrategyController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.department-risk-strategies.edit', $departmentRiskStrategy->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -128,7 +129,7 @@ class DepartmentRiskStrategyController extends Controller
             return redirect()->route('erkap.department-risk-strategies.index')
                 ->with('success', 'Strategi risiko departemen berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.department-risk-strategies.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.department-risk-strategies.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

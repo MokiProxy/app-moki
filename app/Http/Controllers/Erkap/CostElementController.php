@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateCostElementRequest;
 use App\Models\ChartOfAccount;
 use App\Models\Erkap\CostElement;
 use App\Models\Erkap\CostElementCategory;
+use App\Support\ErrorMessage;
 use Exception;
 
 class CostElementController extends Controller
@@ -24,9 +25,8 @@ class CostElementController extends Controller
     {
         $pageName = 'Buat Elemen Biaya';
         $categories = CostElementCategory::all();
-        $chartOfAccounts = ChartOfAccount::orderBy('code')->get();
 
-        return view('erkap.cost-element.create', compact('pageName', 'categories', 'chartOfAccounts'));
+        return view('erkap.cost-element.create', compact('pageName', 'categories'));
     }
 
     public function store(StoreCostElementRequest $request)
@@ -39,7 +39,7 @@ class CostElementController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.cost-elements.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -52,9 +52,8 @@ class CostElementController extends Controller
     {
         $pageName = 'Edit Elemen Biaya';
         $categories = CostElementCategory::all();
-        $chartOfAccounts = ChartOfAccount::orderBy('code')->get();
 
-        return view('erkap.cost-element.edit', compact('pageName', 'costElement', 'categories', 'chartOfAccounts'));
+        return view('erkap.cost-element.edit', compact('pageName', 'costElement', 'categories'));
     }
 
     public function update(UpdateCostElementRequest $request, CostElement $costElement)
@@ -67,7 +66,7 @@ class CostElementController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.cost-elements.edit', $costElement->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -84,7 +83,7 @@ class CostElementController extends Controller
             return redirect()->route('erkap.cost-elements.index')
                 ->with('success', 'Elemen biaya berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.cost-elements.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.cost-elements.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

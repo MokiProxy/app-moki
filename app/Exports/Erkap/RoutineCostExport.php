@@ -38,15 +38,17 @@ class RoutineCostExport implements FromCollection, WithHeadings, WithMapping
     {
         $this->row++;
 
+        $costCenter = $routineCost->costCenter;
+
         return [
             $this->row,
             $routineCost->workProgram->name ?? '-',
             $routineCost->need,
-            $routineCost->costElement->name ?? '-',
-            $routineCost->chartOfAccount->code . ' - ' . $routineCost->chartOfAccount->name ?? '-',
-            $routineCost->costCenter->name ?? '-',
-            $routineCost->costCenter && $routineCost->costCenter->isCentralized()
-                ? 'Terpusat (' . ($routineCost->costCenter->coordinatingDivision->name ?? '-') . ')'
+            $routineCost->costElement?->label ?? '-',
+            $routineCost->chartOfAccount?->label ?? '-',
+            $costCenter?->label ?? '-',
+            $costCenter && $costCenter->isCentralized()
+                ? 'Terpusat (' . ($costCenter->coordinatingDivision?->name ?? '-') . ')'
                 : 'Non-Terpusat',
             $routineCost->qty,
             $routineCost->units,
@@ -62,7 +64,7 @@ class RoutineCostExport implements FromCollection, WithHeadings, WithMapping
             $routineCost->sep_cost,
             $routineCost->oct_cost,
             $routineCost->nov_cost,
-            $routineCost->des_cost,
+            $routineCost->dec_cost,
             $routineCost->total,
             $routineCost->statusLabel(),
         ];

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvestattionCategoryRequest;
 use App\Http\Requests\UpdateInvestattionCategoryRequest;
 use App\Models\Erkap\InvestattionCategory;
+use App\Support\ErrorMessage;
 use Exception;
 
 class InvestattionCategoryController extends Controller
@@ -35,7 +36,7 @@ class InvestattionCategoryController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.investattion-categories.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class InvestattionCategoryController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.investattion-categories.edit', $investattionCategory->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -78,7 +79,7 @@ class InvestattionCategoryController extends Controller
             return redirect()->route('erkap.investattion-categories.index')
                 ->with('success', 'Investattion category berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.investattion-categories.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.investattion-categories.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

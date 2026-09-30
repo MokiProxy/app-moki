@@ -164,7 +164,7 @@ class MonthlyBreakdownValidationTest extends TestCase
             'sep_cost' => 10000,
             'oct_cost' => 10000,
             'nov_cost' => 10000,
-            'des_cost' => 15000,
+            'dec_cost' => 15000,
             'total' => 120000,
             'status' => 'draft',
         ]);
@@ -222,7 +222,7 @@ class MonthlyBreakdownValidationTest extends TestCase
             'sep_cost' => 10000,
             'oct_cost' => 10000,
             'nov_cost' => 10000,
-            'des_cost' => 20000,
+            'dec_cost' => 20000,
             'total' => 130000,
             'status' => 'draft',
         ]);

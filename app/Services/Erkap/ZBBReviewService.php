@@ -24,8 +24,40 @@ class ZBBReviewService
             ->first();
     }
 
+    public static function hasSufficientData(RKAP $rkap): bool
+    {
+        $hasRoutineCost = RoutineCost::query()
+            ->whereHas('workProgram.riskIdentification.departmentTarget.companyTarget', function ($query) use ($rkap) {
+                $query->where('erkap_rkap_id', $rkap->id);
+            })
+            ->exists();
+
+        if ($hasRoutineCost) {
+            return true;
+        }
+
+        $hasInvestmentPlan = InvestmentPlan::query()
+            ->whereHas('workProgram.riskIdentification.departmentTarget.companyTarget', function ($query) use ($rkap) {
+                $query->where('erkap_rkap_id', $rkap->id);
+            })
+            ->exists();
+
+        if ($hasInvestmentPlan) {
+            return true;
+        }
+
+        return RevenuePlan::where('erkap_rkap_id', $rkap->id)->exists();
+    }
+
     public static function buildReviews(RKAP $rkap, ?RKAP $previousRkap = null): array
     {
+        if (! static::hasSufficientData($rkap)) {
+            throw new \RuntimeException(
+                "Data anggaran belum mencukupi untuk ZBB review RKAP {$rkap->year}. "
+                . 'Pastikan ada minimal satu Biaya Rutin, Rencana Investasi, atau Rencana Pendapatan.'
+            );
+        }
+
         $previous = $previousRkap ?? static::previousRkap($rkap);
         $previousMap = static::collectPriorYear($previous);
 

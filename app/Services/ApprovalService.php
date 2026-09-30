@@ -12,6 +12,7 @@ use App\Models\Erkap\WorkProgram;
 use App\Models\User;
 use App\Notifications\ApprovalNotification;
 use App\Services\Erkap\InvestmentGateReviewService;
+use App\Support\ErrorMessage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -35,8 +36,8 @@ class ApprovalService
                 3 => 'erkap-direksi-keuangan',
             ],
             'rkap' => [
-                1 => 'erkap-komisaris',
-                2 => 'erkap-direksi',
+                1 => 'erkap-direksi',
+                2 => 'erkap-komisaris',
             ],
             'risk_register' => [
                 1 => 'erkap-risk-manager',
@@ -175,11 +176,18 @@ class ApprovalService
                 $results['submitted']++;
             } catch (\Throwable $e) {
                 $results['failed']++;
-                $results['errors'][] = $e->getMessage();
+                $results['errors'][] = static::extractErrorMessage($e);
             }
         }
 
+        $results['errors'] = array_values(array_unique($results['errors']));
+
         return $results;
+    }
+
+    protected static function extractErrorMessage(\Throwable $e): string
+    {
+        return ErrorMessage::from($e);
     }
 
     public static function approve(Model $model, User $user, ?string $notes = null): void

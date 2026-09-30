@@ -41,11 +41,12 @@
                         <thead class="table-dark">
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
-                                <th style="width: 140px">Kode</th>
+                                <th style="width: 190px">Kode</th>
+                                <th>Struktur (a · b · c · d)</th>
                                 <th>Nama</th>
                                 <th>Pemilik</th>
                                 <th>Divisi</th>
-                                <th style="width: 130px">Tipe</th>
+                                <th style="width: 130px" class="text-center">Tipe</th>
                                 <th style="width: 120px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -53,7 +54,14 @@
                             @forelse($costCenters as $key => $costCenter)
                             <tr>
                                 <td class="text-center">{{ $costCenters->firstItem() + $key }}</td>
-                                <td class="fw-bold">{{ $costCenter->code }}</td>
+                                <td class="fw-bold"><code>{{ $costCenter->formattedCode }}</code></td>
+                                <td class="small text-muted">
+                                    {{ $costCenter->businessUnit?->code ?? '?' }} ·
+                                    {{ $costCenter->location?->code ?? '?' }} ·
+                                    {{ $costCenter->managementArea?->code ?? '?' }} ·
+                                    {{ $costCenter->activity?->code ?? '?' }}
+                                    <span class="badge bg-light text-dark ms-1">{{ $costCenter->chart_of_accounts_count }} COA</span>
+                                </td>
                                 <td>{{ $costCenter->name }}</td>
                                 <td>{{ $costCenter->owner }}</td>
                                 <td>{{ $costCenter->division->name ?? '-' }}</td>
@@ -78,7 +86,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted">Belum ada data pusat biaya.</td>
+                                <td colspan="8" class="text-center text-muted">Belum ada data pusat biaya.</td>
                             </tr>
                             @endforelse
                         </tbody>

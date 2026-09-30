@@ -6,6 +6,8 @@ use App\Models\ChartOfAccount;
 use App\Models\Company;
 use App\Models\Division;
 use App\Models\Employee;
+use App\Models\Erkap\Activity;
+use App\Models\Erkap\BusinessUnit;
 use App\Models\Erkap\BudgetCapex;
 use App\Models\Erkap\BudgetRealization;
 use App\Models\Erkap\CompanyTarget;
@@ -19,6 +21,8 @@ use App\Models\Erkap\InvestationType;
 use App\Models\Erkap\InvestattionCategory;
 use App\Models\Erkap\InvestmentPlan;
 use App\Models\Erkap\KickoffAttendee;
+use App\Models\Erkap\Location;
+use App\Models\Erkap\ManagementArea;
 use App\Models\Erkap\PerformanceScorecard;
 use App\Models\Erkap\ProgramRealization;
 use App\Models\Erkap\RatingCriteria;
@@ -173,35 +177,20 @@ class RkapSimulasi
                 'level' => 'Moderate',
             ]);
 
-        // Cost element + COA (unit biaya global; dipakai konsolidasi OPEX).
+        // Elemen biaya global; COA-nya baru ditentukan setelah Pusat Biaya
+        // terbentuk karena kode COA = Pusat Biaya (a..d) + elemen (e).
         $costElement = CostElement::whereNotNull('chart_of_account_id')->first()
             ?? CostElement::first();
 
         $category = CostElementCategory::first()
             ?? CostElementCategory::create(['name' => 'Biaya Umum Simulasi']);
 
-        $coa = null;
-        if ($costElement) {
-            $coa = $costElement->chart_of_account_id
-                ? $costElement->chartOfAccount
-                : $costElement->coaSuggestion();
-        }
-
-        if (! $coa) {
-            $coa = ChartOfAccount::expense()->first()
-                ?? ChartOfAccount::where('type', 'expense')->first()
-                ?? ChartOfAccount::create(['code' => '8000', 'name' => 'Biaya Gaji', 'type' => 'expense']);
-        }
-
         if (! $costElement) {
-            $costElement = CostElement::firstOrCreate(
-                ['code' => 'SIM-8000'],
-                [
-                    'name' => 'Biaya Operasional SIMULASI',
-                    'erkap_cost_element_category_id' => $category->id,
-                    'chart_of_account_id' => $coa->id,
-                ]
-            );
+            $costElement = CostElement::create([
+                'code' => '8000',
+                'name' => 'Biaya Operasional SIMULASI',
+                'erkap_cost_element_category_id' => $category->id,
+            ]);
         }
 
         $investationCategory = InvestattionCategory::first()
@@ -222,8 +211,8 @@ class RkapSimulasi
             'probability' => $probability,
             'impact' => $impact,
             'scoreLevel' => $scoreLevel,
+            'costElementCategory' => $category,
             'costElement' => $costElement,
-            'coa' => $coa,
             'investationCategory' => $investationCategory,
             'investationType' => $investationType,
             'investationCriteria' => $investationCriteria,
@@ -231,7 +220,7 @@ class RkapSimulasi
     }
 
     /**
-     * Tahap 0b - Divisi target + cost center milik divisi.
+     * Tahap 0b - Divisi target + Pusat Biaya milik divisi.
      */
     protected static function prepareDivision(): void
     {
@@ -245,15 +234,109 @@ class RkapSimulasi
             ]
         );
 
-        static::$ref['costCenter'] = CostCenter::firstOrCreate(
-            ['code' => 'CC-SIM-01'],
+        $activity = static::prepareActivity();
+
+        static::$ref['costCenter'] = CostCenter::updateOrCreate(
+            ['erkap_activity_id' => $activity->id, 'name' => 'Pusat Biaya '.static::$divisionName],
             [
-                'name' => 'Cost Center '.static::$divisionName,
                 'owner' => 'Kepala Departemen',
                 'division_id' => static::$division->id,
-                'is_swakelola' => true,
             ]
         );
+
+        static::$ref['coa'] = static::resolveCostCenterAccount(
+            static::$ref['costCenter'],
+            static::$ref['costElement'],
+        );
+    }
+
+    /**
+     * Aktivitas (segmen d) untuk simulasi, beserta leluhurnya a..c bila master
+     * belum tersedia. Dipakai master lama kalau ada supaya simulasi tidak
+     * froze data; kode/disimpan ulang tetap idempoten.
+     */
+    protected static function prepareActivity(): Activity
+    {
+        $activity = Activity::query()
+            ->where('code', '110')
+            ->where('is_active', true)
+            ->with('managementArea')
+            ->get()
+            ->first(fn (Activity $item) => $item->managementArea?->division_id === static::$division->id)
+            ?? Activity::query()
+                ->where('is_active', true)
+                ->with('managementArea')
+                ->get()
+                ->first(fn (Activity $item) => $item->managementArea?->division_id === static::$division->id);
+
+        if ($activity) {
+            return $activity;
+        }
+
+        $businessUnit = BusinessUnit::orderBy('sort_order')->first()
+            ?? BusinessUnit::create(['code' => 'S', 'name' => 'Bisnis Unit Simulasi', 'sort_order' => 99]);
+
+        $location = Location::query()
+            ->where('erkap_business_unit_id', $businessUnit->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->first()
+            ?? Location::create([
+                'code' => '99',
+                'name' => 'Lokasi Simulasi',
+                'erkap_business_unit_id' => $businessUnit->id,
+                'sort_order' => 99,
+            ]);
+
+        $managementArea = ManagementArea::query()
+            ->where('erkap_location_id', $location->id)
+            ->where('division_id', static::$division->id)
+            ->first()
+            ?? ManagementArea::create([
+                'code' => '99900',
+                'name' => 'Manajemen Area Simulasi',
+                'erkap_location_id' => $location->id,
+                'division_id' => static::$division->id,
+                'sort_order' => 99,
+            ]);
+
+        return Activity::firstOrCreate(
+            ['erkap_management_area_id' => $managementArea->id, 'code' => '999'],
+            [
+                'name' => 'Aktivitas Simulasi',
+                'is_swakelola' => true,
+            ],
+        );
+    }
+
+    /**
+     * COA hasil komposisi Pusat Biaya + Elemen Biaya.
+     *
+     * Ini satu-satunya sumber COA yang sah: `chart_of_accounts` tak lagi
+     * menyimpan kode bebas, dan setiap COA harus milik satu Pusat Biaya.
+     */
+    protected static function resolveCostCenterAccount(CostCenter $costCenter, CostElement $costElement): ChartOfAccount
+    {
+        $accountId = ChartOfAccount::idForPair($costCenter->id, $costElement->id);
+
+        if ($accountId) {
+            return ChartOfAccount::findOrFail($accountId);
+        }
+
+        $account = ChartOfAccount::create([
+            'cost_center_id' => $costCenter->id,
+            'cost_element_id' => $costElement->id,
+            'name' => $costElement->name.' - '.$costCenter->name,
+            'type' => 'expense',
+        ]);
+
+        // Tautan default elemen biaya diisi bila masih kosong, mengikuti
+        // `ChartOfAccountController::sync()`.
+        if (! $costElement->chart_of_account_id) {
+            $costElement->update(['chart_of_account_id' => $account->id]);
+        }
+
+        return $account;
     }
 
     /**
@@ -658,7 +741,7 @@ protected static function finaliseRkap(): void
     {
         static::$rkap->refresh();
 
-        // Periode RKAP diajukan di fase finalisasi oleh PPK (komisaris -> direksi).
+        // Periode RKAP diajukan di fase finalisasi oleh PPK (direksi -> komisaris).
         static::fillAs('erkap-ppk', function () {
             RKAPLifecycleService::advance(static::$rkap); // consolidation -> finalization
 
@@ -667,12 +750,12 @@ protected static function finaliseRkap(): void
             static::realignApprovers(static::$rkap);
         });
 
-        static::fillAs('erkap-komisaris', function () {
-            ApprovalService::approve(static::$rkap, static::$users['erkap-komisaris'], 'Disetujui otomatis oleh seeder simulasi RKAP '.static::$year.'.');
-        });
-
         static::fillAs('erkap-direksi', function () {
             ApprovalService::approve(static::$rkap, static::$users['erkap-direksi'], 'Disetujui otomatis oleh seeder simulasi RKAP '.static::$year.'.');
+        });
+
+        static::fillAs('erkap-komisaris', function () {
+            ApprovalService::approve(static::$rkap, static::$users['erkap-komisaris'], 'Disetujui otomatis oleh seeder simulasi RKAP '.static::$year.'.');
         });
 
         static::fillAs('erkap-ppk', function () {
@@ -900,7 +983,7 @@ protected static function finaliseRkap(): void
 
     /**
      * Sebar total anggaran merata ke 12 kolom bulanan (jumlah == total).
-     * Catatan: kolom Desember RoutineCost memakai `des_cost` (bukan `dec_cost`).
+     * Catatan: kolom Desember RoutineCost memakai `dec_cost`.
      *
      * @return array<string, float>
      */
@@ -911,8 +994,7 @@ protected static function finaliseRkap(): void
         $data = [];
 
         foreach ($months as $index => $month) {
-            $column = ($suffix === 'cost' && $month === 'dec') ? 'des' : $month;
-            $data["{$column}_{$suffix}"] = ($index === count($months) - 1)
+            $data["{$month}_{$suffix}"] = ($index === count($months) - 1)
                 ? round($total - ($per * (count($months) - 1)), 2)
                 : $per;
         }
@@ -923,9 +1005,8 @@ protected static function finaliseRkap(): void
     protected static function monthColumn(string $suffix, int $month): string
     {
         $names = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-        $column = ($suffix === 'cost' && $names[$month - 1] === 'dec') ? 'des' : $names[$month - 1];
 
-        return $column.'_'.$suffix;
+        return $names[$month - 1].'_'.$suffix;
     }
 
     protected static function proposalPath(WorkProgram $program, string $name): string

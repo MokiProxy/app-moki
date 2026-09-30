@@ -73,15 +73,38 @@
                     </div>
                 </div>
 
+                <div class="card mb-3">
+                    <div class="card-body py-3">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                            <h6 class="card-title mb-0"><i class="mdi mdi-vector-link me-1"></i> Cakupan Kombinasi Pusat Biaya × Elemen Biaya</h6>
+                            <span class="fw-bold {{ $coverage['missing'] > 0 ? 'text-warning' : 'text-success' }}">
+                                {{ $coverage['filled'] }} / {{ $coverage['expected'] }} ({{ $coverage['percent'] }}%)
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 10px" role="progressbar" aria-valuenow="{{ $coverage['percent'] }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar {{ $coverage['percent'] === 100 ? 'bg-success' : 'bg-warning' }}" style="width: {{ $coverage['percent'] }}%"></div>
+                        </div>
+                        <div class="form-text mt-2">
+                            {{ $coverage['costCenters'] }} Pusat Biaya × {{ $coverage['costElements'] }} Elemen Biaya aktif.
+                            @if($coverage['missing'] > 0)
+                                Masih {{ $coverage['missing'] }} kombinasi kosong — jalankan Sinkronisasi.
+                            @else
+                                Seluruh kombinasi sudah terisi.
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle w-100">
                         <thead class="table-dark">
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
-                                <th style="width: 120px">Kode</th>
+                                <th style="width: 190px">Kode</th>
                                 <th>Nama Akun</th>
-                                <th style="width: 140px">Tipe</th>
-                                <th class="text-center" style="width: 160px">Jumlah Elemen Biaya</th>
+                                <th style="width: 190px">Pusat Biaya</th>
+                                <th style="width: 170px">Elemen Biaya</th>
+                                <th style="width: 110px">Tipe</th>
                                 <th style="width: 80px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -89,8 +112,24 @@
                             @forelse($chartOfAccounts as $key => $account)
                             <tr>
                                 <td class="text-center">{{ $chartOfAccounts->firstItem() + $key }}</td>
-                                <td class="fw-bold">{{ $account->formattedCode }}</td>
+                                <td class="fw-bold"><code>{{ $account->formattedCode }}</code></td>
                                 <td>{{ $account->name }}</td>
+                                <td>
+                                    @if($account->costCenter)
+                                        <code>{{ $account->costCenter->formattedCode }}</code>
+                                        <span class="d-block small text-muted text-truncate" style="max-width: 180px">{{ $account->costCenter->name }}</span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($account->costElement)
+                                        <code>{{ $account->costElement->code }}</code>
+                                        <span class="d-block small text-muted text-truncate" style="max-width: 160px">{{ $account->costElement->name }}</span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if($account->type === 'revenue')
                                         <span class="badge bg-success">Revenue</span>
@@ -98,7 +137,6 @@
                                         <span class="badge bg-danger">Expense</span>
                                     @endif
                                 </td>
-                                <td class="text-center">{{ $account->cost_elements_count }}</td>
                                 <td class="text-center">
                                     <a href="{{ route('erkap.chart-of-accounts.show', $account->id) }}" class="btn btn-info btn-sm" title="Detail">
                                         <i class="mdi mdi-eye"></i>
@@ -107,7 +145,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">Belum ada data chart of accounts.</td>
+                                <td colspan="7" class="text-center text-muted">Belum ada data chart of accounts.</td>
                             </tr>
                             @endforelse
                         </tbody>

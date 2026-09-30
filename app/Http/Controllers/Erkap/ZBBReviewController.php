@@ -9,6 +9,7 @@ use App\Models\Erkap\RKAP;
 use App\Models\Erkap\ZBBReview;
 use App\Services\ErkapAccess;
 use App\Services\Erkap\ZBBReviewService;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -82,6 +83,21 @@ class ZBBReviewController extends Controller
             ]);
 
             $rkap = RKAP::findOrFail($request->integer('erkap_rkap_id'));
+
+            if (ErkapAccess::isDivisionScoped()) {
+                $hasAccess = ZBBReview::where('erkap_rkap_id', $rkap->id)
+                    ->where('division_id', ErkapAccess::divisionId())
+                    ->exists();
+
+                if (! $hasAccess) {
+                    $hasAnyData = ZBBReview::where('erkap_rkap_id', $rkap->id)->exists();
+
+                    if ($hasAnyData) {
+                        abort(403);
+                    }
+                }
+            }
+
             $result = ZBBReviewService::buildReviews($rkap);
 
             $message = "Review ZBB untuk RKAP {$rkap->year} berhasil dibangun: {$result['total']} pos anggaran "
@@ -98,7 +114,7 @@ class ZBBReviewController extends Controller
                 ->with('error', collect($err->errors())->flatten()->first());
         } catch (Exception $err) {
             return redirect()->route('erkap.zbb-reviews.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -126,7 +142,7 @@ class ZBBReviewController extends Controller
                 ->withInput();
         } catch (Exception $err) {
             return redirect()->route('erkap.zbb-reviews.show', $review->id)
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 }

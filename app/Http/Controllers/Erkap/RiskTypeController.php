@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRiskTypeRequest;
 use App\Http\Requests\UpdateRiskTypeRequest;
 use App\Models\Erkap\RiskTaxonomy;
 use App\Models\Erkap\RiskType;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RiskTypeController extends Controller
@@ -37,7 +38,7 @@ class RiskTypeController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-types.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -64,7 +65,7 @@ class RiskTypeController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-types.edit', $riskType->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -81,7 +82,7 @@ class RiskTypeController extends Controller
             return redirect()->route('erkap.risk-types.index')
                 ->with('success', 'Risk type berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-types.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-types.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

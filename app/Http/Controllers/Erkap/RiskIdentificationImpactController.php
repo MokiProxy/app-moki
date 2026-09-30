@@ -9,6 +9,7 @@ use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskIdentificationImpact;
 use App\Services\ErkapAccess;
 use App\Services\ErkapEvaluationLock;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RiskIdentificationImpactController extends Controller
@@ -46,7 +47,7 @@ class RiskIdentificationImpactController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-impacts.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -63,7 +64,7 @@ class RiskIdentificationImpactController extends Controller
             ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskIdentificationImpact->erkap_risk_identification_id));
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-impacts.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
 
         $pageName = 'Edit Dampak Identifikasi Risiko';
@@ -87,7 +88,7 @@ class RiskIdentificationImpactController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identification-impacts.edit', $riskIdentificationImpact->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -107,7 +108,7 @@ class RiskIdentificationImpactController extends Controller
             return redirect()->route('erkap.risk-identification-impacts.index')
                 ->with('success', 'Dampak identifikasi risiko berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-identification-impacts.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-identification-impacts.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

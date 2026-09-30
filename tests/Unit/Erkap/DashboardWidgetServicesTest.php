@@ -169,7 +169,7 @@ class DashboardWidgetServicesTest extends TestCase
         $data = app(CostCenterHeatmapService::class)->data($chain['rkapId'], 2026);
 
         $this->assertCount(1, $data['rows']);
-        $this->assertSame($costCenter->name, $data['rows'][0]['name']);
+        $this->assertSame($costCenter->label, $data['rows'][0]['name']);
         $this->assertSame(30.0, $data['rows'][0]['cells'][4]['variance_percent']);
     }
 
