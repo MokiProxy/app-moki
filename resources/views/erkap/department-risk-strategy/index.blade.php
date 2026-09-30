@@ -51,7 +51,7 @@
                             <tr>
                                 <td class="text-center">{{ $departmentRiskStrategies->firstItem() + $key }}</td>
                                 <td class="fw-bold">{{ $departmentRiskStrategy->riskIdentification->risk ?? '-' }}</td>
-                                <td>{{ \App\Models\Erkap\DepartmentRiskStrategy::getStrategies()[$departmentRiskStrategy->strategy] ?? $departmentRiskStrategy->strategy }}</td>
+                                <td>{{ $departmentRiskStrategy->strategy }}</td>
                                 <td class="text-center">
                                     <a href="{{ route('erkap.department-risk-strategies.edit', $departmentRiskStrategy->id) }}" class="btn btn-warning btn-sm btn-edit" title="Edit">
                                         <i class="mdi mdi-pencil"></i>

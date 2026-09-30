@@ -39,7 +39,14 @@ class MicrosoftAuthController extends Controller
         $user = User::where('email', $microsoftUser->getEmail())->first();
 
         if (! $user) {
-            
+            if (! config('services.microsoft.auto_provision', true)) {
+                Log::info('Provisioning Microsoft SSO dimatikan, login ditolak: '.$microsoftUser->getEmail());
+
+                return redirect()
+                    ->route('login')
+                    ->with('error', 'Akun Anda belum terdaftar. Hubungi administrator.');
+            }
+
             $user = User::create([
                 'name'              => $microsoftUser->getName() ?? $microsoftUser->getNickname(),
                 'email'             => $microsoftUser->getEmail(),
@@ -54,12 +61,43 @@ class MicrosoftAuthController extends Controller
             }
         }
 
-        if (!$user->hasAnyRole(Role::pluck('name')->all())) {
-            $user->assignRole('staff');
-        }
+        $this->ensureRole($user);
 
         Auth::login($user, true);
 
         return redirect()->intended(route('portal.index'));
+    }
+
+    /**
+     * Beri role default hanya bila operator menetapkannya lewat konfigurasi.
+     *
+     * Sebelumnya user baru dari Microsoft selalu mendapat `staff` tanpa syarat,
+     * padahal `staff` memberi akses modul lain (reset password AMS, hapus
+     * tiket helpdesk, berkas dokter). Auto-role yang tidak dibatasi membuat
+     * siapa pun yang lolos autentikasi tenant mendapat akses tersebut, termasuk
+     * role ERKAP yang sama sekali tidak terkait. Sekarang role default kosong
+     * secara default: akun tetap dibuat, tetapi admin yang menetapkan aksesnya.
+     */
+    private function ensureRole(User $user): void
+    {
+        if ($user->roles()->exists()) {
+            return;
+        }
+
+        $defaultRole = config('services.microsoft.default_role');
+
+        if (! $defaultRole) {
+            Log::warning('User Microsoft tanpa role, akses ditahan sampai admin memberikan role: '.$user->email);
+
+            return;
+        }
+
+        if (! Role::where('name', $defaultRole)->exists()) {
+            Log::error('Role default Microsoft tidak ada: '.$defaultRole);
+
+            return;
+        }
+
+        $user->assignRole($defaultRole);
     }
 }

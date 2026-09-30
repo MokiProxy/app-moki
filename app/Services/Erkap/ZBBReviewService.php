@@ -6,7 +6,6 @@ use App\Models\Erkap\InvestmentPlan;
 use App\Models\Erkap\RKAP;
 use App\Models\Erkap\RevenuePlan;
 use App\Models\Erkap\RoutineCost;
-use App\Models\Erkap\WorkProgram;
 use App\Models\Erkap\ZBBReview;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
@@ -25,8 +24,40 @@ class ZBBReviewService
             ->first();
     }
 
+    public static function hasSufficientData(RKAP $rkap): bool
+    {
+        $hasRoutineCost = RoutineCost::query()
+            ->whereHas('workProgram.riskIdentification.departmentTarget.companyTarget', function ($query) use ($rkap) {
+                $query->where('erkap_rkap_id', $rkap->id);
+            })
+            ->exists();
+
+        if ($hasRoutineCost) {
+            return true;
+        }
+
+        $hasInvestmentPlan = InvestmentPlan::query()
+            ->whereHas('workProgram.riskIdentification.departmentTarget.companyTarget', function ($query) use ($rkap) {
+                $query->where('erkap_rkap_id', $rkap->id);
+            })
+            ->exists();
+
+        if ($hasInvestmentPlan) {
+            return true;
+        }
+
+        return RevenuePlan::where('erkap_rkap_id', $rkap->id)->exists();
+    }
+
     public static function buildReviews(RKAP $rkap, ?RKAP $previousRkap = null): array
     {
+        if (! static::hasSufficientData($rkap)) {
+            throw new \RuntimeException(
+                "Data anggaran belum mencukupi untuk ZBB review RKAP {$rkap->year}. "
+                . 'Pastikan ada minimal satu Biaya Rutin, Rencana Investasi, atau Rencana Pendapatan.'
+            );
+        }
+
         $previous = $previousRkap ?? static::previousRkap($rkap);
         $previousMap = static::collectPriorYear($previous);
 
@@ -286,25 +317,6 @@ class ZBBReviewService
                 ];
             });
 
-        WorkProgram::query()
-            ->with('riskIdentification.departmentTarget.division')
-            ->whereHas('riskIdentification.departmentTarget.companyTarget', function ($query) use ($rkap) {
-                $query->where('erkap_rkap_id', $rkap->id);
-            })
-            ->get()
-            ->each(function (WorkProgram $item) use (&$rows) {
-                $divisionId = $item->riskIdentification?->departmentTarget?->division_id;
-                $identifier = $item->code ?: $item->name;
-                $rows[] = [
-                    'type' => 'work_program',
-                    'id' => $item->id,
-                    'division_id' => $divisionId,
-                    'display_name' => $item->name ?: 'Program Kerja',
-                    'proposed' => (float) $item->year_plan,
-                    'key' => static::key($divisionId, 'wp', $identifier),
-                ];
-            });
-
         return $rows;
     }
 
@@ -345,18 +357,6 @@ class ZBBReviewService
         RevenuePlan::query()->where('erkap_rkap_id', $previous->id)->get()
             ->each(function (RevenuePlan $item) use (&$accumulate) {
                 $accumulate(static::key($item->division_id, 'rv', $item->chart_of_account_id), (float) $item->total);
-            });
-
-        WorkProgram::query()
-            ->with('riskIdentification.departmentTarget')
-            ->whereHas('riskIdentification.departmentTarget.companyTarget', function ($query) use ($previous) {
-                $query->where('erkap_rkap_id', $previous->id);
-            })
-            ->get()
-            ->each(function (WorkProgram $item) use (&$accumulate) {
-                $divisionId = $item->riskIdentification?->departmentTarget?->division_id;
-                $identifier = $item->code ?: $item->name;
-                $accumulate(static::key($divisionId, 'wp', $identifier), (float) $item->year_plan);
             });
 
         return $map;

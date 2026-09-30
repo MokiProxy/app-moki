@@ -34,7 +34,7 @@ class RoutineCostFactory extends Factory
             'sep_cost' => $this->faker->numberBetween(1000, 100000),
             'oct_cost' => $this->faker->numberBetween(1000, 100000),
             'nov_cost' => $this->faker->numberBetween(1000, 100000),
-            'des_cost' => $this->faker->numberBetween(1000, 100000),
+            'dec_cost' => $this->faker->numberBetween(1000, 100000),
             'total' => $this->faker->numberBetween(10000, 1000000),
             'is_kumulatif' => false,
             'status' => 'draft',

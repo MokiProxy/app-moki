@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRiskImpactRequest;
 use App\Http\Requests\UpdateRiskImpactRequest;
 use App\Models\Erkap\RiskImpact;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RiskImpactController extends Controller
@@ -35,7 +36,7 @@ class RiskImpactController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-impacts.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class RiskImpactController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-impacts.edit', $riskImpact->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -78,7 +79,7 @@ class RiskImpactController extends Controller
             return redirect()->route('erkap.risk-impacts.index')
                 ->with('success', 'Risk impact berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-impacts.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-impacts.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

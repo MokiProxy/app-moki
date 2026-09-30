@@ -12,15 +12,15 @@ use Tests\TestCase;
 class ApprovalMatrixTest extends TestCase
 {
     use RefreshDatabase;
-    public function test_rkap_approval_order_komisaris_then_direksi(): void
+    public function test_rkap_approval_order_direksi_then_komisaris(): void
     {
         $matrix = ApprovalService::getApprovalMatrix();
-        
+
         $this->assertArrayHasKey('rkap', $matrix);
         $rkapMatrix = $matrix['rkap'];
-        
-        $this->assertEquals('erkap-komisaris', $rkapMatrix[1]);
-        $this->assertEquals('erkap-direksi', $rkapMatrix[2]);
+
+        $this->assertEquals('erkap-direksi', $rkapMatrix[1]);
+        $this->assertEquals('erkap-komisaris', $rkapMatrix[2]);
         $this->assertCount(2, $rkapMatrix);
     }
 

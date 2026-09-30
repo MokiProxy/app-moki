@@ -5,15 +5,16 @@ namespace App\Http\Controllers\Erkap;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRevenuePlanRequest;
 use App\Http\Requests\UpdateRevenuePlanRequest;
-use App\Models\ChartOfAccount;
 use App\Models\Division;
 use App\Models\Erkap\RevenuePlan;
 use App\Models\Erkap\RKAP;
-use App\Services\ErkapAccess;
 use App\Services\Erkap\RKAPLifecycleService;
 use App\Services\Erkap\ZBBReviewService;
+use App\Services\ErkapAccess;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class RevenuePlanController extends Controller
 {
@@ -36,9 +37,8 @@ class RevenuePlanController extends Controller
         $pageName = 'Buat Rencana Pendapatan';
         $rkaps = RKAP::orderByDesc('year')->get();
         $divisions = $this->availableDivisions();
-        $chartOfAccounts = ChartOfAccount::revenue()->orderBy('code')->get();
 
-        return view('erkap.revenue-plan.create', compact('pageName', 'rkaps', 'divisions', 'chartOfAccounts'));
+        return view('erkap.revenue-plan.create', compact('pageName', 'rkaps', 'divisions'));
     }
 
     public function store(StoreRevenuePlanRequest $request)
@@ -61,10 +61,18 @@ class RevenuePlanController extends Controller
 
             return redirect()->route('erkap.revenue-plans.index')
                 ->with('success', 'Rencana pendapatan baru berhasil disimpan!');
+        } catch (ValidationException $err) {
+            // `back()` bergantung pada header Referer, jadi pada request tanpa
+            // asal (API, test) ia melompat ke root. Redirect eksplisit ke form
+            // menjaga pesan error tetap terlihat di halaman yang benar.
+            return redirect()->route('erkap.revenue-plans.create')
+                ->withInput()
+                ->with('error', ErrorMessage::from($err))
+                ->withErrors($err->errors());
         } catch (Exception $err) {
             return redirect()->route('erkap.revenue-plans.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -80,9 +88,8 @@ class RevenuePlanController extends Controller
         $pageName = 'Edit Rencana Pendapatan';
         $rkaps = RKAP::orderByDesc('year')->get();
         $divisions = $this->availableDivisions();
-        $chartOfAccounts = ChartOfAccount::revenue()->orderBy('code')->get();
 
-        return view('erkap.revenue-plan.edit', compact('pageName', 'revenuePlan', 'rkaps', 'divisions', 'chartOfAccounts'));
+        return view('erkap.revenue-plan.edit', compact('pageName', 'revenuePlan', 'rkaps', 'divisions'));
     }
 
     public function update(UpdateRevenuePlanRequest $request, RevenuePlan $revenuePlan)
@@ -110,10 +117,15 @@ class RevenuePlanController extends Controller
 
             return redirect()->route('erkap.revenue-plans.index')
                 ->with('success', 'Rencana pendapatan berhasil diperbarui!');
+        } catch (ValidationException $err) {
+            return redirect()->route('erkap.revenue-plans.edit', $revenuePlan->id)
+                ->withInput()
+                ->with('error', ErrorMessage::from($err))
+                ->withErrors($err->errors());
         } catch (Exception $err) {
             return redirect()->route('erkap.revenue-plans.edit', $revenuePlan->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -132,7 +144,7 @@ class RevenuePlanController extends Controller
             return redirect()->route('erkap.revenue-plans.index')
                 ->with('success', 'Rencana pendapatan berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.revenue-plans.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.revenue-plans.index')->with('error', ErrorMessage::from($err));
         }
     }
 

@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Erkap;
 
 use App\Http\Controllers\Controller;
 use App\Models\Division;
-use App\Models\Erkap\ExpensePlan;
 use App\Models\Erkap\ProfitLossStatement;
-use App\Models\Erkap\RevenuePlan;
 use App\Models\Erkap\RKAP;
 use App\Services\ErkapAccess;
+use App\Services\Erkap\ProfitLossService;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -51,16 +51,8 @@ class ProfitLossController extends Controller
 
             ErkapAccess::assertDivisionAccess($data['division_id'] ?? null);
 
-            $revenueRows = $this->planFor($data, 'revenue');
-            $expenseRows = $this->planFor($data, 'expense');
-
-            $monthlyRevenue = $this->sumMonthly($revenueRows);
-            $monthlyExpense = $this->sumMonthly($expenseRows);
-
-            $totalRevenue = array_sum($monthlyRevenue);
-            $totalExpense = array_sum($monthlyExpense);
-            $grossProfit = $totalRevenue - $totalExpense;
-            $margin = $totalRevenue > 0 ? round(($grossProfit / $totalRevenue) * 100, 2) : 0;
+            $rkap = RKAP::findOrFail($data['erkap_rkap_id']);
+            $result = ProfitLossService::calculate($rkap, $data['division_id'] ?? null);
 
             $statement = ProfitLossStatement::updateOrCreate(
                 [
@@ -69,20 +61,20 @@ class ProfitLossController extends Controller
                     'period' => 'yearly',
                 ],
                 [
-                    'total_revenue' => $totalRevenue,
-                    'total_expense' => $totalExpense,
-                    'gross_profit' => $grossProfit,
-                    'net_profit' => $grossProfit,
-                    'margin' => $margin,
+                    'total_revenue' => $result['total_revenue'],
+                    'total_expense' => $result['total_expense'],
+                    'gross_profit' => $result['gross_profit'],
+                    'net_profit' => $result['net_profit'],
+                    'margin' => $result['margin'],
                 ]
             );
 
             return redirect()->route('erkap.profit-loss.show', $statement->id)
-                ->with('success', 'Laporan laba rugi berhasil dibuat dari rencana pendapatan & beban!');
+                ->with('success', 'Laporan laba rugi berhasil dihitung dari anggaran operasional.');
         } catch (Exception $err) {
             return redirect()->route('erkap.profit-loss.index')
                 ->withInput()
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -92,16 +84,12 @@ class ProfitLossController extends Controller
 
         $pageName = 'Detail Laba Rugi';
 
-        $data = [
-            'erkap_rkap_id' => $profitLossStatement->erkap_rkap_id,
-            'division_id' => $profitLossStatement->division_id,
-        ];
+        $rkap = RKAP::findOrFail($profitLossStatement->erkap_rkap_id);
+        $revenueRows = ProfitLossService::fetchRevenueData($rkap, $profitLossStatement->division_id);
+        $expenseRows = ProfitLossService::fetchExpenseData($rkap, $profitLossStatement->division_id);
 
-        $revenueRows = $this->planFor($data, 'revenue');
-        $expenseRows = $this->planFor($data, 'expense');
-
-        $monthlyRevenue = $this->sumMonthly($revenueRows);
-        $monthlyExpense = $this->sumMonthly($expenseRows);
+        $monthlyRevenue = ProfitLossService::sumMonthly($revenueRows);
+        $monthlyExpense = ProfitLossService::sumMonthly($expenseRows);
         $monthlyProfit = array_map(fn ($revenue, $expense) => $revenue - $expense, $monthlyRevenue, $monthlyExpense);
         $monthLabels = $this->monthLabels;
 
@@ -119,20 +107,18 @@ class ProfitLossController extends Controller
         $results = null;
 
         if ($request->filled('erkap_rkap_id')) {
-            $data = [
-                'erkap_rkap_id' => (int) $request->input('erkap_rkap_id'),
-                'division_id' => ErkapAccess::isDivisionScoped()
-                    ? ErkapAccess::divisionId()
-                    : ($request->filled('division_id') ? (int) $request->input('division_id') : null),
-            ];
+            $divisionId = ErkapAccess::isDivisionScoped()
+                ? ErkapAccess::divisionId()
+                : ($request->filled('division_id') ? (int) $request->input('division_id') : null);
 
-            ErkapAccess::assertDivisionAccess($data['division_id']);
+            ErkapAccess::assertDivisionAccess($divisionId);
 
-            $revenueRows = $this->planFor($data, 'revenue');
-            $expenseRows = $this->planFor($data, 'expense');
+            $rkap = RKAP::findOrFail((int) $request->input('erkap_rkap_id'));
+            $revenueRows = ProfitLossService::fetchRevenueData($rkap, $divisionId);
+            $expenseRows = ProfitLossService::fetchExpenseData($rkap, $divisionId);
 
-            $monthlyRevenue = $this->sumMonthly($revenueRows);
-            $monthlyExpense = $this->sumMonthly($expenseRows);
+            $monthlyRevenue = ProfitLossService::sumMonthly($revenueRows);
+            $monthlyExpense = ProfitLossService::sumMonthly($expenseRows);
 
             $baseRevenue = array_sum($monthlyRevenue);
             $baseExpense = array_sum($monthlyExpense);
@@ -156,32 +142,6 @@ class ProfitLossController extends Controller
         }
 
         return view('erkap.profit-loss.simulate', compact('pageName', 'rkaps', 'divisions', 'isDivisionScoped', 'scenarios', 'monthLabels', 'results'));
-    }
-
-    protected function planFor(array $data, string $type)
-    {
-        $query = $type === 'revenue'
-            ? RevenuePlan::with('chartOfAccount')->where('erkap_rkap_id', $data['erkap_rkap_id'])
-            : ExpensePlan::with('chartOfAccount')->where('erkap_rkap_id', $data['erkap_rkap_id']);
-
-        if (! empty($data['division_id'])) {
-            $query->where('division_id', $data['division_id']);
-        }
-
-        return $query->get();
-    }
-
-    protected function sumMonthly($plans): array
-    {
-        $result = array_fill(0, 12, 0.0);
-
-        foreach (RevenuePlan::monthColumns() as $index => $month) {
-            foreach ($plans as $plan) {
-                $result[$index] += (float) $plan->{$month};
-            }
-        }
-
-        return $result;
     }
 
     protected function availableDivisions()

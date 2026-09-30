@@ -14,8 +14,10 @@ class StoreRiskIdentificationReasonRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason' => ['required', 'string', 'max:255'],
             'erkap_risk_identification_id' => ['required', 'integer', 'exists:erkap_risk_identifications,id'],
+            'reasons' => ['sometimes', 'array'],
+            'reasons.*' => ['nullable', 'string', 'max:255'],
+            'reason' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

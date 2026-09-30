@@ -10,9 +10,9 @@
                 <th>Identifikasi Risiko</th>
                 <th>Program Kerja</th>
                 <th>Satuan</th>
-                <th class="text-center">Rencana Tahunan</th>
+                <th class="text-center">Rencana Tahunan (%)</th>
                 @foreach($monthLabels as $label)
-                <th class="text-center">{{ $label }}</th>
+                <th class="text-center">{{ $label }} (%)</th>
                 @endforeach
                 <th class="text-center">Level</th>
                 <th class="text-center">Status</th>
@@ -29,9 +29,9 @@
                 <td class="fw-bold">{{ $model->riskIdentification->risk ?? '-' }}</td>
                 <td>{{ $model->name }}</td>
                 <td>{{ $model->units }}</td>
-                <td class="text-center">{{ $model->year_plan !== null ? number_format($model->year_plan, 0, ',', '.') : '-' }}</td>
+                <td class="text-center">{{ $model->year_plan !== null ? number_format((float) $model->year_plan, 2, ',', '.') . '%' : '-' }}</td>
                 @foreach($monthColumns as $column)
-                <td class="text-center">{{ $model->{$column} ?? '-' }}</td>
+                <td class="text-center">{{ $model->{$column} !== null ? number_format((float) $model->{$column}, 2, ',', '.') . '%' : '-' }}</td>
                 @endforeach
                 <td class="text-center">{{ $item->getLevelLabel() }}</td>
                 <td class="text-center">

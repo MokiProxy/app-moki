@@ -117,7 +117,7 @@
                                     <label class="form-label fw-bold">Status Review</label>
                                     <select name="zbb_status" class="form-select @error('zbb_status') is-invalid @enderror">
                                         @foreach (\App\Models\Erkap\ZBBReview::STATUS_LABELS as $value => $label)
-                                        <option value="{{ $value }}" @selected(old('zbb_status', $review->zbb_status) == $value)>
+                                        <option value="{{ $value }}" >
                                             {{ $label }}
                                         </option>
                                         @endforeach

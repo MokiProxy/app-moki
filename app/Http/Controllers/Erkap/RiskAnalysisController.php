@@ -12,6 +12,7 @@ use App\Models\Erkap\RiskProbability;
 use App\Models\Erkap\RiskScoreLevel;
 use App\Services\ErkapAccess;
 use App\Services\ErkapEvaluationLock;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\JsonResponse;
 
@@ -52,7 +53,7 @@ class RiskAnalysisController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-analysis.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -69,7 +70,7 @@ class RiskAnalysisController extends Controller
             ErkapEvaluationLock::assertRiskEditable(RiskIdentification::find($riskAnalysis->erkap_risk_identification_id));
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-analysis.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
 
         $pageName = 'Edit Analisis Risiko';
@@ -95,7 +96,7 @@ class RiskAnalysisController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-analysis.edit', $riskAnalysis->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -115,7 +116,7 @@ class RiskAnalysisController extends Controller
             return redirect()->route('erkap.risk-analysis.index')
                 ->with('success', 'Analisis risiko berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-analysis.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-analysis.index')->with('error', ErrorMessage::from($err));
         }
     }
 

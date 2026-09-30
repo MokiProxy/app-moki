@@ -66,36 +66,39 @@ class BudgetOpexTest extends TestCase
             'code' => 'WP-CONS',
             'name' => 'Program Konsolidasi',
             'units' => 'Unit',
-            'year_plan' => 120,
-            'jan_plan' => 10,
-            'feb_plan' => 10,
-            'mar_plan' => 10,
-            'apr_plan' => 10,
-            'may_plan' => 10,
-            'jun_plan' => 10,
-            'jul_plan' => 10,
-            'aug_plan' => 10,
-            'sep_plan' => 10,
-            'oct_plan' => 10,
-            'nov_plan' => 10,
-            'dec_plan' => 10,
+            'year_plan' => 100,
+            'jan_plan' => 8,
+            'feb_plan' => 8,
+            'mar_plan' => 8,
+            'apr_plan' => 8,
+            'may_plan' => 8,
+            'jun_plan' => 8,
+            'jul_plan' => 8,
+            'aug_plan' => 8,
+            'sep_plan' => 8,
+            'oct_plan' => 8,
+            'nov_plan' => 8,
+            'dec_plan' => 12,
             'status' => 'draft',
         ]);
 
         $this->costCenter = \App\Models\Erkap\CostCenter::factory()->create(['code' => 'CC-CONS']);
 
-        $chartOfAccount = ChartOfAccount::create([
-            'code' => 'COA-OPEX',
-            'name' => 'Beban Operasional',
-            'type' => 'expense',
-        ]);
-
         $this->costElement = CostElement::create([
             'code' => 'CE-CONS',
             'name' => 'Elemen Konsolidasi',
             'erkap_cost_element_category_id' => \App\Models\Erkap\CostElementCategory::factory()->create()->id,
-            'chart_of_account_id' => $chartOfAccount->id,
         ]);
+
+        // Konsolidasi F8 mencari COA dari pasangan Pusat Biaya + Elemen Biaya,
+        // bukan dari `CostElement::chart_of_account_id`. Keduanya harus mengisi
+        // COA yang sama agar baris OPEX bisa turun ke indikator anggaran.
+        $chartOfAccount = ChartOfAccount::factory()
+            ->composed($this->costCenter, $this->costElement)
+            ->expense()
+            ->create(['name' => 'Beban Operasional']);
+
+        $this->costElement->update(['chart_of_account_id' => $chartOfAccount->id]);
     }
 
     public function test_budget_opex_can_be_created(): void
@@ -160,7 +163,7 @@ class BudgetOpexTest extends TestCase
             'sep_cost' => 10000,
             'oct_cost' => 10000,
             'nov_cost' => 10000,
-            'des_cost' => 0,
+            'dec_cost' => 0,
             'total' => 100000,
             'status' => 'draft',
         ]);
@@ -202,7 +205,7 @@ class BudgetOpexTest extends TestCase
                 'sep_cost' => 0,
                 'oct_cost' => 0,
                 'nov_cost' => 0,
-                'des_cost' => 0,
+                'dec_cost' => 0,
                 'total' => 50000,
                 'status' => 'draft',
             ]);

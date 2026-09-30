@@ -62,11 +62,6 @@ class RiskIdentification extends Model
         return $this->hasMany(RiskAnalysis::class, 'erkap_risk_identification_id');
     }
 
-    public function rankings()
-    {
-        return $this->hasMany(RiskRanking::class, 'erkap_risk_identification_id');
-    }
-
     public function departmentRiskStrategies()
     {
         return $this->hasMany(DepartmentRiskStrategy::class, 'erkap_risk_identification_id');
@@ -75,11 +70,6 @@ class RiskIdentification extends Model
     public function workPrograms()
     {
         return $this->hasMany(WorkProgram::class, 'erkap_risk_identification_id');
-    }
-
-    public function riskTreatments()
-    {
-        return $this->hasMany(RiskTreatment::class, 'erkap_risk_identification_id');
     }
 
     public function hasWorkProgram(): bool
@@ -120,11 +110,6 @@ class RiskIdentification extends Model
         return $this->departmentRiskStrategies()->exists();
     }
 
-    public function hasTreatment(): bool
-    {
-        return $this->riskTreatments()->exists();
-    }
-
     public function validateHasStrategyAndWorkProgram(): void
     {
         if (! $this->hasStrategy()) {
@@ -136,12 +121,6 @@ class RiskIdentification extends Model
         if (! $this->hasWorkProgram()) {
             throw ValidationException::withMessages([
                 'work_program' => 'Setiap Risiko wajib memiliki Program Kerja',
-            ]);
-        }
-
-        if (! $this->hasTreatment()) {
-            throw ValidationException::withMessages([
-                'treatment' => 'Setiap Risiko wajib memiliki minimal satu Rencana Perlakuan Risiko',
             ]);
         }
     }

@@ -13,25 +13,25 @@ class UpdateWorkProgramRequest extends FormRequest
 
     public function rules(): array
     {
-        $monthRules = ['required', 'numeric', 'min:0'];
+        $percentageRules = ['required', 'numeric', 'min:0', 'max:100'];
 
         return [
             'erkap_risk_identification_id' => ['required', 'integer', 'exists:erkap_risk_identifications,id'],
             'name' => ['required', 'string'],
             'units' => ['required', 'string', 'max:255'],
-            'year_plan' => $monthRules,
-            'jan_plan' => $monthRules,
-            'feb_plan' => $monthRules,
-            'mar_plan' => $monthRules,
-            'apr_plan' => $monthRules,
-            'may_plan' => $monthRules,
-            'jun_plan' => $monthRules,
-            'jul_plan' => $monthRules,
-            'aug_plan' => $monthRules,
-            'sep_plan' => $monthRules,
-            'oct_plan' => $monthRules,
-            'nov_plan' => $monthRules,
-            'dec_plan' => $monthRules,
+            'year_plan' => $percentageRules,
+            'jan_plan' => $percentageRules,
+            'feb_plan' => $percentageRules,
+            'mar_plan' => $percentageRules,
+            'apr_plan' => $percentageRules,
+            'may_plan' => $percentageRules,
+            'jun_plan' => $percentageRules,
+            'jul_plan' => $percentageRules,
+            'aug_plan' => $percentageRules,
+            'sep_plan' => $percentageRules,
+            'oct_plan' => $percentageRules,
+            'nov_plan' => $percentageRules,
+            'dec_plan' => $percentageRules,
         ];
     }
 
@@ -54,7 +54,7 @@ class UpdateWorkProgramRequest extends FormRequest
             ])->sum();
 
             if (abs($monthlyTotal - (float) $this->year_plan) > 0.01) {
-                $validator->errors()->add('year_plan', 'Rencana tahunan harus sama dengan jumlah rencana bulanan.');
+                $validator->errors()->add('year_plan', 'Jumlah persentase rencana bulanan harus sama dengan rencana tahunan.');
             }
         });
     }

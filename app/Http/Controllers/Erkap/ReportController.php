@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Erkap\ReportItem;
 use App\Models\Erkap\RKAP;
 use App\Services\Reporting\ReportGenerator;
+use App\Support\ErrorMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -86,11 +87,11 @@ class ReportController extends Controller
                 'month' => $request->integer('month') ?: null,
                 'format' => $format,
                 'status' => ReportItem::STATUS_FAILED,
-                'error' => $e->getMessage(),
+                'error' => ErrorMessage::from($e),
                 'created_by' => auth()->id(),
             ]);
 
-            return back()->with('error', 'Gagal membuat laporan: ' . $e->getMessage());
+            return back()->with('error', 'Gagal membuat laporan: ' . ErrorMessage::from($e));
         }
     }
 

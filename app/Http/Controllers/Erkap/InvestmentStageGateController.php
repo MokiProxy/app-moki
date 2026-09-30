@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Erkap;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Erkap\InvestmentStageGateReviewRequest;
 use App\Models\Erkap\InvestmentStageGate;
+use App\Services\ErkapAccess;
 use App\Services\Erkap\InvestmentGateReviewService;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -18,14 +20,22 @@ class InvestmentStageGateController extends Controller
         $user = auth()->user();
         $isPrivileged = $user->hasAnyRole(['super-admin', 'admin', 'erkap-admin', 'erkap-auditor']);
 
-        $gates = InvestmentStageGate::query()
+        $query = InvestmentStageGate::query()
             ->with(['plan.workProgram', 'reviewer'])
             ->when(! $isPrivileged, function ($query) use ($user) {
                 $query->forRoles($user->getRoleNames()->all());
             })
             ->when($request->filled('erkap_investment_plan_id'), function ($query) use ($request) {
                 $query->where('erkap_investment_plan_id', $request->integer('erkap_investment_plan_id'));
-            })
+            });
+
+        if (ErkapAccess::isDivisionScoped()) {
+            $query->whereHas('plan.workProgram.riskIdentification.departmentTarget', function ($q) {
+                $q->where('division_id', ErkapAccess::divisionId());
+            });
+        }
+
+        $gates = $query
             ->orderBy('erkap_investment_plan_id')
             ->orderBy('stage_order')
             ->paginate(15);
@@ -39,6 +49,14 @@ class InvestmentStageGateController extends Controller
 
         if (! $gate->canReviewBy($user) && ! $user->hasAnyRole(['super-admin', 'admin', 'erkap-admin', 'erkap-auditor'])) {
             abort(403);
+        }
+
+        if (ErkapAccess::isDivisionScoped()) {
+            $divisionId = $gate->plan?->workProgram?->riskIdentification?->departmentTarget?->division_id;
+
+            if ($divisionId && ErkapAccess::divisionId() !== $divisionId) {
+                abort(403);
+            }
         }
 
         $pageName = 'Evaluasi Gate: '.$gate->label();
@@ -78,7 +96,7 @@ class InvestmentStageGateController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.investment-gates.show', $gate->id)
                 ->withInput()
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 }

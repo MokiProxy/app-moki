@@ -27,8 +27,6 @@ class RKAP extends Model
         'kickoff_notes',
         'direction_file_path',
         'direction_notes',
-        'bmi_alignment_status',
-        'bmi_notes',
         'resolution_date',
         'distribution_status',
     ];
@@ -50,13 +48,6 @@ class RKAP extends Model
         'finalization' => 'Finalisasi & Pengesahan',
         'approved' => 'Disahkan',
         'archived' => 'Arsip',
-    ];
-
-    public const BMI_STATUS_LABELS = [
-        'none' => 'Belum Ada Alignment',
-        'in_review' => 'Dalam Review PT BMI',
-        'aligned' => 'Selaras',
-        'rejected' => 'Perlu Penyesuaian',
     ];
 
     public function company(): BelongsTo
@@ -114,21 +105,6 @@ class RKAP extends Model
     public function isLockedForInput(): bool
     {
         return in_array($this->phase, ['finalization', 'approved', 'archived'], true);
-    }
-
-    public function bmiStatusLabel(): string
-    {
-        return static::BMI_STATUS_LABELS[$this->bmi_alignment_status] ?? ucfirst((string) ($this->bmi_alignment_status ?? '-'));
-    }
-
-    public function bmiStatusClass(): string
-    {
-        return match ($this->bmi_alignment_status) {
-            'aligned' => 'success',
-            'in_review' => 'info',
-            'rejected' => 'danger',
-            default => 'secondary',
-        };
     }
 
     public function distributionLabel(): string

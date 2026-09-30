@@ -32,7 +32,6 @@ class InvestmentStageGateFeatureTest extends TestCase
             'erkap-ppk',
             'erkap-manajemen-aset',
             'erkap-direksi-keuangan',
-            'erkap-gate-review',
             'erkap-accounting',
         ];
 
@@ -66,7 +65,7 @@ class InvestmentStageGateFeatureTest extends TestCase
             'erkap.investment-gates.review',
         ];
 
-        foreach (['erkap-ppk', 'erkap-manajemen-aset', 'erkap-direksi-keuangan', 'erkap-gate-review'] as $name) {
+        foreach (['erkap-ppk', 'erkap-manajemen-aset', 'erkap-direksi-keuangan'] as $name) {
             Role::findByName($name, 'web')->givePermissionTo($gatePermissions);
         }
 
@@ -80,7 +79,6 @@ class InvestmentStageGateFeatureTest extends TestCase
         $this->reviewers['erkap-ppk'] = $this->roleUser('erkap-ppk');
         $this->reviewers['erkap-manajemen-aset'] = $this->roleUser('erkap-manajemen-aset');
         $this->reviewers['erkap-direksi-keuangan'] = $this->roleUser('erkap-direksi-keuangan');
-        $this->reviewers['erkap-gate-review'] = $this->roleUser('erkap-gate-review');
         $this->reviewers['erkap-accounting'] = $this->roleUser('erkap-accounting');
     }
 
@@ -198,7 +196,7 @@ class InvestmentStageGateFeatureTest extends TestCase
     {
         $plan = $this->submittedPlan();
 
-        foreach (['proposal' => 'erkap-ppk', 'cba' => 'erkap-ppk', 'aset' => 'erkap-manajemen-aset', 'direksi_keuangan' => 'erkap-direksi-keuangan', 'gate_review_bmi' => 'erkap-gate-review'] as $stage => $role) {
+        foreach (['proposal' => 'erkap-ppk', 'cba' => 'erkap-ppk', 'aset' => 'erkap-manajemen-aset', 'direksi_keuangan' => 'erkap-direksi-keuangan'] as $stage => $role) {
             $gate = $plan->stageGates()->where('stage', $stage)->first();
 
             $this->actingAs($this->reviewers[$role])

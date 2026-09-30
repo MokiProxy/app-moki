@@ -17,7 +17,6 @@
             <div class="small text-muted">Fase Daya Kunci {{ $noModule ?? 'Data Anggaran' }}</div>
             <div class="fw-bold">
                 <span class="badge bg-{{ $cfg['class'] }} rounded-pill">{{ $cfg['label'] }}</span>
-                <span class="badge bg-{{ $rkap->bmiStatusClass() }} ms-1">{{ $rkap->bmiStatusLabel() }}</span>
                 <span class="badge bg-{{ $rkap->distributionClass() }} ms-1">{{ $rkap->distributionLabel() }}</span>
             </div>
         </div>

@@ -49,18 +49,35 @@
                             </select>
                             @error('erkap_risk_identification_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
+                    </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold">Strategi <span class="text-danger">*</span></label>
-                            <select name="strategy" class="form-select @error('strategy') is-invalid @enderror" required>
-                                <option value="" disabled selected>Pilih Strategi</option>
-                                @foreach(\App\Models\Erkap\DepartmentRiskStrategy::getStrategies() as $key => $strategyLabel)
-                                    <option value="{{ $key }}" {{ old('strategy') == $key ? 'selected' : '' }}>
-                                        {{ $strategyLabel }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('strategy') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="mt-4">
+                        <div class="card border">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 class="mb-0 fw-bold">Strategi Mitigasi</h6>
+                                    <button type="button" class="btn btn-outline-primary btn-sm btn-add-strategy">
+                                        <i class="mdi mdi-plus me-1"></i> Tambah Strategi
+                                    </button>
+                                </div>
+                                <div id="strategy-rows">
+                                    @php
+                                    $strategyRows = old('strategies');
+                                    if (!is_array($strategyRows) || $strategyRows === []) { $strategyRows = ['']; }
+                                    @endphp
+                                    @foreach($strategyRows as $index => $value)
+                                    <div class="strategy-row d-flex align-items-start gap-2 mb-2">
+                                        <div class="flex-grow-1">
+                                            <input type="text" class="form-control strategy-input" name="strategies[{{ $index }}]" placeholder="Masukkan strategi..." value="{{ is_string($value) ? $value : '' }}" maxlength="255">
+                                        </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm btn-remove-strategy" title="Hapus strategi">
+                                            <i class="mdi mdi-minus"></i>
+                                        </button>
+                                    </div>
+                                    @endforeach
+                                </div>
+                                <div class="text-muted small mt-1">Strategi mitigasi dapat diisi lebih dari satu.</div>
+                            </div>
                         </div>
                     </div>
 
@@ -75,4 +92,36 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('plugin')
+<script>
+    $(document).ready(function() {
+        function renumberStrategyRows() {
+            $('.strategy-row').each(function(index) {
+                $(this).find('.strategy-input').attr('name', 'strategies[' + index + ']');
+            });
+        }
+
+        $(document).on('click', '.btn-add-strategy', function() {
+            var $row = $('.strategy-row:last').clone();
+            $row.find('.strategy-input').val('').removeClass('is-invalid');
+            $('#strategy-rows').append($row);
+            renumberStrategyRows();
+            $row.find('.strategy-input').focus();
+        });
+
+        $(document).on('click', '.btn-remove-strategy', function() {
+            var $rows = $('.strategy-row');
+            if ($rows.length <= 1) {
+                var $last = $rows.first();
+                $last.find('.strategy-input').val('').removeClass('is-invalid');
+                $last.find('.strategy-input').focus();
+            } else {
+                $(this).closest('.strategy-row').remove();
+                renumberStrategyRows();
+            }
+        });
+    });
+</script>
 @endsection

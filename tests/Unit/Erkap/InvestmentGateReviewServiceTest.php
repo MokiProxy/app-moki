@@ -23,7 +23,7 @@ class InvestmentGateReviewServiceTest extends TestCase
 
         Notification::fake();
 
-        foreach (['erkap-ppk', 'erkap-manajemen-aset', 'erkap-direksi-keuangan', 'erkap-gate-review'] as $name) {
+        foreach (['erkap-ppk', 'erkap-manajemen-aset', 'erkap-direksi-keuangan'] as $name) {
             Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
     }
@@ -42,7 +42,6 @@ class InvestmentGateReviewServiceTest extends TestCase
             'erkap-ppk' => $this->roleUser('erkap-ppk'),
             'erkap-manajemen-aset' => $this->roleUser('erkap-manajemen-aset'),
             'erkap-direksi-keuangan' => $this->roleUser('erkap-direksi-keuangan'),
-            'erkap-gate-review' => $this->roleUser('erkap-gate-review'),
         ];
     }
 
@@ -59,29 +58,28 @@ class InvestmentGateReviewServiceTest extends TestCase
     {
         $stages = InvestmentGateReviewService::defaultStages();
 
-        $this->assertSame(['proposal', 'cba', 'aset', 'direksi_keuangan', 'gate_review_bmi'], array_keys($stages));
+        $this->assertSame(['proposal', 'cba', 'aset', 'direksi_keuangan'], array_keys($stages));
         $this->assertSame('erkap-ppk', $stages['proposal']['reviewer_role']);
         $this->assertSame('erkap-ppk', $stages['cba']['reviewer_role']);
         $this->assertSame('erkap-manajemen-aset', $stages['aset']['reviewer_role']);
         $this->assertSame('erkap-direksi-keuangan', $stages['direksi_keuangan']['reviewer_role']);
-        $this->assertSame('erkap-gate-review', $stages['gate_review_bmi']['reviewer_role']);
     }
 
-    public function test_initialize_creates_five_gates_and_marks_plan_in_review(): void
+    public function test_initialize_creates_four_gates_and_marks_plan_in_review(): void
     {
         $plan = $this->makePlan();
 
         InvestmentGateReviewService::initialize($plan);
 
         $gates = $plan->stageGates()->orderBy('stage_order')->get();
-        $this->assertCount(5, $gates);
-        $this->assertSame(['proposal', 'cba', 'aset', 'direksi_keuangan', 'gate_review_bmi'], $gates->pluck('stage')->all());
-        $this->assertSame([1, 2, 3, 4, 5], $gates->pluck('stage_order')->all());
+        $this->assertCount(4, $gates);
+        $this->assertSame(['proposal', 'cba', 'aset', 'direksi_keuangan'], $gates->pluck('stage')->all());
+        $this->assertSame([1, 2, 3, 4], $gates->pluck('stage_order')->all());
         $this->assertTrue($gates->every(fn ($gate) => $gate->status === 'pending'));
         $this->assertSame('in_review', $plan->refresh()->gate_review_status);
 
         InvestmentGateReviewService::initialize($plan);
-        $this->assertSame(5, $plan->stageGates()->count());
+        $this->assertSame(4, $plan->stageGates()->count());
     }
 
     public function test_initialize_resets_gates_when_plan_was_rejected(): void
@@ -100,7 +98,7 @@ class InvestmentGateReviewServiceTest extends TestCase
 
         $this->assertSame('pending', $plan->stageGates()->first()->status);
         $this->assertNull($plan->stageGates()->first()->result);
-        $this->assertSame(5, $plan->stageGates()->count());
+        $this->assertSame(4, $plan->stageGates()->count());
     }
 
     public function test_submit_without_proposal_is_rejected(): void
@@ -113,7 +111,7 @@ class InvestmentGateReviewServiceTest extends TestCase
         ApprovalService::submit($plan);
     }
 
-    public function test_submit_with_proposal_creates_gates_and_four_approvals(): void
+    public function test_submit_with_proposal_creates_gates_and_three_approvals(): void
     {
         $this->reviewers();
         $plan = $this->makePlan();
@@ -121,10 +119,10 @@ class InvestmentGateReviewServiceTest extends TestCase
         ApprovalService::submit($plan);
 
         $this->assertSame('submitted', $plan->refresh()->status);
-        $this->assertCount(5, $plan->stageGates);
+        $this->assertCount(4, $plan->stageGates);
         $levels = $plan->approvals()->orderBy('level')->pluck('role')->all();
         $this->assertSame(
-            ['erkap-ppk', 'erkap-manajemen-aset', 'erkap-direksi-keuangan', 'erkap-gate-review'],
+            ['erkap-ppk', 'erkap-manajemen-aset', 'erkap-direksi-keuangan'],
             $levels
         );
     }
@@ -136,7 +134,7 @@ class InvestmentGateReviewServiceTest extends TestCase
         ApprovalService::submit($plan);
 
         $this->expectException(ValidationException::class);
-        InvestmentGateReviewService::review($plan, 'proposal', $reviewers['erkap-gate-review'], ['status' => 'approved']);
+        InvestmentGateReviewService::review($plan, 'proposal', $reviewers['erkap-manajemen-aset'], ['status' => 'approved']);
     }
 
     public function test_review_cba_before_proposal_fails(): void
@@ -168,7 +166,6 @@ class InvestmentGateReviewServiceTest extends TestCase
 
         InvestmentGateReviewService::review($plan, 'aset', $reviewers['erkap-manajemen-aset'], ['status' => 'approved']);
         InvestmentGateReviewService::review($plan, 'direksi_keuangan', $reviewers['erkap-direksi-keuangan'], ['status' => 'approved']);
-        InvestmentGateReviewService::review($plan, 'gate_review_bmi', $reviewers['erkap-gate-review'], ['status' => 'approved', 'result' => 'layak']);
 
         $plan->refresh();
 
@@ -176,7 +173,7 @@ class InvestmentGateReviewServiceTest extends TestCase
         $this->assertSame('approved', $plan->gate_review_status);
         $this->assertTrue($plan->stageGates->every(fn ($g) => $g->status === 'approved'));
         $this->assertSame(0, $plan->approvals()->where('status', 'pending')->count());
-        $this->assertSame(4, $plan->approvals()->where('status', 'approved')->count());
+        $this->assertSame(3, $plan->approvals()->where('status', 'approved')->count());
     }
 
     public function test_rejecting_stage_rejects_plan_and_pending_approvals(): void
@@ -196,7 +193,7 @@ class InvestmentGateReviewServiceTest extends TestCase
         $this->assertSame('rejected', $plan->status);
         $this->assertSame('rejected', $plan->gate_review_status);
         $this->assertSame(0, $plan->approvals()->where('status', 'pending')->count());
-        $this->assertSame(4, $plan->approvals()->where('status', 'rejected')->count());
+        $this->assertSame(3, $plan->approvals()->where('status', 'rejected')->count());
     }
 
     public function test_approval_route_is_blocked_when_gate_group_not_approved(): void

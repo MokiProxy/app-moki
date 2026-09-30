@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Erkap\RevenuePlan;
+use App\Rules\ChartOfAccountBelongsToDivision;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,15 @@ class StoreRevenuePlanRequest extends FormRequest
         return [
             'erkap_rkap_id' => ['required', 'integer', 'exists:erkap_rkap,id'],
             'division_id' => ['required', 'integer', 'exists:divisions,id'],
-            'chart_of_account_id' => ['required', 'integer', Rule::exists('chart_of_accounts', 'id')->where('type', 'revenue')],
+            'chart_of_account_id' => [
+                'required',
+                'integer',
+                Rule::exists('chart_of_accounts', 'id')->where('type', 'revenue'),
+                // Tabel `erkap_revenue_plans` tidak punya `cost_center_id`, jadi
+                // divisi adalah satu-satunya penanda organisasi. Tanpa rule ini
+                // pengguna bisa memilih divisi A lalu COA milik divisi B.
+                new ChartOfAccountBelongsToDivision,
+            ],
             'description' => ['nullable', 'string'],
             'jan_plan' => $monthRules,
             'feb_plan' => $monthRules,

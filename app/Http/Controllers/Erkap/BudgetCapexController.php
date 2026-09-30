@@ -9,6 +9,7 @@ use App\Models\Erkap\BudgetCapex;
 use App\Models\Erkap\InvestmentPlan;
 use App\Models\Erkap\RKAP;
 use App\Services\ErkapAccess;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +38,10 @@ class BudgetCapexController extends Controller
         $investmentPlans = InvestmentPlan::with(['workProgram', 'investattionCategory', 'investationType', 'investationCriteria'])
             ->whereHas('workProgram.riskIdentification.departmentTarget', function ($query) use ($budgetCapex) {
                 $query->where('division_id', $budgetCapex->division_id);
+
+                $query->whereHas('companyTarget', function ($query) use ($budgetCapex) {
+                    $query->where('erkap_rkap_id', $budgetCapex->erkap_rkap_id);
+                });
             })
             ->get()
             ->sortBy(fn (InvestmentPlan $plan) => $plan->priority_order ?? PHP_INT_MAX)
@@ -56,7 +61,7 @@ class BudgetCapexController extends Controller
                 ->with('success', 'Status anggaran investasi berhasil diperbarui!');
         } catch (Exception $err) {
             return redirect()->route('erkap.budget-capex.show', $budgetCapex->id)
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -163,30 +168,42 @@ class BudgetCapexController extends Controller
 
             \App\Services\Erkap\ZBBReviewService::requireRationale($rkap);
 
-            $investmentPlans = InvestmentPlan::with('workProgram.riskIdentification.departmentTarget')->get();
+            $investmentPlans = InvestmentPlan::with('workProgram.riskIdentification.departmentTarget')
+                ->where('status', 'approved')
+                ->whereHas('workProgram.riskIdentification.departmentTarget.companyTarget', function ($query) use ($rkap) {
+                    $query->where('erkap_rkap_id', $rkap->id);
+                })
+                ->get();
+
+            if ($investmentPlans->isEmpty()) {
+                return redirect()->route('erkap.budget-capex.index')
+                    ->with('error', 'Tidak ada Rencana Investasi approved untuk RKAP ini.');
+            }
 
             $grouped = $investmentPlans->groupBy(function ($plan) {
                 return $plan->workProgram?->riskIdentification?->departmentTarget?->division_id;
             });
 
-            foreach ($grouped as $divisionId => $plans) {
-                if (! $divisionId) {
-                    continue;
+            DB::transaction(function () use ($rkap, $grouped) {
+                foreach ($grouped as $divisionId => $plans) {
+                    if (! $divisionId) {
+                        continue;
+                    }
+
+                    $totalInvestment = $plans->sum('total');
+
+                    BudgetCapex::updateOrCreate(
+                        ['erkap_rkap_id' => $rkap->id, 'division_id' => $divisionId],
+                        ['total_investment' => $totalInvestment]
+                    );
                 }
-
-                $totalInvestment = $plans->sum('total');
-
-                BudgetCapex::updateOrCreate(
-                    ['erkap_rkap_id' => $request->integer('erkap_rkap_id'), 'division_id' => $divisionId],
-                    ['total_investment' => $totalInvestment]
-                );
-            }
+            });
 
             return redirect()->route('erkap.budget-capex.index')
                 ->with('success', 'Konsolidasi anggaran investasi berhasil dilakukan!');
         } catch (Exception $err) {
             return redirect()->route('erkap.budget-capex.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
     }
 

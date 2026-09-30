@@ -43,7 +43,6 @@
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th>Periode</th>
                                 <th style="width: 200px" class="text-center">Fase Lifecycle</th>
-                                <th class="text-center">Alignment PT BMI</th>
                                 <th class="text-center">Distribusi</th>
                                 <th style="width: 180px" class="text-center">Status</th>
                                 <th style="width: 160px" class="text-center">Aksi</th>
@@ -56,9 +55,6 @@
                                 <td class="fw-bold">{{ $rkap->year }}</td>
                                 <td class="text-center">
                                     <span class="badge bg-primary">{{ $rkap->phaseLabel() }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-{{ $rkap->bmiStatusClass() }}">{{ $rkap->bmiStatusLabel() }}</span>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge bg-{{ $rkap->distributionClass() }}">{{ $rkap->distributionLabel() }}</span>
@@ -88,7 +84,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted">Belum ada data periode RKAP.</td>
+                                <td colspan="6" class="text-center text-muted">Belum ada data periode RKAP.</td>
                             </tr>
                             @endforelse
                         </tbody>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCostElementCategoryRequest;
 use App\Http\Requests\UpdateCostElementCategoryRequest;
 use App\Models\Erkap\CostElementCategory;
+use App\Support\ErrorMessage;
 use Exception;
 
 class CostElementCategoryController extends Controller
@@ -35,7 +36,7 @@ class CostElementCategoryController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.cost-element-categories.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class CostElementCategoryController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.cost-element-categories.edit', $costElementCategory->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -83,7 +84,7 @@ class CostElementCategoryController extends Controller
             return redirect()->route('erkap.cost-element-categories.index')
                 ->with('success', 'Kategori elemen biaya berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.cost-element-categories.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.cost-element-categories.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

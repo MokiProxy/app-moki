@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRiskProbabilityRequest;
 use App\Http\Requests\UpdateRiskProbabilityRequest;
 use App\Models\Erkap\RiskProbability;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RiskProbabilityController extends Controller
@@ -35,7 +36,7 @@ class RiskProbabilityController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-probabilities.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class RiskProbabilityController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-probabilities.edit', $riskProbability->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -78,7 +79,7 @@ class RiskProbabilityController extends Controller
             return redirect()->route('erkap.risk-probabilities.index')
                 ->with('success', 'Risk probability berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-probabilities.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-probabilities.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

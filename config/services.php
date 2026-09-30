@@ -24,6 +24,33 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Microsoft Entra ID (Azure AD)
+    |--------------------------------------------------------------------------
+    |
+    | Driver Socialite `azure` membaca `config('services.microsoft')`. Tanpa
+    | blok ini, halaman `/login/microsoft` gagal saat membaca konfigurasi.
+    |
+    | `default_role` sengaja kosong. Memberi role otomatis tanpa whitelist
+    | berarti siapa pun yang lolos autentikasi tenant mendapat akses modul
+    | lain (reset password AMS, hapus tiket helpdesk, berkas dokter) hanya
+    | karena belum punya role. Isi nama role hanya bila seluruh anggota
+    | tenant memang boleh masuk dengan hak akses tersebut, dan role ERKAP
+    | tetap tidak boleh diberikan lewat sini.
+    |
+    */
+
+    'microsoft' => [
+        'tenant' => env('MICROSOFT_TENANT_ID'),
+        'client_id' => env('MICROSOFT_CLIENT_ID'),
+        'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
+        'redirect' => env('MICROSOFT_REDIRECT_URI', env('APP_URL').'/login/microsoft/callback'),
+
+        'auto_provision' => env('MICROSOFT_AUTO_PROVISION', true),
+        'default_role' => env('MICROSOFT_DEFAULT_ROLE'),
+    ],
+
     'file_conversion' => [
         'pdf_dpi' => env('FILE_CONVERSION_PDF_DPI', 150),
         'pdf_quality' => env('FILE_CONVERSION_PDF_QUALITY', 90),

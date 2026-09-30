@@ -11,7 +11,11 @@ class ErkapAccess
 {
     public static function isDivisionScoped(): bool
     {
-        return Auth::check() && Auth::user()->hasRole('erkap-cost-owner');
+        if (! Auth::check() || ! Auth::user()->hasRole('erkap-cost-owner')) {
+            return false;
+        }
+
+        return static::divisionId() !== null;
     }
 
     public static function divisionId(): ?int
@@ -92,5 +96,22 @@ class ErkapAccess
             && $divisionId !== static::divisionId()) {
             abort(403);
         }
+    }
+
+    /**
+     * Batasi divisi yang diminta ke divisi milik pengguna.
+     *
+     * Dipakai lapisan query (bukan hanya validasi form) karena parameter
+     * `division_id` datang dari client. Tanpa ini, pengguna berscope divisi
+     * bisa mengetik ID divisi lain pada endpoint opsi dan membaca COA/Pusat
+     * Biaya milik divisi tersebut tanpa pernah menyentuh form.
+     */
+    public static function scopeDivision(?int $requestedDivisionId): ?int
+    {
+        if (! static::isDivisionScoped()) {
+            return $requestedDivisionId;
+        }
+
+        return static::divisionId();
     }
 }

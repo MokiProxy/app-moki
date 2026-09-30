@@ -16,7 +16,7 @@ $months = [
     'sep_cost' => 'September',
     'oct_cost' => 'Oktober',
     'nov_cost' => 'November',
-    'des_cost' => 'Desember',
+    'dec_cost' => 'Desember',
 ];
 @endphp
 <div class="row">
@@ -67,31 +67,86 @@ $months = [
                             @error('erkap_work_program_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
+                        @if ($staleCoaPair)
+                            <div class="col-12">
+                                <div class="alert alert-warning py-2 small mb-0">
+                                    Kombinasi Pusat Biaya + Elemen Biaya yang tersimpan pada baris ini
+                                    tidak punya Chart of Account, sehingga tidak lagi bisa dipakai.
+                                    @if ($storedCoa)
+                                        COA lama: <strong>{{ $storedCoa->formattedCode }}</strong>.
+                                    @endif
+                                    Pilih ulang Pusat Biaya dan Elemen Biaya yang tersedia agar COA
+                                    dapat diturunkan ulang.
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Elemen Biaya <span class="text-danger">*</span></label>
-                            <select name="erkap_cost_element_id" class="form-select @error('erkap_cost_element_id') is-invalid @enderror" required>
-                                <option value="" disabled {{ old('erkap_cost_element_id', $routineCost->erkap_cost_element_id) ? '' : 'selected' }}>Pilih Elemen Biaya</option>
-                                @foreach($costElements as $costElement)
-                                    <option value="{{ $costElement->id }}" data-coa-id="{{ $costElement->chart_of_account_id }}" {{ old('erkap_cost_element_id', $routineCost->erkap_cost_element_id) == $costElement->id ? 'selected' : '' }}>
-                                        {{ $costElement->name }}
-                                    </option>
-                                @endforeach
+                            <label class="form-label fw-bold" for="cost_center_id">Pusat Biaya <span class="text-danger">*</span></label>
+                            <select
+                                name="cost_center_id"
+                                id="cost_center_id"
+                                class="form-select @error('cost_center_id') is-invalid @enderror"
+                                required
+                            >
+                                <option value="">— Pilih Pusat Biaya —</option>
+                                @if($swakelolaCostCenters->isNotEmpty())
+                                    <optgroup label="Swakelola">
+                                        @foreach($swakelolaCostCenters as $costCenter)
+                                            <option
+                                                value="{{ $costCenter->id }}"
+                                                data-code="{{ $costCenter->code }}"
+                                                data-owner="{{ $costCenter->owner }}"
+                                                @selected(old('cost_center_id', $routineCost->cost_center_id) == $costCenter->id)
+                                            >{{ $costCenter->formattedCode }} - {{ $costCenter->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                                @if($nonSwakelolaCostCenters->isNotEmpty())
+                                    <optgroup label="Non Swakelola">
+                                        @foreach($nonSwakelolaCostCenters as $costCenter)
+                                            <option
+                                                value="{{ $costCenter->id }}"
+                                                data-code="{{ $costCenter->code }}"
+                                                data-owner="{{ $costCenter->owner }}"
+                                                @selected(old('cost_center_id', $routineCost->cost_center_id) == $costCenter->id)
+                                            >{{ $costCenter->formattedCode }} - {{ $costCenter->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             </select>
+                            <div class="form-text">Kode 11 karakter (a-b-c-d), mewarisi atribut dari segmen a..d.</div>
+                            @error('cost_center_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" for="erkap_cost_element_id">Elemen Biaya <span class="text-danger">*</span></label>
+                            <select
+                                name="erkap_cost_element_id"
+                                id="erkap_cost_element_id"
+                                class="form-select @error('erkap_cost_element_id') is-invalid @enderror"
+                                required
+                                disabled
+                            >
+                                <option value="">— Pilih Pusat Biaya dahulu —</option>
+                            </select>
+                            <div class="form-text">Hanya elemen yang sudah punya COA pada Pusat Biaya ini.</div>
                             @error('erkap_cost_element_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Chart of Account</label>
-                            <select name="chart_of_account_id" class="form-select @error('chart_of_account_id') is-invalid @enderror">
-                                <option value="" {{ old('chart_of_account_id', $routineCost->chart_of_account_id) ? '' : 'selected' }}>Ikuti Elemen Biaya</option>
-                                @foreach($chartOfAccounts as $chartOfAccount)
-                                    <option value="{{ $chartOfAccount->id }}" {{ old('chart_of_account_id', $routineCost->chart_of_account_id) == $chartOfAccount->id ? 'selected' : '' }}>
-                                        {{ $chartOfAccount->formattedCode }} - {{ $chartOfAccount->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="form-text">Kosongkan untuk otomatis mengikuti COA elemen biaya.</div>
-                            @error('chart_of_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <label class="form-label fw-bold" for="resolved_coa">Chart of Account</label>
+                            <input
+                                type="text"
+                                id="resolved_coa"
+                                class="form-control"
+                                placeholder="Otomatis dari Pusat Biaya + Elemen Biaya"
+                                readonly
+                            >
+                            <div class="form-text">
+                                Diturunkan otomatis dari kombinasi di atas — tidak bisa diganti bebas,
+                                sehingga kode a..d selalu sesuai Pusat Biaya.
+                            </div>
                         </div>
 
                         <div class="col-md-12">
@@ -101,37 +156,7 @@ $months = [
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Cost Center Swakelola</label>
-                            <select id="cost_center_swakelola" class="form-select">
-                                <option value="">Pilih Cost Center Swakelola</option>
-                                @foreach($swakelolaCostCenters as $costCenter)
-                                    <option value="{{ $costCenter->id }}" data-owner="{{ $costCenter->owner }}" data-cost-element="{{ $costCenter->cost_element_id }}" {{ old('cost_center_id', $routineCost->cost_center_id) == $costCenter->id ? 'selected' : '' }}>
-                                        {{ $costCenter->code }} - {{ $costCenter->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Cost Center Non Swakelola</label>
-                            <select id="cost_center_non_swakelola" class="form-select">
-                                <option value="">Pilih Cost Center Non Swakelola</option>
-                                @foreach($nonSwakelolaCostCenters as $costCenter)
-                                    <option value="{{ $costCenter->id }}" data-owner="{{ $costCenter->owner }}" data-cost-element="{{ $costCenter->cost_element_id }}" {{ old('cost_center_id', $routineCost->cost_center_id) == $costCenter->id ? 'selected' : '' }}>
-                                        {{ $costCenter->code }} - {{ $costCenter->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <input type="hidden" name="cost_center_id" id="cost_center_id" value="{{ old('cost_center_id', $routineCost->cost_center_id) }}">
-
-                        @error('cost_center_id')
-                        <div class="col-12"><div class="text-danger small">{{ $message }}</div></div>
-                        @enderror
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Pemilik Cost Center <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold" for="cost_center_owner">Pemilik Cost Center <span class="text-danger">*</span></label>
                             <input type="text" name="cost_center_owner" id="cost_center_owner" class="form-control @error('cost_center_owner') is-invalid @enderror" value="{{ old('cost_center_owner', $routineCost->cost_center_owner) }}" placeholder="Nama pemilik cost center" required>
                             @error('cost_center_owner') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -244,6 +269,10 @@ $months = [
 @section('plugin')
 @include('erkap.partials.rupiah')
 <script>
+    window.ERKAP_COA_OPTIONS_URL = @json(route('erkap.coa-options.index'));
+</script>
+<script src="{{ asset('js/erkap-cascade.js') }}"></script>
+<script>
     var subtotalByElement = @json($subtotalByElement);
     var subtotalByProgram = @json($subtotalByProgram);
     var subtotalByCostCenter = @json($subtotalByCostCenter);
@@ -338,45 +367,64 @@ $months = [
         }
     }
 
-    function syncCostCenter($select) {
+    function fillOwner($select) {
         var owner = $select.find(':selected').data('owner');
         if (owner) {
             $('#cost_center_owner').val(owner);
         }
-        var costElementId = $select.find(':selected').data('cost-element');
-        if (costElementId) {
-            $('select[name="erkap_cost_element_id"]').val(costElementId).trigger('change.select2');
-        }
-        $('#cost_center_id').val($select.val() || '');
-        updateSubtotals();
     }
 
-    function syncCoaFromElement() {
-        var coaId = $('select[name="erkap_cost_element_id"] option:selected').data('coa-id');
-        if (coaId && ! $('select[name="chart_of_account_id"]').val()) {
-            $('select[name="chart_of_account_id"]').val(coaId).trigger('change.select2');
+    function showResolvedAccount(selected) {
+        var code = ErkapCascade.composeCode(selected);
+        var $field = $('#resolved_coa');
+
+        if (! code) {
+            $field.val('').attr('placeholder', 'Otomatis dari Pusat Biaya + Elemen Biaya');
+            return;
         }
+
+        var name = selected.cost_element ? selected.cost_element.name : '';
+        $field.val(code + (name ? ' — ' + name : ''))
+            .attr('placeholder', 'Otomatis dari Pusat Biaya + Elemen Biaya');
     }
 
     $(document).ready(function() {
+        ErkapCascade.init({
+            chain: ['cost_center', 'cost_element'],
+            selectors: {
+                cost_center: '#cost_center_id',
+                cost_element: '#erkap_cost_element_id',
+            },
+            dependsOn: {
+                cost_center: [],
+                cost_element: ['cost_center'],
+            },
+            preview: '#__none__',
+            initialValues: {
+                cost_element: @json(old('erkap_cost_element_id', $routineCost->erkap_cost_element_id)),
+            },
+            onReady: function (selected) {
+                showResolvedAccount(selected);
+            },
+            onChange: function (selected, key) {
+                showResolvedAccount(selected);
+
+                if (key === 'cost_center' || key === 'prefill') {
+                    fillOwner($('#cost_center_id'));
+                }
+
+                if (key === 'cost_element' || key === 'cost_center' || key === 'prefill') {
+                    updateSubtotals();
+                    updateRealizationPreview();
+                }
+            },
+        });
+
         $(document).on('input', '.month-cost, input[name="qty"], input[name="unit_price"]', updateCostPreview);
         $('#is_kumulatif').on('change', updateCostPreview);
-        $(document).on('change', 'select[name="erkap_work_program_id"], select[name="erkap_cost_element_id"]', function() {
-            syncCoaFromElement();
+        $(document).on('change', 'select[name="erkap_work_program_id"]', function() {
             updateSubtotals();
             updateRealizationPreview();
-        });
-        $(document).on('change', '#cost_center_swakelola', function() {
-            if ($(this).val()) {
-                $('#cost_center_non_swakelola').val('').trigger('change.select2');
-            }
-            syncCostCenter($(this));
-        });
-        $(document).on('change', '#cost_center_non_swakelola', function() {
-            if ($(this).val()) {
-                $('#cost_center_swakelola').val('').trigger('change.select2');
-            }
-            syncCostCenter($(this));
         });
         updateCostPreview();
         updateRealizationPreview();

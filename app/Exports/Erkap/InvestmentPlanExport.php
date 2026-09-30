@@ -25,7 +25,7 @@ class InvestmentPlanExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'No', 'Program Kerja', 'Nama Investasi', 'Kategori', 'Tipe', 'Chart of Account', 'Kriteria', 'Prioritas',
+            'No', 'Program Kerja', 'Nama Investasi', 'Kategori', 'Tipe', 'Pusat Biaya', 'Chart of Account', 'Kriteria', 'Prioritas',
             'Qty', 'Satuan', 'Harga Satuan',
             'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
             'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
@@ -43,7 +43,8 @@ class InvestmentPlanExport implements FromCollection, WithHeadings, WithMapping
             $investmentPlan->name,
             $investmentPlan->investattionCategory->name ?? '-',
             $investmentPlan->investationType->name ?? '-',
-            $investmentPlan->chartOfAccount->code . ' - ' . $investmentPlan->chartOfAccount->name ?? '-',
+            $investmentPlan->costCenter?->label ?? '-',
+            $investmentPlan->chartOfAccount?->label ?? '-',
             $investmentPlan->investationCriteria->name ?? '-',
             $investmentPlan->priority_order,
             $investmentPlan->qty,

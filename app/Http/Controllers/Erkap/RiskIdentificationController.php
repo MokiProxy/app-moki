@@ -13,6 +13,7 @@ use App\Models\Erkap\RiskType;
 use App\Services\ApprovalService;
 use App\Services\ErkapAccess;
 use App\Services\ErkapEvaluationLock;
+use App\Support\ErrorMessage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Maatwebsite\Excel\Facades\Excel;
@@ -94,7 +95,7 @@ class RiskIdentificationController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identifications.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -111,7 +112,7 @@ class RiskIdentificationController extends Controller
             ErkapEvaluationLock::assertRiskEditable($riskIdentification);
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identifications.index')
-                ->with('error', $err->getMessage());
+                ->with('error', ErrorMessage::from($err));
         }
 
         $pageName = 'Edit Identifikasi Risiko';
@@ -140,7 +141,7 @@ class RiskIdentificationController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-identifications.edit', $riskIdentification->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -165,7 +166,7 @@ class RiskIdentificationController extends Controller
             return redirect()->route('erkap.risk-identifications.index')
                 ->with('success', 'Identifikasi risiko berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-identifications.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-identifications.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -180,7 +181,7 @@ class RiskIdentificationController extends Controller
             return redirect()->route('erkap.risk-identifications.index')
                 ->with('success', 'Form 1 (identifikasi risiko) berhasil diajukan ke Dept. Manajemen Risiko untuk evaluasi!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-identifications.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-identifications.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -218,7 +219,7 @@ class RiskIdentificationController extends Controller
             return redirect()->route('erkap.risk-identifications.index')
                 ->with($results['failed'] > 0 ? 'error' : 'success', $message);
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-identifications.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-identifications.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

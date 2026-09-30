@@ -214,7 +214,7 @@
                                 <td class="text-center">{{ $routineCost->sep_cost ?? '-' }}</td>
                                 <td class="text-center">{{ $routineCost->oct_cost ?? '-' }}</td>
                                 <td class="text-center">{{ $routineCost->nov_cost ?? '-' }}</td>
-                                <td class="text-center">{{ $routineCost->des_cost ?? '-' }}</td>
+                                <td class="text-center">{{ $routineCost->dec_cost ?? '-' }}</td>
                                 <td class="text-end fw-bold">{{ number_format($routineCost->total, 0, ',', '.') }}</td>
                                 <td class="text-center">
                                     <span class="badge bg-{{ $routineCost->statusClass() }}">{{ $routineCost->statusLabel() }}</span>

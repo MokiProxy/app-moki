@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCompanyTargetRequest;
 use App\Http\Requests\UpdateCompanyTargetRequest;
 use App\Models\Erkap\CompanyTarget;
 use App\Models\Erkap\RKAP;
+use App\Support\ErrorMessage;
 use Exception;
 
 class CompanyTargetController extends Controller
@@ -37,7 +38,7 @@ class CompanyTargetController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.company-targets.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -64,7 +65,7 @@ class CompanyTargetController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.company-targets.edit', $companyTarget->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -86,7 +87,7 @@ class CompanyTargetController extends Controller
             return redirect()->route('erkap.company-targets.index')
                 ->with('success', 'Sasaran perusahaan berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.company-targets.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.company-targets.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

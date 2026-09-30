@@ -8,6 +8,7 @@ use App\Http\Requests\StoreInvestmentPlanRequest;
 use App\Http\Requests\UpdateInvestmentPlanRequest;
 use App\Models\ChartOfAccount;
 use App\Models\Erkap\CostCenter;
+use App\Models\Erkap\CostElement;
 use App\Models\Erkap\InvestationCriteria;
 use App\Models\Erkap\InvestationType;
 use App\Models\Erkap\InvestattionCategory;
@@ -15,12 +16,18 @@ use App\Models\Erkap\InvestmentPlan;
 use App\Models\Erkap\RKAP;
 use App\Models\Erkap\WorkProgram;
 use App\Services\ApprovalService;
-use App\Services\ErkapAccess;
+use App\Services\Erkap\CentralizedCostService;
 use App\Services\Erkap\RKAPLifecycleService;
 use App\Services\Erkap\ZBBReviewService;
+use App\Services\ErkapAccess;
+use App\Services\ErkapEvaluationLock;
+use App\Support\CoaCode;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 
 class InvestmentPlanController extends Controller
@@ -33,7 +40,7 @@ class InvestmentPlanController extends Controller
         $sort = $request->string('sort');
         $order = $request->string('order') === 'desc' ? 'desc' : 'asc';
 
-        $investmentPlans = InvestmentPlan::with(['workProgram', 'investattionCategory', 'investationType', 'investationCriteria', 'chartOfAccount', 'stageGates'])
+        $investmentPlans = InvestmentPlan::with(['workProgram', 'investattionCategory', 'investationType', 'investationCriteria', 'costElement', 'chartOfAccount', 'stageGates'])
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds());
             })
@@ -55,14 +62,14 @@ class InvestmentPlanController extends Controller
 
     public function export()
     {
-        $investmentPlans = InvestmentPlan::with(['workProgram', 'investattionCategory', 'investationType', 'investationCriteria', 'chartOfAccount'])
+        $investmentPlans = InvestmentPlan::with(['workProgram', 'investattionCategory', 'investationType', 'investationCriteria', 'costCenter', 'chartOfAccount'])
             ->when(ErkapAccess::isDivisionScoped(), function ($query) {
                 $query->whereIn('erkap_work_program_id', ErkapAccess::workProgramIds());
             })
             ->orderBy('id')
             ->get();
 
-        return Excel::download(new InvestmentPlanExport($investmentPlans), 'rencana-investasi-' . date('Y-m-d-Hi') . '.xlsx');
+        return Excel::download(new InvestmentPlanExport($investmentPlans), 'rencana-investasi-'.date('Y-m-d-Hi').'.xlsx');
     }
 
     public function create()
@@ -72,10 +79,9 @@ class InvestmentPlanController extends Controller
         $investattionCategories = InvestattionCategory::all();
         $investationTypes = InvestationType::all();
         $investationCriterias = InvestationCriteria::all();
-        $costCenters = CostCenter::all();
-        $chartOfAccounts = ChartOfAccount::expense()->orderBy('code')->get();
+        [$swakelolaCostCenters, $nonSwakelolaCostCenters] = $this->groupedCostCenters();
 
-        return view('erkap.investment-plan.create', compact('pageName', 'workPrograms', 'investattionCategories', 'investationTypes', 'investationCriterias', 'costCenters', 'chartOfAccounts'));
+        return view('erkap.investment-plan.create', compact('pageName', 'workPrograms', 'investattionCategories', 'investationTypes', 'investationCriterias', 'swakelolaCostCenters', 'nonSwakelolaCostCenters'));
     }
 
     public function store(StoreInvestmentPlanRequest $request)
@@ -88,8 +94,12 @@ class InvestmentPlanController extends Controller
             );
 
             $data = $request->validated();
+            $this->assertPairHasAccount($data);
             $data['chart_of_account_id'] = $this->resolveChartOfAccountId($data);
             $data['is_kumulatif'] = $request->boolean('is_kumulatif');
+
+            $this->assertCentralizedCostInput($data, $request->integer('erkap_work_program_id'));
+
             $data['total'] = $this->calcTotal($data);
             $data = $this->resolveAttachments($data, $request);
 
@@ -100,10 +110,15 @@ class InvestmentPlanController extends Controller
 
             return redirect()->route('erkap.investment-plans.index')
                 ->with('success', 'Rencana investasi baru berhasil disimpan!');
+        } catch (ValidationException $err) {
+            return redirect()->route('erkap.investment-plans.create')
+                ->withInput()
+                ->with('error', ErrorMessage::from($err))
+                ->withErrors($err->errors());
         } catch (Exception $err) {
             return redirect()->route('erkap.investment-plans.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -121,10 +136,20 @@ class InvestmentPlanController extends Controller
         $investattionCategories = InvestattionCategory::all();
         $investationTypes = InvestationType::all();
         $investationCriterias = InvestationCriteria::all();
-        $costCenters = CostCenter::all();
-        $chartOfAccounts = ChartOfAccount::expense()->orderBy('code')->get();
+        [$swakelolaCostCenters, $nonSwakelolaCostCenters] = $this->groupedCostCenters();
 
-        return view('erkap.investment-plan.edit', compact('pageName', 'investmentPlan', 'workPrograms', 'investattionCategories', 'investationTypes', 'investationCriterias', 'costCenters', 'chartOfAccounts'));
+        $resolvedCoaId = $this->resolveChartOfAccountId([
+            'cost_center_id' => $investmentPlan->cost_center_id,
+            'erkap_cost_element_id' => $investmentPlan->erkap_cost_element_id,
+        ]);
+        $staleCoaPair = $investmentPlan->cost_center_id
+            && $investmentPlan->erkap_cost_element_id
+            && $resolvedCoaId === null;
+        $storedCoa = $staleCoaPair
+            ? $investmentPlan->chartOfAccount()->first()
+            : ChartOfAccount::find($resolvedCoaId);
+
+        return view('erkap.investment-plan.edit', compact('pageName', 'investmentPlan', 'workPrograms', 'investattionCategories', 'investationTypes', 'investationCriterias', 'swakelolaCostCenters', 'nonSwakelolaCostCenters', 'staleCoaPair', 'storedCoa'));
     }
 
     public function update(UpdateInvestmentPlanRequest $request, InvestmentPlan $investmentPlan)
@@ -132,6 +157,7 @@ class InvestmentPlanController extends Controller
         try {
             ErkapAccess::assertWorkProgramAccess($investmentPlan->erkap_work_program_id);
             ErkapAccess::assertWorkProgramAccess($request->integer('erkap_work_program_id'));
+            ErkapEvaluationLock::assertInvestmentPlanEditable($investmentPlan);
 
             $targetWorkProgramId = $request->filled('erkap_work_program_id')
                 ? $request->integer('erkap_work_program_id')
@@ -143,8 +169,12 @@ class InvestmentPlanController extends Controller
             );
 
             $data = $request->validated();
-            $data['chart_of_account_id'] = $this->resolveChartOfAccountId($data, $investmentPlan);
+            $this->assertPairHasAccount($data);
+            $data['chart_of_account_id'] = $this->resolveChartOfAccountId($data);
             $data['is_kumulatif'] = $request->boolean('is_kumulatif');
+
+            $this->assertCentralizedCostInput($data, $targetWorkProgramId, $investmentPlan);
+
             $data['total'] = $this->calcTotal($data);
             $data = $this->resolveAttachments($data, $request, $investmentPlan);
 
@@ -157,10 +187,15 @@ class InvestmentPlanController extends Controller
 
             return redirect()->route('erkap.investment-plans.index')
                 ->with('success', 'Rencana investasi berhasil diperbarui!');
+        } catch (ValidationException $err) {
+            return redirect()->route('erkap.investment-plans.edit', $investmentPlan->id)
+                ->withInput()
+                ->with('error', ErrorMessage::from($err))
+                ->withErrors($err->errors());
         } catch (Exception $err) {
             return redirect()->route('erkap.investment-plans.edit', $investmentPlan->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -179,7 +214,7 @@ class InvestmentPlanController extends Controller
             return redirect()->route('erkap.investment-plans.index')
                 ->with('success', 'Rencana investasi berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.investment-plans.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.investment-plans.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -194,7 +229,7 @@ class InvestmentPlanController extends Controller
             return redirect()->route('erkap.investment-plans.index')
                 ->with('success', 'Rencana investasi berhasil diajukan untuk persetujuan!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.investment-plans.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.investment-plans.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -230,7 +265,7 @@ class InvestmentPlanController extends Controller
             return redirect()->route('erkap.investment-plans.index')
                 ->with($results['failed'] > 0 ? 'error' : 'success', $message);
         } catch (Exception $err) {
-            return redirect()->route('erkap.investment-plans.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.investment-plans.index')->with('error', ErrorMessage::from($err));
         }
     }
 
@@ -249,13 +284,72 @@ class InvestmentPlanController extends Controller
         );
     }
 
-    private function resolveChartOfAccountId(array $data, ?InvestmentPlan $investmentPlan = null): ?int
+    private function resolveChartOfAccountId(array $data): ?int
     {
-        if (filled($data['chart_of_account_id'] ?? null)) {
-            return (int) $data['chart_of_account_id'];
+        return ChartOfAccount::idForPair(
+            $data['cost_center_id'] ?? null,
+            $data['erkap_cost_element_id'] ?? null,
+        );
+    }
+
+    private function assertPairHasAccount(array $data): void
+    {
+        $costCenterId = $data['cost_center_id'] ?? null;
+        $costElementId = $data['erkap_cost_element_id'] ?? null;
+
+        if (! $costCenterId || ! $costElementId) {
+            return;
         }
 
-        return $investmentPlan?->chart_of_account_id ? (int) $investmentPlan->chart_of_account_id : null;
+        if (ChartOfAccount::query()->forPair($costCenterId, $costElementId)->exists()) {
+            return;
+        }
+
+        $costCenter = CostCenter::find($costCenterId);
+        $costElement = CostElement::find($costElementId);
+
+        throw ValidationException::withMessages([
+            'cost_center_id' => 'Kombinasi Pusat Biaya dan Elemen Biaya ini belum punya Chart of Account. '
+                .'Jalankan "Sinkron COA" pada menu Chart of Accounts terlebih dahulu. '
+                .sprintf(
+                    'Pusat Biaya %s + Elemen Biaya %s menghasilkan kode %s.',
+                    $costCenter?->code ?? $costCenterId,
+                    $costElement?->code ?? $costElementId,
+                    $costCenter && $costElement ? (CoaCode::compose($costCenter->segments() + ['cost_element' => $costElement->code]) ?? '-') : '-'
+                ),
+        ]);
+    }
+
+    private function assertCentralizedCostInput(array $data, ?int $workProgramId, ?InvestmentPlan $investmentPlan = null): void
+    {
+        $costCenterId = $data['cost_center_id'] ?? $investmentPlan?->cost_center_id;
+
+        $costCenter = $costCenterId ? CostCenter::find($costCenterId) : null;
+
+        if (! $costCenter) {
+            return;
+        }
+
+        $workProgram = WorkProgram::with('riskIdentification.departmentTarget')->find($workProgramId);
+        $divisionId = $workProgram?->riskIdentification?->departmentTarget?->division_id;
+
+        CentralizedCostService::assertCanInput($costCenter, $divisionId);
+    }
+
+    private function groupedCostCenters(): array
+    {
+        $costCenters = CostCenter::query()
+            ->with(['businessUnit', 'location', 'managementArea', 'activity'])
+            ->when(ErkapAccess::isDivisionScoped(), function ($query) {
+                $query->where('division_id', ErkapAccess::divisionId());
+            })
+            ->orderBy('code')
+            ->get();
+
+        return [
+            $costCenters->filter(fn (CostCenter $costCenter) => $costCenter->isSwakelola())->values(),
+            $costCenters->reject(fn (CostCenter $costCenter) => $costCenter->isSwakelola())->values(),
+        ];
     }
 
     private function resolveAttachments(array $data, $request, ?InvestmentPlan $investmentPlan = null): array

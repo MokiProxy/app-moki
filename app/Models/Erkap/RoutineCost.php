@@ -36,7 +36,7 @@ class RoutineCost extends Model
         'sep_cost',
         'oct_cost',
         'nov_cost',
-        'des_cost',
+        'dec_cost',
         'total',
         'prior_year_amount',
         'is_kumulatif',
@@ -80,7 +80,7 @@ class RoutineCost extends Model
 
     public function validateMonthlyBreakdown(): void
     {
-        $months = ['jan_cost', 'feb_cost', 'mar_cost', 'apr_cost', 'may_cost', 'jun_cost', 'jul_cost', 'aug_cost', 'sep_cost', 'oct_cost', 'nov_cost', 'des_cost'];
+        $months = ['jan_cost', 'feb_cost', 'mar_cost', 'apr_cost', 'may_cost', 'jun_cost', 'jul_cost', 'aug_cost', 'sep_cost', 'oct_cost', 'nov_cost', 'dec_cost'];
         $monthlySum = collect($months)->sum(fn ($month) => (float) ($this->$month ?? 0));
         $total = (float) ($this->total ?? 0);
 

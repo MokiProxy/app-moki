@@ -8,6 +8,7 @@ use App\Models\Erkap\DepartmentTarget;
 use App\Models\Erkap\PerformanceScorecard;
 use App\Models\Erkap\RKAP;
 use App\Services\ErkapAccess;
+use App\Support\ErrorMessage;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -72,7 +73,7 @@ class PerformanceScorecardController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.performance-scorecards.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -89,7 +90,7 @@ class PerformanceScorecardController extends Controller
             return redirect()->route('erkap.performance-scorecards.index')
                 ->with('success', 'Scorecard KPI berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.performance-scorecards.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.performance-scorecards.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

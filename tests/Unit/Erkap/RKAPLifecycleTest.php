@@ -23,7 +23,7 @@ class RKAPLifecycleTest extends TestCase
 
         Notification::fake();
 
-        foreach (['erkap-admin', 'erkap-gate-review', 'erkap-bmi-admin', 'erkap-ppk'] as $name) {
+        foreach (['erkap-admin', 'erkap-ppk'] as $name) {
             Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
     }
@@ -111,16 +111,12 @@ public function test_advance_is_strictly_sequential(): void
         $rkap = $this->rkap([
             'phase' => 'finalization',
             'status' => 'draft',
-            'bmi_alignment_status' => 'aligned',
-            'bmi_notes' => 'note',
             'distribution_status' => 'distributed',
         ]);
 
         RKAPLifecycleService::resetPhase($rkap);
 
         $this->assertSame('initiation', $rkap->phase);
-        $this->assertSame('none', $rkap->bmi_alignment_status);
-        $this->assertNull($rkap->bmi_notes);
         $this->assertSame('not_distributed', $rkap->distribution_status);
     }
 
@@ -142,49 +138,12 @@ public function test_advance_is_strictly_sequential(): void
         $this->assertTrue($this->rkap(['phase' => 'archived'])->isLockedForInput());
     }
 
-    public function test_mark_bmi_aligned_requires_gate_review_role(): void
-    {
-        $rkap = $this->rkap();
-
-        $regularUser = $this->roleUser('erkap-ppk');
-
-        $this->expectException(ValidationException::class);
-        RKAPLifecycleService::markBmiAligned($rkap, $regularUser, [
-            'bmi_alignment_status' => 'aligned',
-            'bmi_notes' => 'Selaras dengan target holding.',
-        ]);
-    }
-
-    public function test_mark_bmi_aligned_updates_status_for_gate_review(): void
-    {
-        $rkap = $this->rkap(['bmi_alignment_status' => 'none']);
-
-        RKAPLifecycleService::markBmiAligned($rkap, $this->roleUser('erkap-gate-review'), [
-            'bmi_alignment_status' => 'aligned',
-            'bmi_notes' => 'Selaras dengan target holding.',
-        ]);
-
-        $this->assertSame('aligned', $rkap->bmi_alignment_status);
-        $this->assertSame('Selaras dengan target holding.', $rkap->bmi_notes);
-    }
-
-    public function test_mark_bmi_aligned_accepts_bmi_admin_role(): void
-    {
-        $rkap = $this->rkap();
-
-        RKAPLifecycleService::markBmiAligned($rkap, $this->roleUser('erkap-bmi-admin'), [
-            'bmi_alignment_status' => 'in_review',
-        ]);
-
-        $this->assertSame('in_review', $rkap->bmi_alignment_status);
-    }
-
     public function test_distribute_marks_distributed_and_notifies_admin(): void
     {
         $rkap = $this->rkap(['phase' => 'approved', 'resolution_date' => null]);
         $admin = $this->roleUser('erkap-admin');
 
-        RKAPLifecycleService::distribute($rkap, $this->roleUser('erkap-gate-review'));
+        RKAPLifecycleService::distribute($rkap, $this->roleUser('erkap-ppk'));
 
         $this->assertSame('distributed', $rkap->distribution_status);
         $this->assertNotNull($rkap->resolution_date);
@@ -197,7 +156,7 @@ public function test_advance_is_strictly_sequential(): void
         $rkap = $this->rkap(['distribution_status' => 'distributed']);
 
         $this->expectException(\RuntimeException::class);
-        RKAPLifecycleService::distribute($rkap, $this->roleUser('erkap-gate-review'));
+        RKAPLifecycleService::distribute($rkap, $this->roleUser('erkap-ppk'));
     }
 
     public function test_resolve_for_work_program_returns_rkap(): void

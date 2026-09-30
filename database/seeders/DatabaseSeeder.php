@@ -45,13 +45,15 @@ class DatabaseSeeder extends Seeder
         $this->call(VendorSeeder::class);
         $this->call(MergeFlowSeeder::class);
 
-
-
         // E-RKAP
         $this->call(CostElementCategoriesSeeder::class);
-        $this->call(ChartOfAccountsSeeder::class);
         $this->call(CostElementsSeeder::class);
+        $this->call(ErkapBusinessUnitSeeder::class);
+        $this->call(ErkapLocationSeeder::class);
+        $this->call(ErkapManagementAreaSeeder::class);
+        $this->call(ErkapActivitySeeder::class);
         $this->call(CostCentersSeeder::class);
+        $this->call(ChartOfAccountsSeeder::class);
         $this->call(ErkapRiskAppetiteSeeder::class);
         $this->call(ErkapRiskTaxonomySeeder::class);
         $this->call(ErkapRiskTypeSeeder::class);
@@ -63,10 +65,9 @@ class DatabaseSeeder extends Seeder
         $this->call(ErkapInvestationTypeSeeder::class);
         $this->call(ErkapInvestationCriteriaSeeder::class);
         $this->call(ErkapInvestattionCategorySeeder::class);
-        $this->call(SasaranDanAsesmenRisikoSeeder::class);
-        $this->call(RiskTreatmentSeeder::class);
-        $this->call(ErkapWorkProgramSeeder::class);
-        $this->call(FinancialProjectionSeeder::class);
-        $this->call(MonitoringRealisasiSeeder::class);
+        // $this->call(SasaranDanAsesmenRisikoSeeder::class);
+        // $this->call(ErkapWorkProgramSeeder::class);
+        // $this->call(FinancialProjectionSeeder::class);
+        // $this->call(MonitoringRealisasiSeeder::class);
     }
 }

@@ -28,7 +28,7 @@ class CostCenterHeatmapService
         foreach ($realizations as $realization) {
             $costCenter = $realization->routineCost?->costCenter;
             $key = $costCenter ? $costCenter->id : 0;
-            $name = $costCenter ? $costCenter->name : 'Tanpa Cost Center';
+            $name = $costCenter ? $costCenter->label : 'Tanpa Pusat Biaya';
             $index = max(0, min(11, (int) $realization->month - 1));
 
             $matrix[$key]['id'] = $key;

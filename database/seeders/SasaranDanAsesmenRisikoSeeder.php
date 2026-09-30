@@ -9,7 +9,6 @@ use App\Models\Erkap\RiskAnalysis;
 use App\Models\Erkap\RiskIdentification;
 use App\Models\Erkap\RiskIdentificationImpact;
 use App\Models\Erkap\RiskIdentificationReason;
-use App\Models\Erkap\RiskRanking;
 use App\Models\Erkap\RKAP;
 use Illuminate\Database\Seeder;
 
@@ -27,7 +26,7 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
 
         $companyTargets = [
             [
-                "target" => "Test Sasaran Perusahaan",
+                "target" => "Tercapainya produksi batubara sebesar 49 juta bcp dengan melakukan optimalisasi seluruh tambang yang saat ini sudah beroperasi maupun yang direncanakan akan beroperasi dalam Tahun 2027",
                 "erkap_rkap_id" => $rkap->id
             ]
         ];
@@ -37,9 +36,9 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
 
             $departmentTargets = [
                 [
-                    "target" => "Tersedianya infrastruktur IT, jaringan, dan kelengkapan perangkat IT, serta software berlisensi guna menunjang kelancaran proses bisnis perusahaan",
-                    "division_id" => 2,
-                    "erkap_rating_criteria_id" => 3,
+                    "target" => "Tercapainya produksi BB dilokasi Banl Tenga sebesar 26 juta bcm",
+                    "division_id" => 49,
+                    "erkap_rating_criteria_id" => 1,
                     "erkap_company_target_id" => $companyTarget->id
                 ]
             ];
@@ -49,25 +48,11 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
 
                 $risks = [
                     [
-                        "risk" => "Terganggunya bisnis proses perusahaan yang memanfaatkan teknologi IT",
+                        "risk" => "Terdapat deviasi antara volume asil joint survey",
                         "risk_direction" => "negative",
                         "erkap_department_target_id" => $deptTarget->id,
-                        "erkap_risk_type_id" => 32,
+                        "erkap_risk_type_id" => 29,
                         "erkap_risk_taxonomy_id" => 5,
-                    ],
-                    [
-                        "risk" => "Perangkat tidak memenuhi kebutuhan pengguna (user)",
-                        "risk_direction" => "negative",
-                        "erkap_department_target_id" => $deptTarget->id,
-                        "erkap_risk_type_id" => 34,
-                        "erkap_risk_taxonomy_id" => 6,
-                    ],
-                    [
-                        "risk" => "Terkena Pinalti",
-                        "risk_direction" => "negative",
-                        "erkap_department_target_id" => $deptTarget->id,
-                        "erkap_risk_type_id" => 35,
-                        "erkap_risk_taxonomy_id" => 3,
                     ]
                 ];
 
@@ -125,32 +110,20 @@ class SasaranDanAsesmenRisikoSeeder extends Seeder
                         }
                     }
 
-                    $riskRankings = [
-                        ["erkap_risk_identification_id" => 1, "ranking" => 1],
-                        ["erkap_risk_identification_id" => 2, "ranking" => 2],
-                        ["erkap_risk_identification_id" => 3, "ranking" => 3],
-                    ];
-                    foreach ($riskRankings as $riskRanking) {
-                        if($riskRanking['erkap_risk_identification_id'] == $riskIdentification->id) {
-                            $createdRiskRanking = RiskRanking::create($riskRanking);
-                        }
-                    }
-
                     $strategies = [
-                        ["erkap_risk_identification_id" => 1, "strategy" => "reduction"],
-                        ["erkap_risk_identification_id" => 1, "strategy" => "reduction"],
-                        ["erkap_risk_identification_id" => 2, "strategy" => "reduction"],
-                        ["erkap_risk_identification_id" => 3, "strategy" => "reduction"],
-                        ["erkap_risk_identification_id" => 3, "strategy" => "reduction"],
+                        ["erkap_risk_identification_id" => 1, "strategy" => "Melakukan pemenuhan kebutuhan perangkat jaringan di setiap unit kerja perusahaan"],
+                        ["erkap_risk_identification_id" => 1, "strategy" => "Menyediakan suku cadang sebagai backup jika terjadi kerusakan"],
+                        ["erkap_risk_identification_id" => 2, "strategy" => "Melakukan perawatan secara berkala"],
+                        ["erkap_risk_identification_id" => 3, "strategy" => "Memenuhi kebutuhan lisensi semua perangkat lunak yang terinstall di dalam perangkat yang digunakan user"],
+                        ["erkap_risk_identification_id" => 3, "strategy" => "Memastikan perpanjangan lisensi dibayarkan tepat waktu"],
                     ];
                     foreach ($strategies as $strategy) {
                         if($strategy['erkap_risk_identification_id'] == $riskIdentification->id) {
                             $createdStrategy = DepartmentRiskStrategy::create($strategy);
                         }
                     }
+
                 }
-
-
             }
         }
     }

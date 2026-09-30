@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRiskAppetiteRequest;
 use App\Http\Requests\UpdateRiskAppetiteRequest;
 use App\Models\Erkap\RiskAppetite;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RiskAppetiteController extends Controller
@@ -35,7 +36,7 @@ class RiskAppetiteController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-appetites.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class RiskAppetiteController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-appetites.edit', $riskAppetite->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -83,7 +84,7 @@ class RiskAppetiteController extends Controller
             return redirect()->route('erkap.risk-appetites.index')
                 ->with('success', 'Risk appetite berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-appetites.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-appetites.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

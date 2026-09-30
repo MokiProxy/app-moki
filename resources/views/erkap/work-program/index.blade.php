@@ -61,31 +61,19 @@
                                 <th class="text-center">Rating</th>
                                 <th>Program Kerja</th>
                                 <th>Satuan</th>
-                                <th class="text-center">Tahunan</th>
-                                <th class="text-center">Jan</th>
-                                <th class="text-center">Feb</th>
-                                <th class="text-center">Mar</th>
-                                <th class="text-center">Apr</th>
-                                <th class="text-center">Mei</th>
-                                <th class="text-center">Jun</th>
-                                <th class="text-center">Jul</th>
-                                <th class="text-center">Agu</th>
-                                <th class="text-center">Sep</th>
-                                <th class="text-center">Okt</th>
-                                <th class="text-center">Nov</th>
-                                <th class="text-center">Des</th>
-                                <th class="text-center bg-primary">Jan %</th>
-                                <th class="text-center bg-primary">Feb %</th>
-                                <th class="text-center bg-primary">Mar %</th>
-                                <th class="text-center bg-primary">Apr %</th>
-                                <th class="text-center bg-primary">Mei %</th>
-                                <th class="text-center bg-primary">Jun %</th>
-                                <th class="text-center bg-primary">Jul %</th>
-                                <th class="text-center bg-primary">Agu %</th>
-                                <th class="text-center bg-primary">Sep %</th>
-                                <th class="text-center bg-primary">Okt %</th>
-                                <th class="text-center bg-primary">Nov %</th>
-                                <th class="text-center bg-primary">Des %</th>
+                                <th class="text-center">Tahunan (%)</th>
+                                <th class="text-center">Jan (%)</th>
+                                <th class="text-center">Feb (%)</th>
+                                <th class="text-center">Mar (%)</th>
+                                <th class="text-center">Apr (%)</th>
+                                <th class="text-center">Mei (%)</th>
+                                <th class="text-center">Jun (%)</th>
+                                <th class="text-center">Jul (%)</th>
+                                <th class="text-center">Agu (%)</th>
+                                <th class="text-center">Sep (%)</th>
+                                <th class="text-center">Okt (%)</th>
+                                <th class="text-center">Nov (%)</th>
+                                <th class="text-center">Des (%)</th>
                                 <th class="text-center">Biaya</th>
                                 <th style="width: 180px" class="text-center">Status</th>
                                 <th style="width: 170px" class="text-center">Aksi</th>
@@ -105,7 +93,6 @@
                             @php
                             $ratingProgram = optional(optional(optional($workProgram->riskIdentification)->departmentTarget)->ratingCriteria)->rating ?? null;
                             $hasBudget = $workProgram->routine_costs_count > 0 || $workProgram->investment_plans_count > 0;
-                            $cumulativePercents = $workProgram->monthlyCumulativePercents();
                             @endphp
                             <tr class="@if(!$hasBudget) no-budget @endif">
                                 <td class="text-center">{{ $workPrograms->firstItem() + $key }}</td>
@@ -113,23 +100,19 @@
                                 <td class="text-center">{!! $ratingBadge($ratingProgram) !!}</td>
                                 <td>{{ $workProgram->name }}</td>
                                 <td>{{ $workProgram->units }}</td>
-                                <td class="text-center">{{ $workProgram->year_plan !== null ? number_format($workProgram->year_plan, 0, ',', '.') : '-' }}</td>
-                                <td class="text-center">{{ $workProgram->jan_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->feb_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->mar_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->apr_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->may_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->jun_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->jul_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->aug_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->sep_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->oct_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->nov_plan ?? '-' }}</td>
-                                <td class="text-center">{{ $workProgram->dec_plan ?? '-' }}</td>
-                                @php $monthKeys = \App\Models\Erkap\WorkProgram::MONTH_COLUMNS; @endphp
-                                @foreach($monthKeys as $m)
-                                <td class="text-center">{{ number_format($cumulativePercents[$m], 2, ',', '.') }}%</td>
-                                @endforeach
+                                <td class="text-center">{{ $workProgram->year_plan !== null ? number_format((float) $workProgram->year_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->jan_plan !== null ? number_format((float) $workProgram->jan_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->feb_plan !== null ? number_format((float) $workProgram->feb_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->mar_plan !== null ? number_format((float) $workProgram->mar_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->apr_plan !== null ? number_format((float) $workProgram->apr_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->may_plan !== null ? number_format((float) $workProgram->may_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->jun_plan !== null ? number_format((float) $workProgram->jun_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->jul_plan !== null ? number_format((float) $workProgram->jul_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->aug_plan !== null ? number_format((float) $workProgram->aug_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->sep_plan !== null ? number_format((float) $workProgram->sep_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->oct_plan !== null ? number_format((float) $workProgram->oct_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->nov_plan !== null ? number_format((float) $workProgram->nov_plan, 2, ',', '.') . '%' : '-' }}</td>
+                                <td class="text-center">{{ $workProgram->dec_plan !== null ? number_format((float) $workProgram->dec_plan, 2, ',', '.') . '%' : '-' }}</td>
                                 <td class="text-center">
                                     @if($hasBudget)
                                         <span class="badge bg-success" title="Program kerja sudah memiliki biaya">Ada</span>
@@ -159,7 +142,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="33" class="text-center text-muted">Belum ada data program kerja.</td>
+                                <td colspan="22" class="text-center text-muted">Belum ada data program kerja.</td>
                             </tr>
                             @endforelse
                         </tbody>

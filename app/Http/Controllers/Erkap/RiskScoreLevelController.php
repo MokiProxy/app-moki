@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateRiskScoreLevelRequest;
 use App\Models\Erkap\RiskImpact;
 use App\Models\Erkap\RiskProbability;
 use App\Models\Erkap\RiskScoreLevel;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RiskScoreLevelController extends Controller
@@ -39,7 +40,7 @@ class RiskScoreLevelController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-score-levels.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -67,7 +68,7 @@ class RiskScoreLevelController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-score-levels.edit', $riskScoreLevel->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -84,7 +85,7 @@ class RiskScoreLevelController extends Controller
             return redirect()->route('erkap.risk-score-levels.index')
                 ->with('success', 'Risk score level berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-score-levels.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-score-levels.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

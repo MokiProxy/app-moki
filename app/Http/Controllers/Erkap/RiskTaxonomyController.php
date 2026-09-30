@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRiskTaxonomyRequest;
 use App\Http\Requests\UpdateRiskTaxonomyRequest;
 use App\Models\Erkap\RiskAppetite;
 use App\Models\Erkap\RiskTaxonomy;
+use App\Support\ErrorMessage;
 use Exception;
 
 class RiskTaxonomyController extends Controller
@@ -37,7 +38,7 @@ class RiskTaxonomyController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-taxonomies.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -64,7 +65,7 @@ class RiskTaxonomyController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.risk-taxonomies.edit', $riskTaxonomy->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -86,7 +87,7 @@ class RiskTaxonomyController extends Controller
             return redirect()->route('erkap.risk-taxonomies.index')
                 ->with('success', 'Risk taxonomy berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.risk-taxonomies.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.risk-taxonomies.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

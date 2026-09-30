@@ -67,29 +67,75 @@ $months = [
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Pusat Biaya (Cost Center)</label>
-                            <select name="cost_center_id" class="form-select @error('cost_center_id') is-invalid @enderror">
-                                <option value="">Pilih Cost Center (opsional)</option>
-                                @foreach($costCenters as $costCenter)
-                                    <option value="{{ $costCenter->id }}" {{ old('cost_center_id') == $costCenter->id ? 'selected' : '' }}>
-                                        {{ $costCenter->code }} - {{ $costCenter->name }}
-                                    </option>
-                                @endforeach
+                            <label class="form-label fw-bold" for="cost_center_id">Pusat Biaya (Cost Center) <span class="text-danger">*</span></label>
+                            <select
+                                name="cost_center_id"
+                                id="cost_center_id"
+                                class="form-select @error('cost_center_id') is-invalid @enderror"
+                                required
+                            >
+                                <option value="">— Pilih Pusat Biaya —</option>
+                                @if($swakelolaCostCenters->isNotEmpty())
+                                    <optgroup label="Swakelola">
+                                        @foreach($swakelolaCostCenters as $costCenter)
+                                            <option
+                                                value="{{ $costCenter->id }}"
+                                                data-code="{{ $costCenter->code }}"
+                                                data-owner="{{ $costCenter->owner }}"
+                                            >{{ $costCenter->formattedCode }} - {{ $costCenter->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                                @if($nonSwakelolaCostCenters->isNotEmpty())
+                                    <optgroup label="Non Swakelola">
+                                        @foreach($nonSwakelolaCostCenters as $costCenter)
+                                            <option
+                                                value="{{ $costCenter->id }}"
+                                                data-code="{{ $costCenter->code }}"
+                                                data-owner="{{ $costCenter->owner }}"
+                                            >{{ $costCenter->formattedCode }} - {{ $costCenter->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             </select>
+                            <div class="form-text">Kode 11 karakter (a-b-c-d), mewarisi atribut dari segmen a..d.</div>
                             @error('cost_center_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-bold">Chart of Account</label>
-                            <select name="chart_of_account_id" class="form-select @error('chart_of_account_id') is-invalid @enderror">
-                                <option value="" {{ old('chart_of_account_id') ? '' : 'selected' }}>Pilih Chart of Account</option>
-                                @foreach($chartOfAccounts as $chartOfAccount)
-                                    <option value="{{ $chartOfAccount->id }}" {{ old('chart_of_account_id') == $chartOfAccount->id ? 'selected' : '' }}>
-                                        {{ $chartOfAccount->formattedCode }} - {{ $chartOfAccount->name }}
-                                    </option>
-                                @endforeach
+                            <label class="form-label fw-bold" for="erkap_cost_element_id">Elemen Biaya <span class="text-danger">*</span></label>
+                            <select
+                                name="erkap_cost_element_id"
+                                id="erkap_cost_element_id"
+                                class="form-select @error('erkap_cost_element_id') is-invalid @enderror"
+                                required
+                                disabled
+                            >
+                                <option value="">— Pilih Pusat Biaya dahulu —</option>
                             </select>
-                            @error('chart_of_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div class="form-text">Hanya elemen yang sudah punya COA pada Pusat Biaya ini.</div>
+                            @error('erkap_cost_element_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" for="resolved_coa">Chart of Account</label>
+                            <input
+                                type="text"
+                                id="resolved_coa"
+                                class="form-control"
+                                placeholder="Otomatis dari Pusat Biaya + Elemen Biaya"
+                                readonly
+                            >
+                            <div class="form-text">
+                                Diturunkan otomatis dari kombinasi di atas — tidak bisa diganti bebas,
+                                sehingga kode a..d selalu sesuai Pusat Biaya.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold" for="cost_center_owner">Pemilik Cost Center <span class="text-danger">*</span></label>
+                            <input type="text" name="cost_center_owner" id="cost_center_owner" class="form-control @error('cost_center_owner') is-invalid @enderror" value="{{ old('cost_center_owner') }}" placeholder="Nama pemilik cost center" required>
+                            @error('cost_center_owner') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-md-6">
@@ -205,7 +251,7 @@ $months = [
                                 @error('proposal') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 <small class="text-muted">Maks. 20MB.</small>
                             </div>
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <label class="form-label fw-bold">Lampiran CBA (opsional)</label>
                                 <input type="file" name="cba_attachment" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
                             </div>
@@ -224,7 +270,7 @@ $months = [
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Justifikasi / Rekomendasi</label>
                                 <textarea name="cba_justification" class="form-control" rows="2" placeholder="Justifikasi kelayakan investasi (opsional)">{{ old('cba_justification') }}</textarea>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
 
@@ -243,6 +289,57 @@ $months = [
 
 @section('plugin')
 @include('erkap.partials.rupiah')
+<script>
+    window.ERKAP_COA_OPTIONS_URL = @json(route('erkap.coa-options.index'));
+</script>
+<script src="{{ asset('js/erkap-cascade.js') }}"></script>
+<script>
+    $(document).ready(function () {
+        ErkapCascade.init({
+            chain: ['cost_center', 'cost_element'],
+            selectors: {
+                cost_center: '#cost_center_id',
+                cost_element: '#erkap_cost_element_id',
+            },
+            dependsOn: {
+                cost_center: [],
+                cost_element: ['cost_center'],
+            },
+            preview: '#__none__',
+            initialValues: {
+                cost_element: @json(old('erkap_cost_element_id')),
+            },
+            onReady: function (selected) {
+                showResolvedAccount(selected);
+            },
+            onChange: function (selected, key) {
+                showResolvedAccount(selected);
+                if (key === 'cost_center' || key === 'prefill') {
+                    fillOwner($('#cost_center_id'));
+                }
+            },
+        });
+    });
+
+    function showResolvedAccount(selected) {
+        var code = ErkapCascade.composeCode(selected);
+        var $field = $('#resolved_coa');
+        if (!code) {
+            $field.val('').attr('placeholder', 'Otomatis dari Pusat Biaya + Elemen Biaya');
+            return;
+        }
+        var name = selected.cost_element ? selected.cost_element.name : '';
+        $field.val(code + (name ? ' — ' + name : ''))
+            .attr('placeholder', 'Otomatis dari Pusat Biaya + Elemen Biaya');
+    }
+
+    function fillOwner($select) {
+        var owner = $select.find(':selected').data('owner');
+        if (owner) {
+            $('#cost_center_owner').val(owner);
+        }
+    }
+</script>
 <script>
     function monthTotal() {
         var total = 0;

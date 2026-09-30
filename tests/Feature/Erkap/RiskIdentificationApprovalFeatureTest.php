@@ -5,6 +5,7 @@ namespace Tests\Feature\Erkap;
 use App\Models\Employee;
 use App\Models\Erkap\DepartmentRiskStrategy;
 use App\Models\Erkap\RiskIdentification;
+use App\Models\Erkap\RoutineCost;
 use App\Models\Regional;
 use App\Models\User;
 use App\Services\ApprovalService;
@@ -291,6 +292,71 @@ class RiskIdentificationApprovalFeatureTest extends TestCase
         $this->actingAs($riskManager)
             ->get(route('erkap.approvals.show', ['risk_register', $risk->id]))
             ->assertOk();
+    }
+
+    public function test_risk_register_renders_in_division_approval_page(): void
+    {
+        $riskManager = $this->riskManager();
+        $risk = $this->chain['risk'];
+        ApprovalService::submit($risk);
+
+        $this->actingAs($riskManager)
+            ->get(route('erkap.approvals.division', $this->chain['division']->id))
+            ->assertOk()
+            ->assertViewHas('groups')
+            ->assertSee('Register Risiko')
+            ->assertSee($risk->risk)
+            ->assertSee('Manajemen Risiko');
+    }
+
+    public function test_every_document_type_has_a_matching_approval_partial(): void
+    {
+        foreach (array_keys(ApprovalService::documentTypes()) as $type) {
+            $view = 'erkap.approvals.partials.'.str_replace('_', '-', $type);
+
+            $this->assertTrue(
+                view()->exists($view),
+                "Partial view [{$view}] tidak ada untuk tipe dokumen [{$type}]."
+            );
+        }
+    }
+
+    public function test_division_page_renders_mixed_document_types_in_one_group_list(): void
+    {
+        $riskManager = $this->riskManager();
+
+        // Satu-satunya user dengan role erkap-ppk agar pemilihan approver deterministik.
+        Role::firstOrCreate(['name' => 'erkap-ppk', 'guard_name' => 'web']);
+        $riskManager->assignRole('erkap-ppk');
+
+        Role::firstOrCreate(['name' => 'erkap-controller', 'guard_name' => 'web']);
+        $controllerEmployee = Employee::create([
+            'employee_id' => 'EMP-CTRL-'.uniqid(),
+            'name' => 'Controller',
+            'division_id' => $this->chain['division']->id,
+            'regional_id' => Regional::factory()->create()->id,
+        ]);
+        User::factory()->create(['employee_id' => $controllerEmployee->employee_id])
+            ->assignRole('erkap-controller');
+
+        RoutineCost::factory()->create([
+            'erkap_work_program_id' => $this->chain['workProgram']->id,
+        ]);
+
+        ApprovalService::submit($this->chain['risk']);
+        ApprovalService::submit($this->chain['workProgram']);
+
+        $response = $this->actingAs($riskManager)
+            ->get(route('erkap.approvals.division', $this->chain['division']->id));
+
+        $response->assertOk()
+            ->assertSee('Register Risiko')
+            ->assertSee('Program Kerja');
+
+        $types = collect($response->viewData('groups'))->pluck('type')->all();
+
+        $this->assertContains('risk_register', $types);
+        $this->assertContains('work_program', $types);
     }
 
     public function test_index_shows_submittable_count(): void

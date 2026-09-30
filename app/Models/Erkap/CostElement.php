@@ -2,11 +2,11 @@
 
 namespace App\Models\Erkap;
 
-use App\Models\Erkap\Traits\HasAuditTrail;
 use App\Models\ChartOfAccount;
-use App\Support\CoaCode;
+use App\Models\Erkap\Traits\HasAuditTrail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CostElement extends Model
 {
@@ -26,14 +26,33 @@ class CostElement extends Model
         return $this->belongsTo(ChartOfAccount::class, 'chart_of_account_id');
     }
 
+    /**
+     * Seluruh Chart of Account yang memakai elemen biaya ini
+     * (satu per Pusat Biaya, hasil komposisi a..e).
+     */
+    public function chartOfAccounts(): HasMany
+    {
+        return $this->hasMany(ChartOfAccount::class, 'cost_element_id');
+    }
+
     public function routineCosts()
     {
         return $this->hasMany(RoutineCost::class, 'erkap_cost_element_id');
     }
 
     /**
-     * Suggest the Chart of Account that matches this cost element's code after
-     * the 16-digit backfill, falling back to the existing explicit link.
+     * Label satu baris untuk tabel, export, dan widget: kode elemen + nama.
+     */
+    public function getLabelAttribute(): string
+    {
+        $name = (string) ($this->name ?? '');
+
+        return $this->code ? $this->code.' - '.$name : ($name ?: '-');
+    }
+
+    /**
+     * Chart of Account yang disarankan untuk elemen biaya ini: tautan eksplisit
+     * bila ada, jika tidak ambil COA pertama yang memakainya.
      */
     public function coaSuggestion(): ?ChartOfAccount
     {
@@ -41,18 +60,6 @@ class CostElement extends Model
             return $this->chartOfAccount;
         }
 
-        if (! $paddedCode = CoaCode::pad($this->code)) {
-            return null;
-        }
-
-        $chartOfAccount = ChartOfAccount::where('code', $paddedCode)->first();
-
-        if (! $chartOfAccount && preg_match('/^\d+$/', $this->code)) {
-            $chartOfAccount = ChartOfAccount::where('code', 'like', $this->code . '%')
-                ->orderBy('code')
-                ->first();
-        }
-
-        return $chartOfAccount;
+        return $this->chartOfAccounts()->orderBy('code')->first();
     }
 }

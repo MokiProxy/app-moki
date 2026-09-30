@@ -6,6 +6,7 @@ use App\Models\Erkap\Approval;
 use App\Models\Erkap\InvestmentPlan;
 use App\Models\Erkap\InvestmentStageGate;
 use App\Models\User;
+use App\Services\WhatsAppNotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -16,7 +17,6 @@ class InvestmentGateReviewService
         'cba' => ['order' => 2, 'role' => 'erkap-ppk'],
         'aset' => ['order' => 3, 'role' => 'erkap-manajemen-aset'],
         'direksi_keuangan' => ['order' => 4, 'role' => 'erkap-direksi-keuangan'],
-        'gate_review_bmi' => ['order' => 5, 'role' => 'erkap-gate-review'],
     ];
 
     public static function roleForStage(string $stage): ?string
@@ -90,42 +90,42 @@ class InvestmentGateReviewService
 
     public static function review(InvestmentPlan $plan, string $stage, User $user, array $payload): InvestmentStageGate
     {
-        $gate = $plan->stageGates()->where('stage', $stage)->first();
-
-        if (! $gate) {
-            throw ValidationException::withMessages([
-                'stage' => 'Stage gate tidak ditemukan untuk rencana investasi ini.',
-            ]);
-        }
-
-        if (! $gate->canReviewBy($user)) {
-            throw ValidationException::withMessages([
-                'stage' => 'Anda tidak memiliki role yang berhak menilai gate ini.',
-            ]);
-        }
-
-        if ($gate->status === 'approved') {
-            throw ValidationException::withMessages([
-                'stage' => 'Gate ini sudah disetujui.',
-            ]);
-        }
-
-        $earlierPending = $plan->stageGates()
-            ->where('stage_order', '<', $gate->stage_order)
-            ->where('status', '!=', 'approved')
-            ->count();
-
-        if ($earlierPending > 0) {
-            throw ValidationException::withMessages([
-                'stage' => 'Stage gate sebelumnya belum disetujui.',
-            ]);
-        }
-
         $status = $payload['status'] ?? 'approved';
         $result = $payload['result'] ?? null;
         $notes = $payload['notes'] ?? null;
 
-        DB::transaction(function () use ($plan, $gate, $user, $status, $result, $notes) {
+        $gate = DB::transaction(function () use ($plan, $stage, $user, $status, $result, $notes) {
+            $gate = $plan->stageGates()->where('stage', $stage)->lockForUpdate()->first();
+
+            if (! $gate) {
+                throw ValidationException::withMessages([
+                    'stage' => 'Stage gate tidak ditemukan untuk rencana investasi ini.',
+                ]);
+            }
+
+            if (! $gate->canReviewBy($user)) {
+                throw ValidationException::withMessages([
+                    'stage' => 'Anda tidak memiliki role yang berhak menilai gate ini.',
+                ]);
+            }
+
+            if ($gate->status === 'approved') {
+                throw ValidationException::withMessages([
+                    'stage' => 'Gate ini sudah disetujui.',
+                ]);
+            }
+
+            $earlierPending = $plan->stageGates()
+                ->where('stage_order', '<', $gate->stage_order)
+                ->where('status', '!=', 'approved')
+                ->count();
+
+            if ($earlierPending > 0) {
+                throw ValidationException::withMessages([
+                    'stage' => 'Stage gate sebelumnya belum disetujui.',
+                ]);
+            }
+
             $gate->update([
                 'status' => $status,
                 'result' => $result,
@@ -158,9 +158,51 @@ class InvestmentGateReviewService
             } else {
                 $plan->update(['gate_review_status' => $aggregate]);
             }
+
+            return $gate;
         });
 
+        if ($status === 'approved') {
+            static::notifyNextGateReviewer($plan, $gate);
+        }
+
         return $gate->refresh();
+    }
+
+    protected static function notifyNextGateReviewer(InvestmentPlan $plan, InvestmentStageGate $approvedGate): void
+    {
+        $nextGate = $plan->stageGates()
+            ->where('stage_order', '>', $approvedGate->stage_order)
+            ->where('status', 'pending')
+            ->orderBy('stage_order')
+            ->first();
+
+        if (! $nextGate) {
+            return;
+        }
+
+        $reviewers = User::query()
+            ->role($nextGate->reviewer_role)
+            ->whereNotNull('employee_id')
+            ->get()
+            ->filter(fn (User $user) => $user->employee?->hp);
+
+        if ($reviewers->isEmpty()) {
+            return;
+        }
+
+        $message = sprintf(
+            "Gate Review Investasi: %s telah disetujui. Gate berikutnya (%s) menunggu review Anda. Rencana: %s.",
+            $approvedGate->label(),
+            $nextGate->label(),
+            $plan->name
+        );
+
+        $waService = app(WhatsAppNotificationService::class);
+
+        foreach ($reviewers as $reviewer) {
+            $waService->send($reviewer->employee->hp, $message);
+        }
     }
 
     public static function approveMatchingApproval(InvestmentPlan $plan, InvestmentStageGate $gate, User $user): void

@@ -268,46 +268,6 @@
                                 @endif
                             </div>
                         </div>
-
-                        <div class="card mb-3">
-                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0"><i class="mdi mdi-handshake me-1"></i> Alignment dengan PT BMI</h6>
-                                <span class="badge bg-soft-{{ $rkap->bmiStatusClass() }} text-{{ $rkap->bmiStatusClass() }}">{{ $rkap->bmiStatusLabel() }}</span>
-                            </div>
-                            <div class="card-body">
-                                <p class="mb-0">{!! nl2br(e($rkap->bmi_notes ?: 'Belum ada catatan alignment PT BMI.')) !!}</p>
-
-                                @if(auth()->user()->can('erkap.rkap.bmi'))
-                                <form method="POST" action="{{ route('erkap.rkap.bmi', $rkap->id) }}" class="mt-3">
-                                    @csrf
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Status Alignment</label>
-                                            <select name="bmi_alignment_status" class="form-select" required>
-                                                @foreach([
-                                                    'none' => 'Belum Ada Alignment',
-                                                    'in_review' => 'Dalam Review PT BMI',
-                                                    'aligned' => 'Selaras',
-                                                    'rejected' => 'Perlu Penyesuaian',
-                                                ] as $value => $label)
-                                                <option value="{{ $value }}" @selected($rkap->bmi_alignment_status === $value)>{{ $label }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-8">
-                                            <label class="form-label">Catatan</label>
-                                            <textarea name="bmi_notes" class="form-control" rows="2">{{ old('bmi_notes', $rkap->bmi_notes) }}</textarea>
-                                        </div>
-                                        <div class="col-md-12 d-flex justify-content-end">
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="mdi mdi-content-save me-1"></i> Simpan Alignment BMI
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                                @endif
-                            </div>
-                        </div>
                     </div>
 
                     <div class="col-md-4">
@@ -338,7 +298,7 @@
 
                                 @if(in_array($rkap->status, ['draft', 'rejected']) && auth()->user()->can('erkap.rkap.edit'))
                                 <form method="POST" action="{{ route('erkap.rkap.reset-phase', $rkap->id) }}"
-                                    onsubmit="return confirm('Reset fase lifecycle ke Inisiasi? Seluruh catatan alignment dihapus.')">
+                                    onsubmit="return confirm('Reset fase lifecycle ke Inisiasi?')">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-danger w-100 mb-2">
                                         <i class="mdi mdi-restore me-1"></i> Reset Fase ke Inisiasi

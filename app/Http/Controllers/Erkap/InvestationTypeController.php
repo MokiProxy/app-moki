@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvestationTypeRequest;
 use App\Http\Requests\UpdateInvestationTypeRequest;
 use App\Models\Erkap\InvestationType;
+use App\Support\ErrorMessage;
 use Exception;
 
 class InvestationTypeController extends Controller
@@ -35,7 +36,7 @@ class InvestationTypeController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.investation-types.create')
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -61,7 +62,7 @@ class InvestationTypeController extends Controller
         } catch (Exception $err) {
             return redirect()->route('erkap.investation-types.edit', $investationType->id)
                 ->withInput()
-                ->with('error', $err->getMessage())
+                ->with('error', ErrorMessage::from($err))
                 ->with('error_detail', [
                     'file' => $err->getFile(),
                     'line' => $err->getLine(),
@@ -78,7 +79,7 @@ class InvestationTypeController extends Controller
             return redirect()->route('erkap.investation-types.index')
                 ->with('success', 'Investation type berhasil dihapus!');
         } catch (Exception $err) {
-            return redirect()->route('erkap.investation-types.index')->with('error', $err->getMessage());
+            return redirect()->route('erkap.investation-types.index')->with('error', ErrorMessage::from($err));
         }
     }
 }

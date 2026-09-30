@@ -19,8 +19,13 @@ class StoreInvestmentPlanRequest extends FormRequest
 
         return [
             'erkap_work_program_id' => ['required', 'integer', 'exists:erkap_work_programs,id'],
-            'cost_center_id' => ['nullable', 'integer', 'exists:cost_centers,id'],
-            'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
+            'cost_center_id' => ['required', 'integer', 'exists:cost_centers,id'],
+            'cost_center_owner' => ['required', 'string', 'max:255'],
+            'erkap_cost_element_id' => ['required', 'integer', 'exists:erkap_cost_elements,id'],
+            // `chart_of_account_id` sengaja tidak divalidasi: field ini tidak lagi
+            // ada di form. Nilainya diturunkan controller dari pasangan
+            // `cost_center_id` + `erkap_cost_element_id`, sehingga input client
+            // akan diabaikan walau dikirim.
             'erkap_investattion_category_id' => ['required', 'integer', 'exists:erkap_investattion_categories,id'],
             'erkap_investation_type_id' => ['required', 'integer', 'exists:erkap_investation_types,id'],
             'erkap_investation_criteria_id' => ['required', 'integer', 'exists:erkap_investation_criterias,id'],

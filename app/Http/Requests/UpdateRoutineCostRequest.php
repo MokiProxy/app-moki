@@ -18,13 +18,13 @@ class UpdateRoutineCostRequest extends FormRequest
         return [
             'erkap_work_program_id' => ['required', 'integer', 'exists:erkap_work_programs,id'],
             'need' => ['required', 'string'],
-            'cost_center_id' => ['nullable', 'integer', 'exists:cost_centers,id'],
+            'cost_center_id' => ['required', 'integer', 'exists:cost_centers,id'],
             'cost_center_owner' => ['required', 'string', 'max:255'],
             'qty' => ['required', 'numeric'],
             'units' => ['required', 'string', 'max:50'],
             'unit_price' => ['required', 'numeric'],
             'erkap_cost_element_id' => ['required', 'integer', 'exists:erkap_cost_elements,id'],
-            'chart_of_account_id' => ['nullable', 'integer', 'exists:chart_of_accounts,id'],
+            // Lihat `StoreRoutineCostRequest`: COA diturunkan, bukan diinput.
             'jan_cost' => $monthRules,
             'feb_cost' => $monthRules,
             'mar_cost' => $monthRules,
@@ -36,7 +36,7 @@ class UpdateRoutineCostRequest extends FormRequest
             'sep_cost' => $monthRules,
             'oct_cost' => $monthRules,
             'nov_cost' => $monthRules,
-            'des_cost' => $monthRules,
+            'dec_cost' => $monthRules,
             'total' => ['required', 'numeric'],
             'is_kumulatif' => ['nullable', 'boolean'],
         ];

@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Erkap\ProcessApprovalRequest;
 use App\Models\Division;
 use App\Models\Erkap\Approval;
+use App\Models\Erkap\InvestmentPlan;
+use App\Models\Erkap\RiskIdentification;
 use App\Services\ApprovalService;
+use App\Support\ErrorMessage;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Collection;
 
 class ApprovalController extends Controller
@@ -24,6 +28,7 @@ class ApprovalController extends Controller
             ->latest()
             ->get()
             ->filter(fn (Approval $approval) => ApprovalService::typeFor($approval->approvalable) !== null)
+            ->reject(fn (Approval $approval) => static::hasPendingStageGate($approval))
             ->values();
 
         $historyApprovals = (clone $query)
@@ -76,12 +81,29 @@ class ApprovalController extends Controller
         $division = $isGeneral ? null : Division::findOrFail((int) $divisionKey);
 
         $approvals = Approval::query()
-            ->with(['approvalable', 'approver'])
+            ->with([
+                'approver',
+                'approvalable' => function (MorphTo $relation) {
+                    $relation->morphWith([
+                        RiskIdentification::class => [
+                            'departmentTarget.ratingCriteria',
+                            'riskType',
+                            'riskTaxonomy',
+                            'reasons',
+                            'impacts',
+                            'analysis',
+                            'departmentRiskStrategies',
+                            'workPrograms',
+                        ],
+                    ]);
+                },
+            ])
             ->where('approver_id', auth()->id())
             ->where('status', 'pending')
             ->latest()
             ->get()
             ->filter(fn (Approval $approval) => ApprovalService::typeFor($approval->approvalable) !== null)
+            ->reject(fn (Approval $approval) => static::hasPendingStageGate($approval))
             ->filter(function (Approval $approval) use ($isGeneral, $division) {
                 $approvalDivision = ApprovalService::divisionFor($approval->approvalable);
 
@@ -106,11 +128,69 @@ class ApprovalController extends Controller
         return view('erkap.approvals.division', compact('pageName', 'division', 'isGeneral', 'groups'));
     }
 
+    protected static function hasPendingStageGate(Approval $approval): bool
+    {
+        $model = $approval->approvalable;
+
+        if (! $model instanceof InvestmentPlan) {
+            return false;
+        }
+
+        return $model->stageGates()
+            ->where('status', 'pending')
+            ->exists();
+    }
+
+    protected static function detailRelations(string $type): array
+    {
+        $relations = [
+            'work_program' => [
+                'riskIdentification.departmentTarget.division',
+                'riskIdentification.departmentTarget.ratingCriteria',
+            ],
+            'routine_cost' => [
+                'workProgram',
+                'costElement',
+                'costCenter',
+                'chartOfAccount',
+            ],
+            'investment_plan' => [
+                'workProgram',
+                'costCenter',
+                'chartOfAccount',
+                'investattionCategory',
+                'investationType',
+                'investationCriteria',
+                'stageGates.reviewer',
+            ],
+            'rkap' => [
+                'company',
+            ],
+            'risk_register' => [
+                'departmentTarget.division',
+                'departmentTarget.ratingCriteria',
+                'riskType',
+                'riskTaxonomy.riskAppetite',
+                'reasons',
+                'impacts',
+                'analysis.riskProbability',
+                'analysis.riskImpact',
+                'analysis.riskScoreValue',
+                'departmentRiskStrategies',
+                'workPrograms',
+            ],
+        ];
+
+        return $relations[$type] ?? [];
+    }
+
     public function show(string $type, $id)
     {
         $pageName = 'Detail Persetujuan';
 
         $model = ApprovalService::resolveModel($type, $id);
+
+        $model->load(static::detailRelations($type));
 
         $approvals = $model->approvals()->with('approver')->orderBy('level')->get();
         $myApproval = $model->approvals()->where('approver_id', auth()->id())->first();
@@ -153,7 +233,7 @@ class ApprovalController extends Controller
 
             return redirect()->route('erkap.approvals.show', [$type, $id])->with('success', $message);
         } catch (\Exception $err) {
-            return redirect()->route('erkap.approvals.show', [$type, $id])->with('error', $err->getMessage());
+            return redirect()->route('erkap.approvals.show', [$type, $id])->with('error', ErrorMessage::from($err));
         }
     }
 }

@@ -58,7 +58,6 @@ class InvestmentStageGate extends Model
             'cba' => 'Kajian Kelayakan (CBA)',
             'aset' => 'Dept. Manajemen Aset',
             'direksi_keuangan' => 'Direksi Keuangan',
-            'gate_review_bmi' => 'Gate Review PT BMI',
             default => $stage ?: '-',
         };
     }

@@ -32,11 +32,9 @@
                 <th>Divisi</th>
                 <th>Rating</th>
                 <th>Satuan</th>
-                <th>Tahunan</th>
-                <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th><th>Jun</th>
-                <th>Jul</th><th>Agu</th><th>Sep</th><th>Okt</th><th>Nov</th><th>Des</th>
-                <th>Kum Jan %</th><th>Kum Feb %</th><th>Kum Mar %</th><th>Kum Apr %</th><th>Kum Mei %</th><th>Kum Jun %</th>
-                <th>Kum Jul %</th><th>Kum Agu %</th><th>Kum Sep %</th><th>Kum Okt %</th><th>Kum Nov %</th><th>Kum Des %</th>
+                <th>Tahunan (%)</th>
+                <th>Jan (%)</th><th>Feb (%)</th><th>Mar (%)</th><th>Apr (%)</th><th>Mei (%)</th><th>Jun (%)</th>
+                <th>Jul (%)</th><th>Agu (%)</th><th>Sep (%)</th><th>Okt (%)</th><th>Nov (%)</th><th>Des (%)</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -45,7 +43,6 @@
             @php
             $departmentTarget = $workProgram->riskIdentification?->departmentTarget;
             $statusClass = $workProgram->statusClass();
-            $cumulativePercents = $workProgram->monthlyCumulativePercents();
             @endphp
             <tr>
                 <td style="text-align: center;">{{ $loop->iteration }}</td>
@@ -54,29 +51,26 @@
                 <td>{{ $departmentTarget->division->name ?? '-' }}</td>
                 <td style="text-align: center;">{{ $departmentTarget->ratingCriteria->rating ?? '-' }}</td>
                 <td>{{ $workProgram->units }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->year_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->jan_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->feb_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->mar_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->apr_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->may_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->jun_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->jul_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->aug_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->sep_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->oct_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->nov_plan, 0, ',', '.') }}</td>
-                <td style="text-align: right;">{{ number_format($workProgram->dec_plan, 0, ',', '.') }}</td>
-                @foreach(\App\Models\Erkap\WorkProgram::MONTH_COLUMNS as $m)
-                <td style="text-align: right;">{{ number_format($cumulativePercents[$m], 2, ',', '.') }}%</td>
-                @endforeach
+                <td style="text-align: right;">{{ $workProgram->year_plan !== null ? number_format((float) $workProgram->year_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->jan_plan !== null ? number_format((float) $workProgram->jan_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->feb_plan !== null ? number_format((float) $workProgram->feb_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->mar_plan !== null ? number_format((float) $workProgram->mar_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->apr_plan !== null ? number_format((float) $workProgram->apr_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->may_plan !== null ? number_format((float) $workProgram->may_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->jun_plan !== null ? number_format((float) $workProgram->jun_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->jul_plan !== null ? number_format((float) $workProgram->jul_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->aug_plan !== null ? number_format((float) $workProgram->aug_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->sep_plan !== null ? number_format((float) $workProgram->sep_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->oct_plan !== null ? number_format((float) $workProgram->oct_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->nov_plan !== null ? number_format((float) $workProgram->nov_plan, 2, ',', '.') . '%' : '-' }}</td>
+                <td style="text-align: right;">{{ $workProgram->dec_plan !== null ? number_format((float) $workProgram->dec_plan, 2, ',', '.') . '%' : '-' }}</td>
                 <td style="text-align: center;">
                     <span class="status bg-{{ $statusClass }}">{{ $workProgram->statusLabel() }}</span>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="32" style="text-align: center;">Tidak ada program kerja</td>
+                 <td colspan="20" style="text-align: center;">Tidak ada program kerja</td>
             </tr>
             @endforelse
         </tbody>

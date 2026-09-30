@@ -56,7 +56,7 @@
                                 <option value="" disabled selected>Pilih Probabilitas</option>
                                 @foreach($riskProbabilities as $riskProbability)
                                     <option value="{{ $riskProbability->id }}" {{ old('erkap_risk_probability_id') == $riskProbability->id ? 'selected' : '' }}>
-                                        {{ $riskProbability->name }}
+                                        {{ $riskProbability->point }} - {{ $riskProbability->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -69,7 +69,7 @@
                                 <option value="" disabled selected>Pilih Dampak</option>
                                 @foreach($riskImpacts as $riskImpact)
                                     <option value="{{ $riskImpact->id }}" {{ old('erkap_risk_impact_id') == $riskImpact->id ? 'selected' : '' }}>
-                                        {{ $riskImpact->name }}
+                                        {{ $riskImpact->point }} - {{ $riskImpact->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -78,11 +78,11 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Skor & Level <span class="text-danger">*</span></label>
-                            <select id="erkap_risk_score_value_id" class="form-select" required disabled>
-                                <option value="" disabled selected>Pilih Probabilitas & Dampak terlebih dahulu</option>
-                            </select>
-                            <input type="hidden" name="erkap_risk_score_value_id" id="erkap_risk_score_value_id_hidden" value="{{ old('erkap_risk_score_value_id') }}">
-                            @error('erkap_risk_score_value_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <select id="erkap_risk_score_value_id" class="form-select" required disabled>
+                                    <option value="" disabled selected>Pilih Probabilitas & Dampak terlebih dahulu</option>
+                                </select>
+                                <input type="hidden" name="erkap_risk_score_value_id" id="erkap_risk_score_value_id_hidden" value="{{ old('erkap_risk_score_value_id') }}">
+                                @error('erkap_risk_score_value_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
 
