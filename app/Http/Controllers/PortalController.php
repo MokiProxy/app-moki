@@ -27,83 +27,91 @@ class PortalController extends Controller
         $menus = [
             [
                 'title' => 'IT Admin',
-                'sub'   => 'IT Admin Panel',
-                'icon'  => 'mdi-cog',
+                'sub' => 'IT Admin Panel',
+                'icon' => 'mdi-cog',
                 'color' => '#556EE6',
                 'permission' => 'it-admin.access',
-                'link'  => route('it-admin.index')
+                'link' => route('it-admin.index')
             ],
             [
                 'title' => 'AMS',
-                'sub'   => 'Asset Management',
-                'icon'  => 'mdi-database-settings',
+                'sub' => 'Asset Management',
+                'icon' => 'mdi-database-settings',
                 'color' => '#4e73df',
                 'permission' => 'ams.menu',
-                'link'  => route('transaction.index')
+                'link' => route('transaction.index')
             ],
             [
                 'title' => 'HELPDESK',
-                'sub'   => 'IT Support Ticket',
-                'icon'  => 'mdi-face-agent',
+                'sub' => 'IT Support Ticket',
+                'icon' => 'mdi-face-agent',
                 'color' => '#1cc88a',
                 'permission' => 'helpdesk.menu',
-                'link'  => route('helpdesk.index')
+                'link' => route('helpdesk.index')
             ],
             [
                 'title' => 'DATA PEGAWAI',
-                'sub'   => 'Data Pegawai SBS',
-                'icon'  => 'mdi-account',
+                'sub' => 'Data Pegawai SBS',
+                'icon' => 'mdi-account',
                 'color' => '#FF8F00',
                 'permission' => 'data-pegawai.menu',
-                'link'  => '#'
+                'link' => '#'
             ],
             [
                 'title' => 'FORM IT',
-                'sub'   => 'Digital Request',
-                'icon'  => 'mdi-file-document-edit',
+                'sub' => 'Digital Request',
+                'icon' => 'mdi-file-document-edit',
                 'color' => '#36b9cc',
                 'permission' => 'helpdesk.menu',
-                'link'  => route('form-it.index')
+                'link' => route('form-it.index')
             ],
             [
                 'title' => 'SOP IT',
-                'sub'   => 'Standard Procedure',
-                'icon'  => 'mdi-book-open-variant',
+                'sub' => 'Standard Procedure',
+                'icon' => 'mdi-book-open-variant',
                 'color' => '#f6c23e',
                 'permission' => 'sop-it.menu',
-                'link'  => '#'
+                'link' => '#'
             ],
             [
                 'title' => 'DOKTER',
-                'sub'   => 'Dokumen Kontroler',
-                'icon'  => 'mdi-file',
+                'sub' => 'Dokumen Kontroler',
+                'icon' => 'mdi-file',
                 'color' => '#f6c23e',
                 'permission' => 'dokter.menu',
-                'link'  => route('dokter.index')
+                'link' => route('dokter.index')
             ],
             [
                 'title' => 'EQTAX',
-                'sub'   => 'Ekualisasi Pajak',
-                'icon'  => 'mdi-percent',
+                'sub' => 'Ekualisasi Pajak',
+                'icon' => 'mdi-percent',
                 'color' => '#276F27',
                 'permission' => 'eqtax.menu',
-                'link'  => route('eqtax.index')
+                'link' => route('eqtax.index')
             ],
             [
                 'title' => 'E-RKAP',
-                'sub'   => 'Manajemen RKAP Digital',
-                'icon'  => 'mdi-cash',
+                'sub' => 'Manajemen RKAP Digital',
+                'icon' => 'mdi-cash',
                 'color' => '#556EE6',
                 'permission' => 'erkap.menu',
-                'link'  => route('erkap.index')
+                'link' => route('erkap.index')
+            ],
+            [
+                'title' => 'SIMKA',
+                'sub' => 'Sistem Informasi Manajemen Keuangan & Anggaran',
+                'icon' => 'mdi-cash',
+                'color' => '#556EE6',
+                'permission' => 'erkap.menu',
+                'link' => route('simka.index')
             ],
             [
                 'title' => 'MORE',
-                'sub'   => 'Other Apps',
-                'icon'  => 'mdi-apps',
+                'sub' => 'Other Apps',
+                'icon' => 'mdi-apps',
                 'color' => '#858796',
                 'permission' => 'sop-it.menu',
-                'link'  => '#'
+                'link' => '#'
             ],
         ];
 
@@ -130,30 +138,30 @@ class PortalController extends Controller
 
             // Data Dummy jika database kosong/belum ada
             return collect([
-                (object)[
+                (object) [
                     'image' => 'https://extension.harvard.edu/wp-content/uploads/sites/8/2024/07/tech.jpg',
                     'title' => 'Digital Transformation',
-                    'desc'  => 'Membangun ekosistem kerja yang lebih efisien dan terintegrasi.'
+                    'desc' => 'Membangun ekosistem kerja yang lebih efisien dan terintegrasi.'
                 ],
-                (object)[
+                (object) [
                     'image' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
                     'title' => 'AMS Monitoring',
-                    'desc'  => 'Kelola aset perusahaan Anda dengan sistem monitoring yang akurat.'
+                    'desc' => 'Kelola aset perusahaan Anda dengan sistem monitoring yang akurat.'
                 ],
-                (object)[
+                (object) [
                     'image' => 'https://cdn.prod.website-files.com/5b6df8bb681f89c158b48f6b/5d528588404ce631d4d3a806_pc-technician.jpg',
                     'title' => 'HELPDESK',
-                    'desc'  => 'Kelola tiket support IT Anda dengan sistem yang efisien.'
+                    'desc' => 'Kelola tiket support IT Anda dengan sistem yang efisien.'
                 ],
-                (object)[
+                (object) [
                     'image' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
                     'title' => 'FORM IT',
-                    'desc'  => 'Kelola Formulir digital Anda dengan sistem yang mudah digunakan.'
+                    'desc' => 'Kelola Formulir digital Anda dengan sistem yang mudah digunakan.'
                 ],
-                (object)[
+                (object) [
                     'image' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
                     'title' => 'DOKTER',
-                    'desc'  => 'Kelola Dokumen Kontroler Anda dengan sistem yang mudah digunakan.'
+                    'desc' => 'Kelola Dokumen Kontroler Anda dengan sistem yang mudah digunakan.'
                 ],
             ]);
         } catch (\Exception $e) {

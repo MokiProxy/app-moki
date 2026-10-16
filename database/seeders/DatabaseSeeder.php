@@ -41,6 +41,12 @@ class DatabaseSeeder extends Seeder
 
         $this->call(WhatsappSeeder::class);
 
+        // SIMKA
+        $this->call(SimkaKategoriPendapatanSeeder::class);
+        $this->call(SimkaSpph773BobotSeeder::class);
+        $this->call(SimkaSpph773KomponenTarifSeeder::class);
+        $this->call(SimkaSpph773AsumsiDasarSeeder::class);
+
         $this->call(DocumentTypeSeeder::class);
         $this->call(VendorSeeder::class);
         $this->call(MergeFlowSeeder::class);

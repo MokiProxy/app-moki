@@ -61,6 +61,7 @@ Route::group(['middleware' => ['auth']], function () {
     require __DIR__.'/routers/form-it.php';
     require __DIR__.'/routers/eqtax.php';
     require __DIR__.'/routers/erkap.php';
+    require __DIR__.'/routers/simka.php';
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
