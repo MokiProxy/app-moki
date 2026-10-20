@@ -10,6 +10,7 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class MonitorScanner extends Command
 {
@@ -34,6 +35,12 @@ class MonitorScanner extends Command
     protected int $batchDelayMs = 500;
 
     /**
+     * Umur minimal file (detik) sebelum dianggap selesai diunggah scanner.
+     * File yang lebih baru berpotensi masih dikunci FTP server saat dibaca.
+     */
+    protected int $minFileAgeSeconds = 15;
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -43,6 +50,7 @@ class MonitorScanner extends Command
         parent::__construct();
         $this->batchSize = config('services.gemini.batch_size', 5);
         $this->batchDelayMs = config('services.gemini.batch_delay_ms', 500);
+        $this->minFileAgeSeconds = (int) config('services.scanner.min_file_age', 15);
     }
 
     /**
@@ -85,6 +93,10 @@ class MonitorScanner extends Command
             ]);
 
             foreach ($batch as $file) {
+                if (! $this->isFileReady($file)) {
+                    continue;
+                }
+
                 $this->processRootFile($file, $converter, $logger);
             }
 
@@ -115,10 +127,28 @@ class MonitorScanner extends Command
             return;
         }
 
-        $content = Storage::disk('ftp_scanner')->get($file);
+        $content = $this->downloadFile($file, $logger);
+
+        if ($content === null) {
+            return;
+        }
 
         $localPath = "scanner/incoming/{$filename}";
-        Storage::disk('local')->put($localPath, $content);
+
+        if (! Storage::disk('local')->put($localPath, $content)) {
+            Log::error('Gagal menyimpan file scanner ke storage lokal', [
+                'file' => $file,
+                'local_path' => $localPath,
+            ]);
+            $logger->log('file_write_failed', 'failed', [
+                'filename' => $filename,
+                'extension' => $extension,
+                'message' => 'Gagal menyimpan file ke storage lokal',
+            ]);
+
+            return;
+        }
+
         Storage::disk('ftp_scanner')->delete($file);
 
         $fullPath = storage_path("app/private/{$localPath}");
@@ -177,6 +207,10 @@ class MonitorScanner extends Command
             $files = Storage::disk('ftp_scanner')->files($directory);
 
             foreach ($files as $file) {
+                if (! $this->isFileReady($file)) {
+                    continue;
+                }
+
                 $this->processFile($file, $docType, $converter, $logger);
             }
         }
@@ -203,9 +237,31 @@ class MonitorScanner extends Command
 
         $this->info("Downloading: {$file}");
 
-        $content = Storage::disk('ftp_scanner')->get($file);
+        $content = $this->downloadFile($file, $logger, $documentType);
+
+        if ($content === null) {
+            return;
+        }
+
         $localPath = "scanner/incoming/{$filename}";
-        Storage::disk('local')->put($localPath, $content);
+
+        if (! Storage::disk('local')->put($localPath, $content)) {
+            Log::error('Gagal menyimpan file scanner ke storage lokal', [
+                'file' => $file,
+                'local_path' => $localPath,
+                'document_type_id' => $documentType->id,
+            ]);
+            $logger->log('file_write_failed', 'failed', [
+                'filename' => $filename,
+                'extension' => $extension,
+                'document_type_id' => $documentType->id,
+                'document_type_name' => $documentType->name,
+                'message' => 'Gagal menyimpan file ke storage lokal',
+            ]);
+
+            return;
+        }
+
         Storage::disk('ftp_scanner')->delete($file);
 
         $fullPath = storage_path("app/private/{$localPath}");
@@ -242,5 +298,100 @@ class MonitorScanner extends Command
             ProcessScanFile::dispatch($filename, $documentType->id);
             $this->info("OCR job dispatched for: {$filename} (document type: {$documentType->name})");
         }
+    }
+
+    /**
+     * Cek apakah file sudah selesai diunggah scanner.
+     *
+     * File langsung muncul di listing FTP begitu scanner mulai menulis, tetapi
+     * FTP server (IIS) mengunci file tersebut sampai upload selesai. Membaca
+     * file yang masih dikunci akan gagal dengan warning "ftp_fget(): End".
+     */
+    protected function isFileReady(string $file): bool
+    {
+        try {
+            $lastModified = Storage::disk('ftp_scanner')->lastModified($file);
+        } catch (Throwable $e) {
+            Log::warning('Gagal membaca waktu modifikasi file scanner', [
+                'file' => $file,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        if ($lastModified === false || $lastModified <= 0) {
+            Log::debug('Waktu modifikasi file scanner tidak tersedia, file langsung diproses', [
+                'file' => $file,
+            ]);
+
+            return true;
+        }
+
+        $age = time() - $lastModified;
+
+        if ($age < $this->minFileAgeSeconds) {
+            Log::debug('File scanner belum selesai ditulis, ditunda ke siklus berikutnya', [
+                'file' => $file,
+                'age_seconds' => $age,
+                'min_file_age_seconds' => $this->minFileAgeSeconds,
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Ambil isi file dari FTP scanner dengan penanganan error.
+     *
+     * Warning dari ftp_fget() diubah Laravel menjadi ErrorException, sehingga
+     * satu file yang gagal dibaca tidak boleh menghentikan seluruh siklus.
+     *
+     * @return string|null Null jika file gagal dibaca dan harus dicoba lagi nanti.
+     */
+    protected function downloadFile(string $file, ScanLogger $logger, ?DocumentType $documentType = null): ?string
+    {
+        try {
+            $content = Storage::disk('ftp_scanner')->get($file);
+        } catch (Throwable $e) {
+            $this->logDownloadFailure($file, $logger, $documentType, $e->getMessage());
+
+            return null;
+        }
+
+        if (! is_string($content) || $content === '') {
+            $this->logDownloadFailure($file, $logger, $documentType, 'File kosong atau gagal dibaca');
+
+            return null;
+        }
+
+        return $content;
+    }
+
+    /**
+     * Catat kegagalan download tanpa menghentikan siklus monitor.
+     */
+    protected function logDownloadFailure(string $file, ScanLogger $logger, ?DocumentType $documentType, string $reason): void
+    {
+        $context = [
+            'file' => $file,
+            'error' => $reason,
+        ];
+
+        $data = [
+            'filename' => basename($file),
+            'message' => 'File gagal dibaca (kemungkinan masih dikunci scanner), akan dicoba pada siklus berikutnya: '.$reason,
+        ];
+
+        if ($documentType !== null) {
+            $context['document_type_id'] = $documentType->id;
+            $data['document_type_id'] = $documentType->id;
+            $data['document_type_name'] = $documentType->name;
+        }
+
+        Log::warning('Gagal membaca file dari FTP scanner', $context);
+        $logger->log('file_read_failed', 'warning', $data);
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('simka_spph773_kategori_tarif', function (Blueprint $table) {
+        Schema::create('simka_kategori_tarif', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
             $table->foreignId('kategori_pendapatan_id')->constrained('simka_kategori_pendapatan');
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('simka_spph773_kategori_tarif');
+        Schema::dropIfExists('simka_kategori_tarif');
     }
 };

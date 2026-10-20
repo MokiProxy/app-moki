@@ -9,7 +9,7 @@ class KategoriTarif extends Model
 {
     use HasFactory;
 
-    protected $table = 'simka_spph773_kategori_tarif';
+    protected $table = 'simka_kategori_tarif';
 
     protected $fillable = [
         'name',
@@ -24,5 +24,10 @@ class KategoriTarif extends Model
     public function spph773Tarif()
     {
         return $this->hasMany(Spph773Tarif::class, 'kategori_tarif_id', 'id');
+    }
+
+    public function spph2287Tarif()
+    {
+        return $this->hasMany(Spph2287Tarif::class, 'kategori_tarif_id', 'id');
     }
 }

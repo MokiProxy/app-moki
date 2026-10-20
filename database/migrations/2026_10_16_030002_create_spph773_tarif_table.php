@@ -15,12 +15,12 @@ return new class extends Migration
     {
         Schema::create('simka_spph773_tarif', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kategori_tarif_id')->constrained('simka_spph773_kategori_tarif');
-            $table->integer('jarak_awal');
-            $table->integer('jarak_akhir');
+            $table->foreignId('kategori_tarif_id')->constrained('simka_kategori_tarif');
+            $table->integer('jarak_awal')->nullable();
+            $table->integer('jarak_akhir')->nullable();
             $table->integer('tarif_dasar');
-            $table->integer('tarif_adjustment');
-            $table->integer('tarif_ekskalasi');
+            $table->integer('tarif_adjustment')->nullable();
+            $table->integer('tarif_ekskalasi')->nullable();
             $table->timestamps();
         });
     }

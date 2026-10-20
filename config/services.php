@@ -57,6 +57,10 @@ return [
         'image_format' => env('FILE_CONVERSION_IMAGE_FORMAT', 'jpg'),
         'max_pages' => env('FILE_CONVERSION_MAX_PAGES', 20),
     ],
+    'scanner' => [
+        'min_file_age' => env('SCANNER_MIN_FILE_AGE', 15),
+    ],
+
     'gemini' => [
         'api_key' => env('GOOGLE_GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
@@ -65,7 +69,7 @@ Extract data into a flat JSON object with these rules:
 1. Missing fields: use "".
 2. document_date format: DD Mon YY.
 3. uraian: format as string array.
-4. vendor_name: extract text between commas in customer (e.g., "0023/, PT NAME, PT" -> "PT NAME").
+4. vendor_name: extract text between commas in customer (e.g., "0023/, PT NAME, PT" -> "PT NAME"). Or if you not find any, search for Account Name Data. Just use the company name, if you find "PT." just get the company name.
 5. Extra numbers: if there are secondary document numbers, add them as top-level JSON keys using their identifier labels (no nesting).
 6. Main document number: use the first number found in the text as the main document_number.
 7. Make all json key using snake case.

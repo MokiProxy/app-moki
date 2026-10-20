@@ -9,6 +9,7 @@ use App\Services\MergeFlowService;
 use App\Services\Ocr\GeminiEngine;
 use App\Services\PdfMergeService;
 use App\Services\ScanLogger;
+use App\Support\FileNameSanitizer;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -93,7 +94,7 @@ class ProcessScanFile implements ShouldQueue
                 'vendor_name' => $vendorName,
             ]);
         } else {
-            $vendorName = $processor->matchVendor($documentType, $ocrText);
+            $vendorName = $this->sanitizeFilename($processor->matchVendor($documentType, $ocrText));
             $documentNumber = null;
             $tanggal = null;
             $keterangan = null;
@@ -101,7 +102,10 @@ class ProcessScanFile implements ShouldQueue
         }
 
         $originalExtension = pathinfo($this->filename, PATHINFO_EXTENSION);
-        $targetFilename = $processor->generateFilename($documentType, $vendorName, $documentNumber, $originalExtension);
+        // Nomor dokumen dipakai sebagai bagian nama file, jadi pemisah path
+        // (mis. "001/PBT/M/03/26") harus diratakan agar tidak membuat folder.
+        $safeDocumentNumber = FileNameSanitizer::sanitize($documentNumber);
+        $targetFilename = $processor->generateFilename($documentType, $vendorName, $safeDocumentNumber, $originalExtension);
         $targetFilename = $targetFilename ?: $this->filename;
 
         $ocrTemp = [
@@ -155,9 +159,9 @@ class ProcessScanFile implements ShouldQueue
             $vendorExpected = $documentType->vendor_search_enabled && $documentType->vendors()->exists();
             $ftpPath = $vendorExpected
                 ? $processor->resolveFailedPath($documentType, $pdfFilename)
-                : $processor->resolveFtpPath($documentType, $vendorName, $documentNumber, $pdfFilename);
+                : $processor->resolveFtpPath($documentType, $vendorName, $safeDocumentNumber, $pdfFilename);
         } else {
-            $ftpPath = $processor->resolveFtpPath($documentType, $vendorName, $documentNumber, $pdfFilename);
+            $ftpPath = $processor->resolveFtpPath($documentType, $vendorName, $safeDocumentNumber, $pdfFilename);
         }
 
         $ftpDisk = Storage::disk('ftp_final');
@@ -179,13 +183,18 @@ class ProcessScanFile implements ShouldQueue
         }
 
         if ($existingContent !== null) {
-            $tempExisting = storage_path('app/private/scanner/temp/existing_' . $pdfFilename);
-            $tempNew = storage_path('app/private/scanner/temp/new_' . $pdfFilename);
+            // File temp selalu dibuat flat, terlepas dari bentuk nama file target,
+            // agar tidak pernah gagal karena direktori induk belum ada.
+            $tempBase = FileNameSanitizer::sanitize($pdfFilename, 'scan_'.md5($pdfFilename));
+            $tempExisting = storage_path('app/private/scanner/temp/existing_'.$tempBase);
+            $tempNew = storage_path('app/private/scanner/temp/new_'.$tempBase);
             $mergedDir = storage_path('app/private/scanner/merged');
-            $mergedPath = $mergedDir . '/' . $pdfFilename;
+            $mergedPath = $mergedDir.'/'.$tempBase;
 
-            $this->ensureDirectoryExists(dirname($tempExisting));
             $this->ensureDirectoryExists($mergedDir);
+            $this->ensureDirectoryExists(dirname($tempExisting));
+            $this->ensureDirectoryExists(dirname($tempNew));
+            $this->ensureDirectoryExists(dirname($mergedPath));
 
             file_put_contents($tempExisting, $existingContent);
             file_put_contents($tempNew, $ftpContent);
@@ -319,7 +328,7 @@ class ProcessScanFile implements ShouldQueue
             return null;
         }
 
-        return preg_replace('#[/\\\\:*?"<>|]#', '_', $value);
+        return FileNameSanitizer::sanitize($value);
     }
 
     /**

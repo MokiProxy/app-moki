@@ -46,6 +46,10 @@ class DatabaseSeeder extends Seeder
         $this->call(SimkaSpph773BobotSeeder::class);
         $this->call(SimkaSpph773KomponenTarifSeeder::class);
         $this->call(SimkaSpph773AsumsiDasarSeeder::class);
+        $this->call(SimkaSpph773KategoriTarifSeeder::class);
+        $this->call(SimkaSpph2287KategoriSeeder::class);
+        $this->call(SimkaSpph2287BobotSeeder::class);
+        $this->call(SimkaSpph2287AsumsiDasarSeeder::class);
 
         $this->call(DocumentTypeSeeder::class);
         $this->call(VendorSeeder::class);

@@ -107,6 +107,7 @@
     .bg-soft-success { background: rgba(54, 203, 131, 0.14); color: #2f9e6b; }
     .bg-soft-warning { background: rgba(241, 180, 76, 0.16); color: #d99b28; }
     .bg-soft-info { background: rgba(52, 195, 235, 0.16); color: #2aa9c9; }
+    .bg-soft-danger { background: rgba(240, 101, 72, 0.14); color: #d9534f; }
 
     .text-dark { color: #1f2937 !important; }
 </style>

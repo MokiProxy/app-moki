@@ -15,6 +15,7 @@
                         ['name' => 'tarif_gali_tanah', 'label' => 'Tarif Gali', 'icon' => 'mdi-pickaxe', 'route' => 'simka.spph773.tarif-gali-tanah'],
                         ['name' => 'tarif_angkutan_tanah', 'label' => 'Tarif Angkutan', 'icon' => 'mdi-truck', 'route' => 'simka.spph773.tarif-angkutan-tanah'],
                         ['name' => 'tarif_sebar_tanah', 'label' => 'Tarif Sebar', 'icon' => 'mdi-food', 'route' => 'simka.spph773.tarif-sebar-tanah'],
+                        ['name' => 'tarif_total_tanah', 'label' => 'Tarif Total', 'icon' => 'mdi-sigma', 'route' => 'simka.spph773.tarif-total-tanah'],
                     ],
                 ],
             ],
@@ -30,6 +31,7 @@
                     'fields' => [
                         ['name' => 'tarif_gali_batubara', 'label' => 'Tarif Gali', 'icon' => 'mdi-pickaxe', 'route' => 'simka.spph773.tarif-gali-batubara'],
                         ['name' => 'tarif_angkutan_batubara', 'label' => 'Tarif Angkutan', 'icon' => 'mdi-truck', 'route' => 'simka.spph773.tarif-angkutan-batubara'],
+                        ['name' => 'tarif_total_batubara', 'label' => 'Tarif Total', 'icon' => 'mdi-sigma', 'route' => 'simka.spph773.tarif-total-batubara'],
                     ],
                 ],
             ],

@@ -7,6 +7,7 @@ use App\Models\DocumentMergeGroupItem;
 use App\Models\MergeFlow;
 use App\Models\MergeFlowStep;
 use App\Models\ScanLog;
+use App\Support\FileNameSanitizer;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -201,8 +202,12 @@ class MergeFlowService
                 $tempFiles[] = $tempFile;
             }
 
-            $numbers = $items->pluck('document_number')->implode('_');
-            $finalFilename = "FINAL_{$group->vendor_name}_{$numbers}.pdf";
+            $numbers = FileNameSanitizer::sanitize($items->pluck('document_number')->implode('_'));
+            $vendorFolder = FileNameSanitizer::sanitize($group->vendor_name, 'TANPA_VENDOR');
+            $finalFilename = FileNameSanitizer::sanitize(
+                "FINAL_{$vendorFolder}_{$numbers}.pdf",
+                "FINAL_{$group->id}.pdf"
+            );
 
             $mergedDir = storage_path('app/private/scanner/merged_flow');
             $this->ensureDirectoryExists($mergedDir);
@@ -211,7 +216,7 @@ class MergeFlowService
             $merger = app(PdfMergeService::class);
             $merger->mergePdfs($tempFiles, $mergedPath);
 
-            $finalPath = "FINAL/{$group->vendor_name}/{$finalFilename}";
+            $finalPath = "FINAL/{$vendorFolder}/{$finalFilename}";
             $mergedContent = file_get_contents($mergedPath);
             $ftpDisk->put($finalPath, $mergedContent);
 
