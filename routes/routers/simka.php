@@ -88,6 +88,35 @@ Route::prefix("simka")->name("simka.")->group(function () {
     Route::prefix("spph-16368")->name("spph16368.")->group(function () {
         Route::get("/", [SPPH16368Controller::class, 'index'])->name("index");
         Route::get("/konfigurasi-data", [SPPH16368Controller::class, 'konfigurasi'])->name("konfigurasi");
+        Route::post("/konfigurasi-data", [SPPH16368Controller::class, 'simpanKonfigurasi'])->name("konfigurasi.simpan");
+        Route::delete("/konfigurasi-data/{bagian}", [SPPH16368Controller::class, 'hapusKonfigurasi'])
+            ->where('bagian', 'adjustment|bobot|komponen-tarif|asumsi-dasar|semua')
+            ->name("konfigurasi.hapus");
         Route::get("/kalkulasi", [SPPH16368Controller::class, 'kalkulasi'])->name("kalkulasi");
+        // Sub-menu kalkulasi.
+        // Seluruh sub-menu memakai aksi generik yang sama (tarifSubMenu / simpanTarif /
+        // kalkulasiTarif / hapusTarif) karena SPPH 16368 memakai satu pola kalkulasi.
+        foreach ([
+            ['pekerjaan-tanah/tarif-gali', 'tarif-gali-tanah'],
+            ['pekerjaan-tanah/tarif-angkutan', 'tarif-angkutan-tanah'],
+            ['pekerjaan-tanah/tarif-sebar', 'tarif-sebar-tanah'],
+            ['sewa-alat-berat/tarif-dasar', 'tarif-sewa-alat-berat'],
+            ['sewa-alat-berat/tarif-jasa-angkutan-batubara', 'tarif-jasa-sewa-angkutan-batubara'],
+            ['pekerjaan-batubara/tarif-gali', 'tarif-gali-batubara'],
+            ['pekerjaan-batubara/tarif-angkutan', 'tarif-angkutan-batubara'],
+        ] as [$path, $name]) {
+            Route::get("/kalkulasi/{$path}", [SPPH16368Controller::class, 'tarifSubMenu'])->name($name);
+            Route::post("/kalkulasi/{$path}", [SPPH16368Controller::class, 'simpanTarif'])->name("{$name}.simpan");
+            Route::post("/kalkulasi/{$path}/kalkulasi", [SPPH16368Controller::class, 'kalkulasiTarif'])->name("{$name}.kalkulasi");
+            Route::delete("/kalkulasi/{$path}", [SPPH16368Controller::class, 'hapusTarif'])->name("{$name}.hapus");
+        }
+
+        // Tarif Total (view only, logika kalkulasi belum tersedia)
+        Route::get("/kalkulasi/pekerjaan-tanah/tarif-total", [SPPH16368Controller::class, 'tarifTotalTanah'])->name("tarif-total-tanah");
+        Route::post("/kalkulasi/pekerjaan-tanah/tarif-total/kalkulasi", [SPPH16368Controller::class, 'placeholderAksi'])->name("tarif-total-tanah.kalkulasi");
+        Route::delete("/kalkulasi/pekerjaan-tanah/tarif-total", [SPPH16368Controller::class, 'placeholderAksi'])->name("tarif-total-tanah.hapus");
+        Route::get("/kalkulasi/pekerjaan-batubara/tarif-total", [SPPH16368Controller::class, 'tarifTotalBatubara'])->name("tarif-total-batubara");
+        Route::post("/kalkulasi/pekerjaan-batubara/tarif-total/kalkulasi", [SPPH16368Controller::class, 'placeholderAksi'])->name("tarif-total-batubara.kalkulasi");
+        Route::delete("/kalkulasi/pekerjaan-batubara/tarif-total", [SPPH16368Controller::class, 'placeholderAksi'])->name("tarif-total-batubara.hapus");
     });
 });

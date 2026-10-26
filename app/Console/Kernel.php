@@ -20,7 +20,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('erkap:mark-overdue-risk-assessments')->dailyAt('00:05');
         $schedule->command('erkap:generate-scheduled-reports')->monthlyOn(1, '02:00');
         $schedule->command('erkap:zbb-snapshot')->yearlyOn(1, 1, '00:10');
-        $schedule->command('php artisan app:monitor-scanner')->everyMinute();
+        $schedule->command('app:monitor-scanner')->everyMinute();
     }
 
     /**

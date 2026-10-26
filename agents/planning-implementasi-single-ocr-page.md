@@ -1,6 +1,6 @@
 # Planning: Implementasi Single-Page OCR untuk PDF Multi-Halaman (Opsi A)
 
-## Status: PLANNING
+## Status: DONE
 ## Date: 2026-10-20
 ## Author: opencode
 ## Modul: Dokter — Monitor Scanner / OCR / Merge Flow
@@ -167,6 +167,13 @@ Tidak ada migration database.
     // Jumlah halaman PDF yang dikirim ke Gemini untuk OCR.
     // 0 = semua halaman (perilaku lama), 1 = halaman pertama saja.
     'pdf_ocr_pages' => env('GEMINI_PDF_OCR_PAGES', 1),
+
+    // Token & think optimization.
+    'max_tokens' => env('GEMINI_MAX_TOKENS', 1024),
+    'media_resolution' => env('GEMINI_MEDIA_RESOLUTION', 'low'),
+    'thinking_level' => env('GEMINI_THINKING_LEVEL', 'minimal'),
+    'thinking_budget' => env('GEMINI_THINKING_BUDGET'),
+    'response_mime_type' => env('GEMINI_RESPONSE_MIME_TYPE', 'application/json'),
 ],
 ```
 
@@ -175,6 +182,14 @@ Tidak ada migration database.
 ```env
 # OCR PDF: jumlah halaman yang dikirim ke Gemini (0 = semua halaman)
 GEMINI_PDF_OCR_PAGES=1
+# Resolusi media: low | medium | high | unspecified (low = paling hemat token)
+GEMINI_MEDIA_RESOLUTION=low
+# Thinking Gemini 3/4: minimal | low | medium | high
+GEMINI_THINKING_LEVEL=minimal
+# Gemini 2.5: 0 = thinking mati, -1 = dinamis
+# GEMINI_THINKING_BUDGET=0
+GEMINI_RESPONSE_MIME_TYPE=application/json
+GEMINI_MAX_TOKENS=1024
 
 # Scanner: pecah PDF menjadi gambar per halaman (false = simpan PDF utuh)
 SCANNER_SPLIT_PDF_PAGES=false
@@ -493,17 +508,19 @@ Langkah:
 
 ## 9. Acceptance Criteria
 
-- [ ] PDF multi-halaman tetap tersimpan **utuh** di FTP final.
-- [ ] OCR Gemini hanya menerima **1 halaman** (default) untuk PDF multi-halaman.
-- [ ] Data `scan_logs` dan nama file tetap dihasilkan dengan benar dari halaman 1.
-- [ ] Tidak ada perubahan perilaku untuk file gambar.
-- [ ] Merge flow tetap menggunakan PDF lengkap.
-- [ ] Gagal ekstraksi PDF tidak membuat job gagal total (fallback ke PDF utuh).
-- [ ] Tidak ada file temp OCR yang tertinggal.
-- [ ] `GEMINI_PDF_OCR_PAGES=0` mengembalikan perilaku lama tanpa error.
-- [ ] Unit test PdfPageExtractor lulus.
-- [ ] `php -l` pada semua file yang diubah tidak menghasilkan error.
-- [ ] `php artisan config:clear` terdokumentasi.
+- [x] PDF multi-halaman tetap tersimpan **utuh** di FTP final (upload tetap memakai `$fullPath` asli).
+- [x] OCR Gemini hanya menerima **1 halaman** (default) untuk PDF multi-halaman.
+- [x] Data `scan_logs` dan nama file tetap dihasilkan dari halaman 1 (tidak ada perubahan alur data).
+- [x] Tidak ada perubahan perilaku untuk file gambar.
+- [x] Merge flow tetap menggunakan PDF lengkap.
+- [x] Gagal ekstraksi PDF tidak membuat job gagal total (fallback ke PDF utuh).
+- [x] Tidak ada file temp OCR yang tertinggal (dibersihkan di `finally`, diuji).
+- [x] `GEMINI_PDF_OCR_PAGES=0` mengembalikan perilaku lama tanpa error (diuji).
+- [x] Unit test PdfPageExtractor lulus (8 test, 20 assertion).
+- [x] Feature test integrasi GeminiEngine lulus (3 test, 16 assertion).
+- [x] `php -l` pada semua file yang diubah tidak menghasilkan error.
+- [x] `php artisan config:clear` terdokumentasi.
+- [ ] Verifikasi end-to-end di FTP final (butuh koneksi FTP scanner/final).
 
 ---
 
@@ -554,16 +571,16 @@ Catatan: `SCANNER_SPLIT_PDF_PAGES=true` akan menghapus PDF asli dan menyimpan ga
 
 ## 12. Urutan Pekerjaan
 
-1. [ ] Tambah config `services.gemini.pdf_ocr_pages` dan `services.scanner.split_pdf_pages`.
-2. [ ] Tambah dokumentasi env di `.env.example`.
-3. [ ] Buat `app/Services/PdfPageExtractor.php`.
-4. [ ] Buat unit test `PdfPageExtractorTest`.
-5. [ ] Integrasikan pemotongan di `GeminiEngine::extractText()` + cleanup `finally` + fallback.
-6. [ ] Ubah `MonitorScanner` agar tidak memecah PDF secara default (dua lokasi).
-7. [ ] (Opsional) Simpan `source_pages` / `ocr_pages_used` di `ScanLog`.
-8. [ ] Jalankan `php -l` pada semua file yang diubah.
-9. [ ] Uji manual dengan PDF 18 dan 37 halaman.
-10. [ ] Uji regresi gambar, PDF 1 halaman, `pdf_ocr_pages=0`.
+1. [x] Tambah config `services.gemini.pdf_ocr_pages` dan `services.scanner.split_pdf_pages`.
+2. [x] Tambah dokumentasi env di `.env.example`.
+3. [x] Buat `app/Services/PdfPageExtractor.php`.
+4. [x] Buat unit test `PdfPageExtractorTest`.
+5. [x] Integrasikan pemotongan di `GeminiEngine::extractText()` + cleanup `finally` + fallback.
+6. [x] Ubah `MonitorScanner` agar tidak memecah PDF secara default (dua lokasi).
+7. [x] (Opsional) Simpan `source_pages` / `ocr_pages_used` di `ScanLog`.
+8. [x] Jalankan `php -l` pada semua file yang diubah.
+9. [x] Uji extractor dengan PDF nyata 37 halaman (PDF 18 halaman tidak tersedia di workspace).
+10. [x] Uji regresi PDF 1 halaman dan `pdf_ocr_pages=0` melalui feature test.
 11. [ ] Verifikasi jumlah halaman PDF arsip di FTP final.
 12. [ ] Update dokumentasi/tutorial modul dokter bila perlu.
 13. [ ] Code review & merge.
@@ -607,3 +624,112 @@ Catatan: `SCANNER_SPLIT_PDF_PAGES=true` akan menghapus PDF asli dan menyimpan ga
 - `app/Services/PdfMergeService.php:27-91` — FPDI, `mergePdfs()`, `getPageCount()`.
 - `config/services.php:60-96` — konfigurasi scanner & Gemini.
 - `.env.example` — dokumentasi environment.
+
+---
+
+## 16. Catatan Implementasi (2026-10-20)
+
+### File yang diubah / dibuat
+
+| File | Perubahan |
+|---|---|
+| `config/services.php` | `scanner.split_pdf_pages` (default `false`), `gemini.pdf_ocr_pages` (default `1`) |
+| `.env.example` | `GEMINI_PDF_OCR_PAGES=1`, `SCANNER_SPLIT_PDF_PAGES=false` |
+| `app/Services/PdfPageExtractor.php` | **Baru** — ekstraksi halaman dengan FPDI, mengembalikan `path`, `source_pages`, `ocr_pages` |
+| `app/Services/Ocr/GeminiEngine.php` | Potong PDF sebelum OCR, fallback ke PDF utuh, cleanup `finally`, log halaman |
+| `app/Console/Commands/Dokter/MonitorScanner.php` | Cabang pecah PDF hanya aktif jika `split_pdf_pages=true` |
+| `app/Jobs/ProcessScanFile.php` | Simpan `source_pages` & `ocr_pages_used` di metadata OCR |
+| `tests/Unit/Dokter/PdfPageExtractorTest.php` | **Baru** — 8 test |
+| `tests/Feature/Dokter/GeminiEngineSinglePageOcrTest.php` | **Baru** — 5 test integrasi dengan `Http::fake()` |
+
+### Perilaku akhir
+
+- PDF dari scanner **tidak dipecah** dan **tidak dihapus** oleh `MonitorScanner` secara default.
+- `ProcessScanFile` tetap mengunggah file asli (`$fullPath`) ke FTP final, sehingga seluruh halaman tersimpan.
+- `GeminiEngine` membuat salinan sementara berisi halaman pertama (default) lalu menghapusnya di `finally`.
+- Jika FPDI gagal (PDF terenkripsi/rusak), OCR memakai PDF utuh dan mencatat warning.
+- `GEMINI_PDF_OCR_PAGES=0` mengirim seluruh PDF (perilaku lama).
+- `SCANNER_SPLIT_PDF_PAGES=true` mengembalikan perilaku lama (pecah gambar per halaman).
+
+### Hasil verifikasi
+
+| Verifikasi | Hasil |
+|---|---|
+| `php -l` semua file yang diubah | Tidak ada syntax error |
+| `phpunit tests/Unit/Dokter/PdfPageExtractorTest.php` | 8 test, 20 assertion — OK |
+| `phpunit tests/Feature/Dokter/GeminiEngineSinglePageOcrTest.php` | 5 test, 27 assertion — OK |
+| `phpunit --testsuite Unit` | 121 test, 303 assertion — OK |
+| PDF nyata 37 halaman (`20261020_113818.pdf`, 1.706.888 B) | Terpotong menjadi 1 halaman (34.345 B), output PDF valid 1 halaman |
+| OCR nyata via fallback `gemini-3.5-flash-lite` | Sukses, 391 prompt token + 248 completion token (total 639), hasil ekstraksi benar |
+
+### Catatan
+
+- File `.env` aktual tidak diubah karena default config sudah menerapkan perilaku baru. Jalankan `php artisan config:clear` bila `.env` diubah.
+- `metadata.ocr_data.source_pages` dan `metadata.ocr_data.ocr_pages_used` bernilai `null` bila FPDI gagal membaca PDF (jumlah halaman tidak diketahui).
+- `total_pages` pada `scan_logs` belum diubah maknanya; nilai tersebut tetap mengikuti logika merge yang sudah ada.
+- Verifikasi end-to-end ke FTP final belum dijalankan karena membutuhkan koneksi FTP scanner/final.
+
+---
+
+## 17. Optimasi Token Lanjutan (2026-10-20)
+
+Setelah Opsi A berjalan, konsumsi token diturunkan lagi tanpa mengubah data yang diarsipkan.
+
+### Perubahan
+
+| Optimasi | Sebelum | Sesudah | Dampak |
+|---|---|---|---|
+| Halaman OCR | Semua halaman (18) | 1 halaman | ±18x lebih sedikit |
+| Resolusi media PDF | `unspecified` (±560 token/halaman, Gemini 3) | `MEDIA_RESOLUTION_LOW` (±280 token/halaman) | ±2x lebih sedikit |
+| Thinking | Default model | `thinkingLevel: minimal` | Menghindari token thinking berlebih |
+| Output | Teks bebas + markdown | `responseMimeType: application/json` | Output lebih pendek & konsisten |
+| `maxOutputTokens` | 8192 | 1024 | Mencegah output/thinking membengkak |
+| Prompt | ±175 token | ±100 token | Prompt lebih ringkas |
+| 503/429 | Job langsung gagal | Retry exponential + `Retry-After` | Lebih tahan saat model high demand |
+| Model high demand | Job gagal | Fallback otomatis ke model cadangan | OCR tetap jalan meski model utama 503 |
+
+### Konfigurasi baru
+
+```env
+GEMINI_PDF_OCR_PAGES=1
+GEMINI_MEDIA_RESOLUTION=low
+GEMINI_THINKING_LEVEL=minimal
+GEMINI_RESPONSE_MIME_TYPE=application/json
+GEMINI_MAX_TOKENS=1024
+GEMINI_FALLBACK_MODELS=gemini-3.5-flash-lite,gemini-2.5-flash-lite
+# Khusus Gemini 2.5:
+# GEMINI_THINKING_BUDGET=0
+```
+
+### Fallback model
+
+Jika model utama mengembalikan `503/500/502/504` setelah 3 percobaan, engine otomatis mencoba model berikutnya dari `GEMINI_FALLBACK_MODELS`. Model `gemini-2.5-flash-lite` otomatis memakai `thinkingBudget: 0` (bukan `thinkingLevel`).
+
+### Hasil pengukuran nyata
+
+Diuji dengan PDF 37 halaman (`20261020_113818.pdf`) memakai model cadangan `gemini-3.5-flash-lite`:
+
+| Skenario | Prompt token | Completion token | Total |
+|---|---:|---:|---:|
+| Sebelum (18 halaman, default) | 9.768 | 214 | 9.982 |
+| Sesudah (1 halaman, `low`, prompt ringkas) | **391** | **248** | **639** |
+| **Reduksi** | **±96%** | — | **±93,6%** |
+
+Hasil ekstraksi tetap benar:
+
+```json
+{
+  "document_type": "SLIP PEMBUKUAN AP",
+  "document_number": "001/PBT/M/03/26",
+  "vendor_name": "PUSAKA BUMI TRANSPORTASI",
+  "document_date": "02 Apr 26"
+}
+```
+
+`thoughts_tokens` tercatat `0`, sehingga `thinkingLevel: minimal` benar-benar menekan token thinking. Waktu proses 50 detik karena model utama 503 dan harus beralih ke model cadangan.
+
+Angka aktual dapat bervariasi tergantung jenis PDF (native text vs scanned) dan panjang `uraian`. Jika akurasi OCR menurun pada dokumen tertentu, naikkan `GEMINI_MEDIA_RESOLUTION` ke `medium` atau `high`.
+
+### Catatan 503
+
+Saat pengujian nyata, model `gemini-3.1-flash-lite` mengembalikan `503 UNAVAILABLE` karena high demand. Kode sekarang melakukan retry otomatis (3 percobaan, exponential backoff, menghormati `Retry-After`) lalu beralih ke `GEMINI_FALLBACK_MODELS`. Jika semua model gagal, queue akan mencoba ulang job pada siklus berikutnya.

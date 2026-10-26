@@ -13,6 +13,8 @@ class ScanLog extends Model
         'source',
         'event',
         'status',
+        'merge_status',
+        'total_pages',
         'filename',
         'extension',
         'document_type_id',
@@ -36,6 +38,7 @@ class ScanLog extends Model
         'linked_numbers' => 'array',
         'file_size' => 'integer',
         'processing_time_ms' => 'integer',
+        'total_pages' => 'integer',
     ];
 
     public function documentType(): BelongsTo

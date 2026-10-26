@@ -29,4 +29,19 @@ class KategoriPendapatan extends Model
     {
         return $this->hasMany(KategoriTarif::class, 'kategori_pendapatan_id', 'id');
     }
+
+    public function spph16368Bobot()
+    {
+        return $this->hasMany(Spph16368Bobot::class, 'kategori_pendapatan_id', 'id');
+    }
+
+    public function spph16368KomponenTarif()
+    {
+        return $this->hasMany(Spph16368KomponenTarif::class, 'kategori_pendapatan_id', 'id');
+    }
+
+    public function spph16368KategoriTarif()
+    {
+        return $this->hasMany(Spph16368KategoriTarif::class, 'kategori_pendapatan_id', 'id');
+    }
 }

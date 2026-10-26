@@ -3,5 +3,7 @@
 @section('title', 'SPPH 16368 - Kalkulasi')
 
 @section('content')
-    @include('simka.partials.spph-subpage')
+    @include('simka.partials.spph-subpage', [
+        'contentView' => 'simka.spph16368.partials.konfigurasi-kalkulasi',
+    ])
 @endsection

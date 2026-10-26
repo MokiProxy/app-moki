@@ -41,6 +41,12 @@ class MonitorScanner extends Command
     protected int $minFileAgeSeconds = 15;
 
     /**
+     * Pecah PDF menjadi gambar per halaman (perilaku lama).
+     * Default false: PDF tetap utuh dan hanya input OCR yang dipotong.
+     */
+    protected bool $splitPdfPages = false;
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -51,6 +57,7 @@ class MonitorScanner extends Command
         $this->batchSize = config('services.gemini.batch_size', 5);
         $this->batchDelayMs = config('services.gemini.batch_delay_ms', 500);
         $this->minFileAgeSeconds = (int) config('services.scanner.min_file_age', 15);
+        $this->splitPdfPages = (bool) config('services.scanner.split_pdf_pages', false);
     }
 
     /**
@@ -88,7 +95,7 @@ class MonitorScanner extends Command
         $batchCount = count($batches);
 
         foreach ($batches as $batchIndex => $batch) {
-            Log::debug("Processing batch ".($batchIndex + 1)." of {$batchCount}", [
+            Log::debug('Processing batch '.($batchIndex + 1)." of {$batchCount}", [
                 'files_in_batch' => count($batch),
             ]);
 
@@ -153,7 +160,7 @@ class MonitorScanner extends Command
 
         $fullPath = storage_path("app/private/{$localPath}");
 
-        if ($converter->isPdf($fullPath)) {
+        if ($this->splitPdfPages && $converter->isPdf($fullPath)) {
             try {
                 $images = $converter->pdfToImages($fullPath);
                 Storage::disk('local')->delete($localPath);
@@ -266,7 +273,7 @@ class MonitorScanner extends Command
 
         $fullPath = storage_path("app/private/{$localPath}");
 
-        if ($converter->isPdf($fullPath)) {
+        if ($this->splitPdfPages && $converter->isPdf($fullPath)) {
             try {
                 $images = $converter->pdfToImages($fullPath);
                 Storage::disk('local')->delete($localPath);

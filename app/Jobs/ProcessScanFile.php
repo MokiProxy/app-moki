@@ -57,7 +57,7 @@ class ProcessScanFile implements ShouldQueue
 
         $uploadedFile = new UploadedFile($fullPath, $this->filename, mime_content_type($fullPath), null, true);
 
-        $ocr = new GeminiEngine();
+        $ocr = new GeminiEngine;
 
         // Single-pass: 1 Gemini call mengembalikan document_type + semua field
         $result = $ocr->extractText($uploadedFile);
@@ -68,6 +68,8 @@ class ProcessScanFile implements ShouldQueue
 
         $ocrText = $result['text'] ?? '';
         $ocrData = $result['ocr_data'] ?? null;
+        $sourcePages = $result['source_pages'] ?? null;
+        $ocrPagesUsed = $result['ocr_pages_used'] ?? null;
 
         Log::info('OCR DATA', [
             'data' => $ocrData,
@@ -112,6 +114,8 @@ class ProcessScanFile implements ShouldQueue
             'filename' => $this->filename,
             'text' => $ocrText,
             'processing_time_ms' => $result['processing_time_ms'] ?? null,
+            'source_pages' => $sourcePages,
+            'ocr_pages_used' => $ocrPagesUsed,
             'processed_at' => now()->toIso8601String(),
         ];
 
