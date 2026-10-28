@@ -11,6 +11,10 @@ class ScanLog extends Model
 
     protected $fillable = [
         'source',
+        'user',
+        'user_id',
+        'scanner_folder',
+        'scanned_by_name',
         'event',
         'status',
         'merge_status',
@@ -44,6 +48,11 @@ class ScanLog extends Model
     public function documentType(): BelongsTo
     {
         return $this->belongsTo(DocumentType::class, 'document_type_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function getStatusLabelAttribute(): string
@@ -82,6 +91,9 @@ class ScanLog extends Model
             'ftp_upload_failed' => 'Upload ke FTP Gagal',
             'job_completed' => 'Proses Selesai',
             'job_failed' => 'Proses Gagal',
+            'scanner_user_unresolved' => 'User Scanner Tidak Dikenali',
+            'scanner_user_ambiguous' => 'User Scanner Ambigu',
+            'scanner_folder_unknown' => 'Folder Scanner Tidak Dikenali',
             default => ucwords(str_replace('_', ' ', $this->event)),
         };
     }

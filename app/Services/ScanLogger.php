@@ -13,7 +13,7 @@ class ScanLogger
      * @param  string  $status  status ('success', 'failed', 'warning', 'skipped', 'info')
      * @param  array<string, mixed>  $data  kolom tambahan (filename, document_type_id, message, dll)
      */
-    public function log(string $event, string $status = 'info', array $data = []): ScanLog
+    public function log(string $user, string $event, string $status = 'info', array $data = []): ScanLog
     {
         $arrayFields = ['uraian', 'linked_numbers', 'metadata'];
 
@@ -25,6 +25,7 @@ class ScanLogger
 
         return ScanLog::create(array_merge([
             'source' => $data['source'] ?? 'scanner',
+            'user' => $user,
             'event' => $event,
             'status' => $status,
         ], $data));

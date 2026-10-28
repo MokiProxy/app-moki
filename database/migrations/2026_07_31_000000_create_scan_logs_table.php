@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('scan_logs', function (Blueprint $table) {
             $table->id();
             $table->string('source')->default('scanner');
+            $table->string('user')->nullable();
             $table->string('event');
             $table->string('status')->default('info');
             $table->string('filename')->nullable();

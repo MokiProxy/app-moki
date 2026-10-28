@@ -57,6 +57,9 @@ $roleColor = "primary-dokter";
                 @can('dokter.vendors.view')
                 <li><a href="{{ route('dokter.vendors.index') }}"><i class='mdi mdi-alert-box'></i>Vendor</a></li>
                 @endcan
+                @can('dokter.vendors.view')
+                <li><a href="{{ route('dokter.vendors.index') }}"><i class='mdi mdi-user'></i>User Scanner</a></li>
+                @endcan
             </ul>
         </li>
         @endcan

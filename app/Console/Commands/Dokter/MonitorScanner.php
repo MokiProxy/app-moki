@@ -85,30 +85,34 @@ class MonitorScanner extends Command
      */
     protected function processRootFiles(FileConversionService $converter, ScanLogger $logger): void
     {
-        $files = Storage::disk('ftp_scanner')->files();
+        $folders = Storage::disk('ftp_scanner')->directories();
+        // if (empty($files)) {
+        //     return;
+        // }
 
-        if (empty($files)) {
-            return;
-        }
+        foreach ($folders as $folder) {
+            $files = Storage::disk('ftp_scanner')->files($folder);
+            $this->info("Processing: {$folder} | Files: " . count($files));
 
-        $batches = array_chunk($files, $this->batchSize);
-        $batchCount = count($batches);
+            $batches = array_chunk($files, $this->batchSize);
+            $batchCount = count($batches);
 
-        foreach ($batches as $batchIndex => $batch) {
-            Log::debug('Processing batch '.($batchIndex + 1)." of {$batchCount}", [
-                'files_in_batch' => count($batch),
-            ]);
+            foreach ($batches as $batchIndex => $batch) {
+                Log::debug('Processing batch ' . ($batchIndex + 1) . " of {$batchCount}", [
+                    'files_in_batch' => count($batch),
+                ]);
 
-            foreach ($batch as $file) {
-                if (! $this->isFileReady($file)) {
-                    continue;
+                foreach ($batch as $file) {
+                    if (!$this->isFileReady($file)) {
+                        continue;
+                    }
+
+                    $this->processRootFile($file, $converter, $logger, $folder);
                 }
 
-                $this->processRootFile($file, $converter, $logger);
-            }
-
-            if ($batchIndex < $batchCount - 1 && $this->batchDelayMs > 0) {
-                usleep($this->batchDelayMs * 1000);
+                if ($batchIndex < $batchCount - 1 && $this->batchDelayMs > 0) {
+                    usleep($this->batchDelayMs * 1000);
+                }
             }
         }
     }
@@ -117,18 +121,18 @@ class MonitorScanner extends Command
      * Process single file dari root folder.
      * Dispatch ProcessScanFile tanpa documentTypeId — deteksi dilakukan dalam 1 Gemini call.
      */
-    protected function processRootFile(string $file, FileConversionService $converter, ScanLogger $logger): void
+    protected function processRootFile(string $file, FileConversionService $converter, ScanLogger $logger, string $user): void
     {
         $filename = basename($file);
         $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
-        if (! in_array($extension, $this->allowedExtensions)) {
+        if (!in_array($extension, $this->allowedExtensions)) {
             $this->warn("Skipping non-image file: {$file}");
             Storage::disk('ftp_scanner')->delete($file);
             $logger->log('file_skipped', 'skipped', [
                 'filename' => $filename,
                 'extension' => $extension,
-                'message' => 'Ekstensi file tidak didukung: '.$extension,
+                'message' => 'Ekstensi file tidak didukung: ' . $extension,
             ]);
 
             return;
@@ -142,7 +146,7 @@ class MonitorScanner extends Command
 
         $localPath = "scanner/incoming/{$filename}";
 
-        if (! Storage::disk('local')->put($localPath, $content)) {
+        if (!Storage::disk('local')->put($localPath, $content)) {
             Log::error('Gagal menyimpan file scanner ke storage lokal', [
                 'file' => $file,
                 'local_path' => $localPath,
@@ -178,17 +182,17 @@ class MonitorScanner extends Command
 
                 foreach ($images as $imagePath) {
                     $imageFilename = basename($imagePath);
-                    ProcessScanFile::dispatch($imageFilename);
+                    ProcessScanFile::dispatch($imageFilename, $user);
                     $this->info("OCR job dispatched for: {$imageFilename}");
                 }
             } catch (Exception $e) {
                 $this->warn("PDF local conversion unavailable, processing PDF directly: {$filename}");
-                ProcessScanFile::dispatch($filename);
+                ProcessScanFile::dispatch($filename, $user);
                 $this->info("OCR job dispatched for PDF: {$filename}");
             }
         } else {
-            ProcessScanFile::dispatch($filename);
-            $this->info("OCR job dispatched for: {$filename}");
+            ProcessScanFile::dispatch($filename, $user);
+            $this->info("OCR job dispatched for: {$filename} source user: {$user}");
         }
     }
 
@@ -205,7 +209,7 @@ class MonitorScanner extends Command
             $slug = basename($directory);
             $docType = $documentTypes->firstWhere('slug', $slug);
 
-            if (! $docType) {
+            if (!$docType) {
                 $this->warn("No document type found for subfolder: {$slug}");
 
                 continue;
@@ -214,7 +218,7 @@ class MonitorScanner extends Command
             $files = Storage::disk('ftp_scanner')->files($directory);
 
             foreach ($files as $file) {
-                if (! $this->isFileReady($file)) {
+                if (!$this->isFileReady($file)) {
                     continue;
                 }
 
@@ -228,7 +232,7 @@ class MonitorScanner extends Command
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         $filename = basename($file);
 
-        if (! in_array($extension, $this->allowedExtensions)) {
+        if (!in_array($extension, $this->allowedExtensions)) {
             $this->warn("Skipping unsupported file: {$file}");
             Storage::disk('ftp_scanner')->delete($file);
             $logger->log('file_skipped', 'skipped', [
@@ -236,7 +240,7 @@ class MonitorScanner extends Command
                 'extension' => $extension,
                 'document_type_id' => $documentType->id,
                 'document_type_name' => $documentType->name,
-                'message' => 'Ekstensi file tidak didukung: '.$extension,
+                'message' => 'Ekstensi file tidak didukung: ' . $extension,
             ]);
 
             return;
@@ -252,7 +256,7 @@ class MonitorScanner extends Command
 
         $localPath = "scanner/incoming/{$filename}";
 
-        if (! Storage::disk('local')->put($localPath, $content)) {
+        if (!Storage::disk('local')->put($localPath, $content)) {
             Log::error('Gagal menyimpan file scanner ke storage lokal', [
                 'file' => $file,
                 'local_path' => $localPath,
@@ -368,7 +372,7 @@ class MonitorScanner extends Command
             return null;
         }
 
-        if (! is_string($content) || $content === '') {
+        if (!is_string($content) || $content === '') {
             $this->logDownloadFailure($file, $logger, $documentType, 'File kosong atau gagal dibaca');
 
             return null;
@@ -389,7 +393,7 @@ class MonitorScanner extends Command
 
         $data = [
             'filename' => basename($file),
-            'message' => 'File gagal dibaca (kemungkinan masih dikunci scanner), akan dicoba pada siklus berikutnya: '.$reason,
+            'message' => 'File gagal dibaca (kemungkinan masih dikunci scanner), akan dicoba pada siklus berikutnya: ' . $reason,
         ];
 
         if ($documentType !== null) {
