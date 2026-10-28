@@ -3,6 +3,7 @@
 @section('title', $pageName)
 
 @php
+if (! function_exists('formatBytes')) {
 function formatBytes($bytes, $precision = 2)
 {
 $units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -11,6 +12,7 @@ $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
 $pow = min($pow, count($units) - 1);
 $bytes /= pow(1024, $pow);
 return round($bytes, $precision) . ' ' . $units[$pow];
+}
 }
 @endphp
 
@@ -148,21 +150,49 @@ return round($bytes, $precision) . ' ' . $units[$pow];
                 @endif
 
                 @isset($files)
-                @if(count($files) > 0)
                 @php
                 $validatedCount = collect($files)->where('is_validated', true)->count();
                 $totalCount = count($files);
+                $totalFiles = $totalFiles ?? $totalCount;
+                $searchTerm = $search ?? '';
                 @endphp
-                <div class="d-flex justify-content-between align-items-center mb-2">
+
+                @if($totalCount > 0 || $searchTerm !== '')
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                     <h6 class="text-muted text-uppercase fw-bold mb-0">
                         <i class="mdi mdi-file-outline me-1"></i> File
                         <span class="badge bg-secondary ms-1">{{ $totalCount }}</span>
+                        @if($searchTerm !== '' && $totalFiles > $totalCount)
+                        <small class="text-muted fw-normal text-lowercase ms-1">{{ $totalCount }} dari {{ $totalFiles }} file</small>
+                        @endif
                     </h6>
-                    <small class="text-muted">
-                        <i class="mdi mdi-check-circle text-success me-1"></i>
-                        {{ $validatedCount }}/{{ $totalCount }} divalidasi
-                    </small>
+                    <div class="d-flex align-items-center flex-wrap gap-3">
+                        @if($totalCount > 0)
+                        <small class="text-muted">
+                            <i class="mdi mdi-check-circle text-success me-1"></i>
+                            {{ $validatedCount }}/{{ $totalCount }} divalidasi
+                        </small>
+                        @endif
+                        <form method="GET" action="{{ route('dokter.file-managements.index') }}" class="d-flex" role="search">
+                            <input type="hidden" name="path" value="{{ $path ?? '' }}">
+                            <div class="input-group input-group-sm" style="width: 300px;">
+                                <span class="input-group-text bg-white"><i class="mdi mdi-magnify"></i></span>
+                                <input type="search" name="search" value="{{ $searchTerm }}" class="form-control"
+                                    placeholder="Cari nama file..." aria-label="Cari nama file">
+                                @if($searchTerm !== '')
+                                <a href="{{ route('dokter.file-managements.index', ['path' => $path ?? '']) }}"
+                                    class="btn btn-outline-secondary" title="Reset pencarian">
+                                    <i class="mdi mdi-close"></i>
+                                </a>
+                                @endif
+                                <button type="submit" class="btn btn-primary">Cari</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+                @endif
+
+                @if($totalCount > 0)
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle w-100 mb-0">
                         <thead class="table-dark">
@@ -260,6 +290,13 @@ return round($bytes, $precision) . ' ' . $units[$pow];
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+                @elseif($searchTerm !== '')
+                <div class="text-center text-muted py-4">
+                    <i class="mdi mdi-magnify text-secondary" style="font-size: 3.5rem;"></i>
+                    <p class="mt-2 fw-semibold mb-1">File dengan nama "{{ $searchTerm }}" tidak ditemukan.</p>
+                    <a href="{{ route('dokter.file-managements.index', ['path' => $path ?? '']) }}"
+                        class="btn btn-sm btn-light border">Reset pencarian</a>
                 </div>
                 @else
                 <div class="text-center text-muted py-4">

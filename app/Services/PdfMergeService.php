@@ -66,7 +66,12 @@ class PdfMergeService
             $templateId = $this->fpdi->ImportPage($pageNo);
             $size = $this->fpdi->getTemplateSize($templateId);
 
-            $this->fpdi->AddPage();
+            // Pertahankan ukuran halaman sumber. Tanpa ini semua halaman
+            // hasil merge menjadi A4 dan konten bisa terpotong.
+            $this->fpdi->AddPage(
+                $size['orientation'] ?? 'P',
+                [$size['width'], $size['height']]
+            );
 
             $this->fpdi->UseTemplate($templateId, 0, 0, $size['width'], $size['height']);
         }

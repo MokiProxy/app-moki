@@ -14,10 +14,11 @@ class FileManagementController extends Controller
     {
         $pageName = 'File Management';
         $path = $request->query('path', '');
+        $search = trim((string) $request->query('search', ''));
         $disk = Storage::disk('ftp_final');
 
         if ($path !== '') {
-            return $this->showFolder($disk, $path, $pageName);
+            return $this->showFolder($disk, $path, $pageName, $search);
         }
 
         return $this->showRoot($disk, $pageName);
@@ -30,11 +31,19 @@ class FileManagementController extends Controller
         return view('dokter.file-managements.index', compact('pageName', 'directories'));
     }
 
-    protected function showFolder($disk, string $path, string $pageName)
+    protected function showFolder($disk, string $path, string $pageName, string $search = '')
     {
         $breadcrumbs = $this->buildBreadcrumbs($path);
         $directories = $this->getSubDirectories($disk, $path);
         $files = $this->getFiles($disk, $path);
+        $totalFiles = count($files);
+
+        if ($search !== '') {
+            $files = array_values(array_filter(
+                $files,
+                fn (array $file): bool => mb_stripos($file['name'], $search) !== false
+            ));
+        }
 
         $validatedFiles = FileValidation::whereIn('file_path', collect($files)->pluck('path')->toArray())
             ->get()
@@ -47,7 +56,17 @@ class FileManagementController extends Controller
             $file['validated_at'] = $validation?->validated_at ?? null;
         }
 
-        return view('dokter.file-managements.index', compact('pageName', 'breadcrumbs', 'directories', 'files', 'path'));
+        unset($file);
+
+        return view('dokter.file-managements.index', compact(
+            'pageName',
+            'breadcrumbs',
+            'directories',
+            'files',
+            'path',
+            'search',
+            'totalFiles'
+        ));
     }
 
     public function validateFile(Request $request)

@@ -14,6 +14,7 @@ class DocumentMergeGroup extends Model
     ];
 
     protected $casts = [
+        'status' => 'integer',
         'merged_at' => 'datetime',
     ];
 
@@ -33,6 +34,7 @@ class DocumentMergeGroup extends Model
             0 => 'Pending',
             1 => 'Lengkap',
             2 => 'Selesai',
+            3 => 'Gagal Merge',
             default => 'Unknown',
         };
     }
@@ -43,6 +45,7 @@ class DocumentMergeGroup extends Model
             0 => 'bg-warning',
             1 => 'bg-info',
             2 => 'bg-success',
+            3 => 'bg-danger',
             default => 'bg-secondary',
         };
     }

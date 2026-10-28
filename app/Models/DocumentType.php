@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\FileNameSanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
@@ -39,10 +40,10 @@ class DocumentType extends Model
     {
         $template = $this->attributes['ftp_folder_template'] ?? '{document_type}/{vendor}';
         $replacements = [
-            '{document_type}' => strtoupper($this->name),
-            '{vendor}' => strtoupper($vendorName ?? ''),
-            '{number}' => $number ?? '',
-            '{filename}' => $filename ?? '',
+            '{document_type}' => FileNameSanitizer::sanitize(strtoupper($this->name)),
+            '{vendor}' => strtoupper(FileNameSanitizer::sanitize($vendorName)),
+            '{number}' => FileNameSanitizer::sanitize($number),
+            '{filename}' => FileNameSanitizer::sanitize($filename),
         ];
 
         return str_replace(array_keys($replacements), array_values($replacements), $template);
@@ -57,8 +58,8 @@ class DocumentType extends Model
             default => $ext,
         };
         $replacements = [
-            '{vendor}' => strtoupper($vendorName ?? ''),
-            '{number}' => $number ?? '',
+            '{vendor}' => strtoupper(FileNameSanitizer::sanitize($vendorName)),
+            '{number}' => FileNameSanitizer::sanitize($number),
             '{ext}' => $safeExt,
             '{filename}' => '',
         ];

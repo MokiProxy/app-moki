@@ -9,6 +9,7 @@ use App\Services\MergeFlowService;
 use App\Services\Ocr\GeminiEngine;
 use App\Services\PdfMergeService;
 use App\Services\ScanLogger;
+use App\Support\FileNameSanitizer;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,8 +33,10 @@ class ProcessScanFile implements ShouldQueue
 
     public function __construct(
         public string $filename,
+        public string $user,
         public ?int $documentTypeId = null,
-    ) {}
+    ) {
+    }
 
     public function handle(
         DocumentTypeProcessor $processor,
@@ -41,10 +44,13 @@ class ProcessScanFile implements ShouldQueue
         PdfMergeService $merger,
         ScanLogger $logger,
     ): void {
+        Log::info('USER', [
+            'user' => $this->user,
+        ]);
         $incomingPath = "scanner/incoming/{$this->filename}";
         $fullPath = storage_path("app/private/{$incomingPath}");
 
-        if (! file_exists($fullPath)) {
+        if (!file_exists($fullPath)) {
             Log::warning('File not found for OCR processing', ['file' => $this->filename]);
             $logger->log('job_failed', 'failed', [
                 'filename' => $this->filename,
@@ -56,17 +62,19 @@ class ProcessScanFile implements ShouldQueue
 
         $uploadedFile = new UploadedFile($fullPath, $this->filename, mime_content_type($fullPath), null, true);
 
-        $ocr = new GeminiEngine();
+        $ocr = new GeminiEngine;
 
         // Single-pass: 1 Gemini call mengembalikan document_type + semua field
         $result = $ocr->extractText($uploadedFile);
 
         if (empty($result['success'])) {
-            throw new Exception('OCR failed: '.json_encode($result));
+            throw new Exception('OCR failed: ' . json_encode($result));
         }
 
         $ocrText = $result['text'] ?? '';
         $ocrData = $result['ocr_data'] ?? null;
+        $sourcePages = $result['source_pages'] ?? null;
+        $ocrPagesUsed = $result['ocr_pages_used'] ?? null;
 
         Log::info('OCR DATA', [
             'data' => $ocrData,
@@ -93,7 +101,7 @@ class ProcessScanFile implements ShouldQueue
                 'vendor_name' => $vendorName,
             ]);
         } else {
-            $vendorName = $processor->matchVendor($documentType, $ocrText);
+            $vendorName = $this->sanitizeFilename($processor->matchVendor($documentType, $ocrText));
             $documentNumber = null;
             $tanggal = null;
             $keterangan = null;
@@ -101,13 +109,18 @@ class ProcessScanFile implements ShouldQueue
         }
 
         $originalExtension = pathinfo($this->filename, PATHINFO_EXTENSION);
-        $targetFilename = $processor->generateFilename($documentType, $vendorName, $documentNumber, $originalExtension);
+        // Nomor dokumen dipakai sebagai bagian nama file, jadi pemisah path
+        // (mis. "001/PBT/M/03/26") harus diratakan agar tidak membuat folder.
+        $safeDocumentNumber = FileNameSanitizer::sanitize($documentNumber);
+        $targetFilename = $processor->generateFilename($documentType, $vendorName, $safeDocumentNumber, $originalExtension);
         $targetFilename = $targetFilename ?: $this->filename;
 
         $ocrTemp = [
             'filename' => $this->filename,
             'text' => $ocrText,
             'processing_time_ms' => $result['processing_time_ms'] ?? null,
+            'source_pages' => $sourcePages,
+            'ocr_pages_used' => $ocrPagesUsed,
             'processed_at' => now()->toIso8601String(),
         ];
 
@@ -151,13 +164,13 @@ class ProcessScanFile implements ShouldQueue
             }
         }
 
-        if (! $vendorName) {
+        if (!$vendorName) {
             $vendorExpected = $documentType->vendor_search_enabled && $documentType->vendors()->exists();
             $ftpPath = $vendorExpected
                 ? $processor->resolveFailedPath($documentType, $pdfFilename)
-                : $processor->resolveFtpPath($documentType, $vendorName, $documentNumber, $pdfFilename);
+                : $processor->resolveFtpPath($documentType, $vendorName, $safeDocumentNumber, $pdfFilename);
         } else {
-            $ftpPath = $processor->resolveFtpPath($documentType, $vendorName, $documentNumber, $pdfFilename);
+            $ftpPath = $processor->resolveFtpPath($documentType, $vendorName, $safeDocumentNumber, $pdfFilename);
         }
 
         $ftpDisk = Storage::disk('ftp_final');
@@ -179,13 +192,18 @@ class ProcessScanFile implements ShouldQueue
         }
 
         if ($existingContent !== null) {
-            $tempExisting = storage_path('app/private/scanner/temp/existing_' . $pdfFilename);
-            $tempNew = storage_path('app/private/scanner/temp/new_' . $pdfFilename);
+            // File temp selalu dibuat flat, terlepas dari bentuk nama file target,
+            // agar tidak pernah gagal karena direktori induk belum ada.
+            $tempBase = FileNameSanitizer::sanitize($pdfFilename, 'scan_' . md5($pdfFilename));
+            $tempExisting = storage_path('app/private/scanner/temp/existing_' . $tempBase);
+            $tempNew = storage_path('app/private/scanner/temp/new_' . $tempBase);
             $mergedDir = storage_path('app/private/scanner/merged');
-            $mergedPath = $mergedDir . '/' . $pdfFilename;
+            $mergedPath = $mergedDir . '/' . $tempBase;
 
-            $this->ensureDirectoryExists(dirname($tempExisting));
             $this->ensureDirectoryExists($mergedDir);
+            $this->ensureDirectoryExists(dirname($tempExisting));
+            $this->ensureDirectoryExists(dirname($tempNew));
+            $this->ensureDirectoryExists(dirname($mergedPath));
 
             file_put_contents($tempExisting, $existingContent);
             file_put_contents($tempNew, $ftpContent);
@@ -255,7 +273,7 @@ class ProcessScanFile implements ShouldQueue
             default => 'File baru diupload (1 page)',
         };
 
-        $scanLog = $logger->log('job_completed', 'success', [
+        $scanLog = $logger->log($this->user, 'job_completed', 'success', [
             'filename' => $this->filename,
             'document_type_id' => $documentType->id,
             'document_type_name' => $documentType->name,
@@ -308,7 +326,7 @@ class ProcessScanFile implements ShouldQueue
 
     protected function ensureDirectoryExists(string $directory): void
     {
-        if (! is_dir($directory)) {
+        if (!is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
     }
@@ -319,7 +337,7 @@ class ProcessScanFile implements ShouldQueue
             return null;
         }
 
-        return preg_replace('#[/\\\\:*?"<>|]#', '_', $value);
+        return FileNameSanitizer::sanitize($value);
     }
 
     /**

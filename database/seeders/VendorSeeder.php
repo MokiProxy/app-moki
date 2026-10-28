@@ -30,7 +30,7 @@ class VendorSeeder extends Seeder
                 'description' => 'PT Putra Perkasa Abadi',
             ],
             [
-                'name' => 'PUSAKA BUMI TRANSPORTAS',
+                'name' => 'PUSAKA BUMI TRANSPORTASI',
                 'slug' => 'pusaka-bumi-transportasi',
                 'description' => 'PT Pusaka Bumi Transportasi',
             ],

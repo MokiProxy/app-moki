@@ -71,6 +71,7 @@
                             <tr>
                                 <th class="text-center" style="width: 50px">No</th>
                                 <th style="width: 160px">Waktu Scan</th>
+                                <th style="width: 160px">User</th>
                                 <th class="text-center" style="width: 110px">Status</th>
                                 <th>Nama File</th>
                                 <th>Jenis Dokumen</th>
@@ -83,6 +84,7 @@
                             <tr>
                                 <td class="text-center">{{ $logs->firstItem() + $key }}</td>
                                 <td class="text-nowrap">{{ $log->created_at?->format('d-m-Y H:i:s') }}</td>
+                                <td class="text-nowrap">{{ $log->user ?? '-' }}</td>
                                 <td class="text-center">
                                     <span class="badge {{ $log->status_badge_class }}">{{ $log->status_label }}</span>
                                 </td>

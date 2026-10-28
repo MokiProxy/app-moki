@@ -43,6 +43,7 @@
                             <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Pending</option>
                             <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Lengkap</option>
                             <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Selesai</option>
+                            <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Gagal Merge</option>
                         </select>
                     </div>
                     <div class="col-md-3">

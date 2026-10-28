@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'employee_id',
+        'scanner_folder',
     ];
 
     /**

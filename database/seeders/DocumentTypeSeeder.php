@@ -17,7 +17,7 @@ class DocumentTypeSeeder extends Seeder
                 'name' => 'SLIP PEMBUKUAN AP',
                 'slug' => 'slip-pembukuan-ap',
                 'description' => 'Slip Pembukuan AP',
-                'filename_template' => 'AP_{vendor}_{number}.{ext}',
+                'filename_template' => '{vendor}_{number}.{ext}',
                 'ftp_folder_template' => '{document_type}/{vendor}',
                 'ftp_failed_folder' => 'FAILED',
                 'vendor_search_enabled' => true,
@@ -49,10 +49,22 @@ class DocumentTypeSeeder extends Seeder
                 'ftp_failed_folder' => 'FAILED',
                 'vendor_search_enabled' => true,
             ],
+            [
+                'name' => 'PERSETUJUAN PEMBAYARAN',
+                'slug' => 'persetujuan-pembayaran',
+                'description' => 'Persetujuan Pembayaran',
+                'filename_template' => 'APP_{vendor}_{number}.{ext}',
+                'ftp_folder_template' => '{document_type}/{vendor}',
+                'ftp_failed_folder' => 'FAILED',
+                'vendor_search_enabled' => true,
+            ],
         ];
 
         foreach ($documentTypes as $documentType) {
-            DocumentType::create($documentType);
+            DocumentType::updateOrCreate(
+                ['slug' => $documentType['slug']],
+                $documentType
+            );
         }
     }
 }
