@@ -92,6 +92,7 @@ class ProcessScanFile implements ShouldQueue
             $vendorName = $this->sanitizeFilename($ocrData['vendor_name'] ?? null);
             $tanggal = $ocrData['document_date'] ?? null;
             $keterangan = $ocrData['keterangan'] ?? null;
+            $noPo = $ocrData['no_po'] ?? null;
             $uraian = is_array($ocrData['uraian'] ?? null) ? json_encode($ocrData['uraian']) : ($ocrData['uraian'] ?? null);
 
             Log::info('Using structured data from Gemini', [
@@ -105,6 +106,7 @@ class ProcessScanFile implements ShouldQueue
             $documentNumber = null;
             $tanggal = null;
             $keterangan = null;
+            $noPo = null;
             $uraian = null;
         }
 
@@ -281,6 +283,7 @@ class ProcessScanFile implements ShouldQueue
             'vendor_name' => $vendorName,
             'tanggal' => $tanggal,
             'keterangan' => $keterangan,
+            'no_po' => $noPo,
             'uraian' => $uraian,
             'ftp_path' => $ftpPath,
             'processing_time_ms' => $ocrData['processing_time_ms'],
@@ -303,6 +306,7 @@ class ProcessScanFile implements ShouldQueue
             'vendor_name' => $vendorName,
             'tanggal' => $tanggal,
             'keterangan' => $keterangan,
+            'no_po' => $noPo,
             'uraian' => $uraian,
             'ftp_path' => $ftpPath,
             'processing_time_ms' => $ocrData['processing_time_ms'],

@@ -92,6 +92,74 @@ class GLController extends Controller
         ]);
     }
 
+    public function delete(Request $request)
+    {
+        $validated = $request->validate([
+            'select_all' => 'nullable|boolean',
+            'ids'        => 'nullable|array',
+            'ids.*'      => 'integer',
+            'search'     => 'nullable|string',
+            'sheet'      => 'nullable|string',
+            'date_from'  => 'nullable|date',
+            'date_to'    => 'nullable|date',
+        ]);
+
+        $selectAll = !empty($validated['select_all']);
+
+        if (!$selectAll && empty($validated['ids'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pilih minimal satu data yang akan dihapus.',
+            ], 422);
+        }
+
+        $query = EQTAXGL::query();
+
+        if ($selectAll) {
+            if (!empty($validated['search'])) {
+                $search = $validated['search'];
+                $query->where(function ($q) use ($search) {
+                    $q->where('no_faktur_pajak', 'like', "%{$search}%")
+                      ->orWhere('nama_supplier', 'like', "%{$search}%")
+                      ->orWhere('jurnal_no', 'like', "%{$search}%")
+                      ->orWhere('no_supplier', 'like', "%{$search}%");
+                });
+            }
+            if (!empty($validated['sheet'])) {
+                $query->where('sheet', $validated['sheet']);
+            }
+            if (!empty($validated['date_from'])) {
+                $query->where('jurnal_date', '>=', $validated['date_from']);
+            }
+            if (!empty($validated['date_to'])) {
+                $query->where('jurnal_date', '<=', $validated['date_to']);
+            }
+        } else {
+            $query->whereIn('id', $validated['ids']);
+        }
+
+        $deleted = $query->delete();
+
+        if ($deleted === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data yang dihapus. Data mungkin sudah tidak ada.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success'       => true,
+            'message'       => "{$deleted} data GL berhasil dihapus.",
+            'deleted_count' => $deleted,
+            'redirect_url'  => route('eqtax.gl.index', array_filter([
+                'search'    => $validated['search'] ?? null,
+                'sheet'     => $validated['sheet'] ?? null,
+                'date_from' => $validated['date_from'] ?? null,
+                'date_to'   => $validated['date_to'] ?? null,
+            ])),
+        ]);
+    }
+
     private function formatFieldValue(string $field, $value): string
     {
         $numberFields = ['dpp', 'ppn'];

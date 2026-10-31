@@ -80,10 +80,11 @@ Extract data into a flat JSON object:
 - uraian: array of strings.
 - vendor_name: company name from customer (text between commas) or Account Name; drop "PT." prefix.
 - Secondary document numbers: add as top-level snake_case keys using their labels.
-- document_number: first number found in the text.
+- document_number: first number on the head of the document.
 - Document Type is the title of the document. If the document type is "Persetujuan Pembayaran", return "invoice_numbers" as an array containing EVERY invoice number listed. Split each number into its own string; never combine them into one string. Omit this field for other document types.
+- no_po: get from keterangan. get set of characters on the start of keterangan
 Return ONLY valid JSON.
-Fields: ["document_type","document_number","document_date","vendor_name","customer","keterangan","uraian","invoice_numbers"]
+Fields: ["document_type","document_number","document_date","vendor_name","customer","keterangan","uraian","invoice_numbers", no_po]
 PROMPT,
         'default_fields' => [
             'document_type',

@@ -21,6 +21,7 @@ Route::prefix("eqtax")->name("eqtax.")->middleware(['permission:eqtax.menu'])->g
             Route::get("/", [SPTCoretaxController::class, "index"])->name("index");
             Route::post("import", [SPTCoretaxController::class, "import"])->name("import")->middleware('permission:eqtax.spt.coretax.import');
             Route::post("update-field", [SPTCoretaxController::class, "updateField"])->name("update-field")->middleware('permission:eqtax.spt.coretax.update-field');
+            Route::post("delete", [SPTCoretaxController::class, "delete"])->name("delete")->middleware('permission:eqtax.spt.coretax.delete');
         });
     });
 
@@ -28,6 +29,7 @@ Route::prefix("eqtax")->name("eqtax.")->middleware(['permission:eqtax.menu'])->g
         Route::get("/", [GLController::class, "index"])->name("index");
         Route::post("import", [GLController::class, "import"])->name("import")->middleware('permission:eqtax.gl.import');
         Route::post("update-field", [GLController::class, "updateField"])->name("update-field")->middleware('permission:eqtax.gl.update-field');
+        Route::post("delete", [GLController::class, "delete"])->name("delete")->middleware('permission:eqtax.gl.delete');
     });
 
     Route::prefix('equalization')->name('equalization.')->middleware('permission:eqtax.equalization.view')->group(function () {
