@@ -110,6 +110,72 @@ class SPTCoretaxController extends Controller
         ]);
     }
 
+    public function delete(Request $request)
+    {
+        $validated = $request->validate([
+            'select_all' => 'nullable|boolean',
+            'ids'        => 'nullable|array',
+            'ids.*'      => 'integer',
+            'tab'        => 'nullable|string|in:PK,PM,PMS',
+            'search'     => 'nullable|string',
+            'masa_pajak' => 'nullable|string',
+            'tahun'      => 'nullable|string',
+        ]);
+
+        $activeTab = $validated['tab'] ?? 'PK';
+        $selectAll = !empty($validated['select_all']);
+
+        if (!$selectAll && empty($validated['ids'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pilih minimal satu data yang akan dihapus.',
+            ], 422);
+        }
+
+        // Delete selalu dibatasi tab/entity aktif agar data tab lain tidak ikut terhapus.
+        $query = EQTAXCoretaxSPT::query()->where('entity', 'like', $activeTab . '%');
+
+        if ($selectAll) {
+            if (!empty($validated['search'])) {
+                $search = $validated['search'];
+                $query->where(function ($q) use ($search) {
+                    $q->where('no_faktur_pajak', 'like', "%{$search}%")
+                      ->orWhere('nama_penjual', 'like', "%{$search}%")
+                      ->orWhere('npwp_penjual', 'like', "%{$search}%");
+                });
+            }
+            if (!empty($validated['masa_pajak'])) {
+                $query->where('masa_pajak', $validated['masa_pajak']);
+            }
+            if (!empty($validated['tahun'])) {
+                $query->where('tahun', $validated['tahun']);
+            }
+        } else {
+            $query->whereIn('id', $validated['ids']);
+        }
+
+        $deleted = $query->delete();
+
+        if ($deleted === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data yang dihapus. Data mungkin sudah tidak ada atau tidak sesuai tab aktif.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success'       => true,
+            'message'       => "{$deleted} data SPT berhasil dihapus.",
+            'deleted_count' => $deleted,
+            'redirect_url'  => route('eqtax.spt.coretax.index', array_filter([
+                'tab'        => $activeTab,
+                'search'     => $validated['search'] ?? null,
+                'masa_pajak' => $validated['masa_pajak'] ?? null,
+                'tahun'      => $validated['tahun'] ?? null,
+            ])),
+        ]);
+    }
+
     private function formatFieldValue(string $field, $value): string
     {
         $booleanFields = ['valid', 'dilaporkan', 'dilaporkan_oleh_penjual'];

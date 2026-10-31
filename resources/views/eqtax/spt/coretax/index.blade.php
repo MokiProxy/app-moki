@@ -129,6 +129,21 @@ $authUserName = auth()->user()->name;
         right: 20px;
         z-index: 9999;
     }
+
+    .table > tbody > tr.table-active > td {
+        background-color: #e0e7ff !important;
+    }
+
+    #bulk-toolbar {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 12px;
+    }
+
+    #bulk-toolbar .btn-link {
+        text-decoration: none;
+    }
 </style>
 @endsection
 
@@ -323,21 +338,55 @@ $authUserName = auth()->user()->name;
                         ['field' => 'no_sp2d', 'label' => 'No SP2D', 'type' => 'text', 'align' => 'text-start'],
                     ],
                 };
+
+                $canDelete = auth()->user()->can('eqtax.spt.coretax.delete');
+                $extraCols = $canDelete ? 2 : 0;
                 @endphp
+
+                @if($canDelete)
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3" id="bulk-toolbar"
+                     data-url="{{ route('eqtax.spt.coretax.delete') }}"
+                     data-tab="{{ $activeTab }}"
+                     data-search="{{ request('search') }}"
+                     data-masa-pajak="{{ request('masa_pajak') }}"
+                     data-tahun="{{ request('tahun') }}"
+                     data-total="{{ $sptData->total() }}">
+                    <span class="text-muted small" id="selected-info">0 data dipilih</span>
+                    <button type="button" class="btn btn-danger btn-sm" id="btn-delete-selected" disabled>
+                        <i class="fas fa-trash me-1"></i> Hapus Terpilih
+                    </button>
+                    <button type="button" class="btn btn-link btn-sm p-0 d-none" id="btn-select-all-filtered">
+                        Pilih semua data pada filter ini
+                    </button>
+                </div>
+                @endif
 
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered align-middle w-100" id="spt-table">
                         <thead class="table-dark">
                             <tr class="align-middle">
+                                @if($canDelete)
+                                <th class="text-center" style="width: 42px">
+                                    <input type="checkbox" id="checkAll" class="form-check-input" title="Pilih semua pada halaman ini">
+                                </th>
+                                @endif
                                 <th>No</th>
                                 @foreach($columns as $col)
                                 <th>{{ $col['label'] }}</th>
                                 @endforeach
+                                @if($canDelete)
+                                <th class="text-center" style="width: 70px">Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($sptData as $key => $dt)
                             <tr data-id="{{ $dt->id }}">
+                                @if($canDelete)
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input row-checkbox" value="{{ $dt->id }}">
+                                </td>
+                                @endif
                                 <td>{{ ($sptData->currentPage() - 1) * $sptData->perPage() + $key + 1 }}</td>
                                 @foreach($columns as $col)
                                 @php
@@ -360,10 +409,21 @@ $authUserName = auth()->user()->name;
                                 <td class="editable text-start" data-field="{{ $field }}" data-type="text" data-value="{{ $value }}">{{ $value ?? "-" }}</td>
                                 @endif
                                 @endforeach
+                                @if($canDelete)
+                                <td class="text-center">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger btn-delete-row"
+                                            data-id="{{ $dt->id }}"
+                                            data-label="{{ $dt->no_faktur_pajak ?? $dt->id }}"
+                                            title="Hapus data">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                                @endif
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="{{ count($columns) + 1 }}" class="text-center text-muted">Belum ada data untuk tab {{ $activeTab }}. Silakan import file SPT terlebih dahulu.</td>
+                                <td colspan="{{ count($columns) + 1 + $extraCols }}" class="text-center text-muted">Belum ada data untuk tab {{ $activeTab }}. Silakan import file SPT terlebih dahulu.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -511,5 +571,184 @@ $authUserName = auth()->user()->name;
             }
         });
     }
+</script>
+<script src="{{ asset('libs/sweetalert2/sweetalert2.min.js') }}"></script>
+<script>
+    (function () {
+        const $toolbar = $('#bulk-toolbar');
+        if (!$toolbar.length) return;
+
+        const deleteUrl = $toolbar.data('url');
+        const totalFiltered = parseInt($toolbar.data('total'), 10) || 0;
+        let selectAllFiltered = false;
+        let requestRunning = false;
+
+        function formatNumber(n) {
+            return Number(n).toLocaleString('id-ID');
+        }
+
+        function escapeHtml(value) {
+            return $('<div>').text(value == null ? '' : value).html();
+        }
+
+        function getSelectedIds() {
+            return $('.row-checkbox:checked').map(function () {
+                return $(this).val();
+            }).get();
+        }
+
+        function updateBulkState() {
+            const ids = getSelectedIds();
+            const count = ids.length;
+            const effectiveCount = selectAllFiltered ? totalFiltered : count;
+
+            $('#selected-info').text(
+                selectAllFiltered
+                    ? `Semua ${formatNumber(totalFiltered)} data pada filter ini dipilih`
+                    : `${formatNumber(count)} data dipilih`
+            );
+
+            $('#btn-delete-selected')
+                .prop('disabled', effectiveCount === 0 || requestRunning)
+                .html('<i class="fas fa-trash me-1"></i> Hapus Terpilih' + (effectiveCount ? ` (${formatNumber(effectiveCount)})` : ''));
+
+            const $checkAll = $('#checkAll');
+            const $all = $('.row-checkbox');
+            const allChecked = $all.length > 0 && $all.length === $all.filter(':checked').length;
+
+            $checkAll.prop('checked', allChecked);
+            $checkAll.prop('indeterminate', count > 0 && !allChecked);
+
+            $('tr[data-id]').removeClass('table-active');
+            $('.row-checkbox:checked').closest('tr').addClass('table-active');
+
+            const showSelectAll = !selectAllFiltered && count > 0 && totalFiltered > $all.length;
+            $('#btn-select-all-filtered')
+                .toggleClass('d-none', !showSelectAll)
+                .text(`Pilih semua ${formatNumber(totalFiltered)} data pada filter ini`);
+        }
+
+        $('#checkAll').on('change', function () {
+            selectAllFiltered = false;
+            $('.row-checkbox').prop('checked', this.checked);
+            updateBulkState();
+        });
+
+        $(document).on('change', '.row-checkbox', function () {
+            selectAllFiltered = false;
+            updateBulkState();
+        });
+
+        $('#btn-select-all-filtered').on('click', function () {
+            selectAllFiltered = true;
+            $('.row-checkbox').prop('checked', true);
+            updateBulkState();
+        });
+
+        function basePayload() {
+            return {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                tab: $toolbar.data('tab') || '',
+                search: $toolbar.data('search') || '',
+                masa_pajak: $toolbar.data('masa-pajak') || '',
+                tahun: $toolbar.data('tahun') || ''
+            };
+        }
+
+        function buildPayload() {
+            const payload = basePayload();
+
+            if (selectAllFiltered) {
+                payload.select_all = 1;
+            } else {
+                payload.ids = getSelectedIds();
+            }
+
+            return payload;
+        }
+
+        function sendDelete(payload) {
+            if (requestRunning) return;
+            requestRunning = true;
+            updateBulkState();
+
+            $.ajax({
+                url: deleteUrl,
+                type: 'POST',
+                data: payload,
+                success: function (res) {
+                    if (!res.success) {
+                        Swal.fire('Gagal!', res.message || 'Gagal menghapus data.', 'error');
+                        return;
+                    }
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        html: escapeHtml(res.message) + '<br><small class="text-muted">Jalankan ulang ekualisasi agar hasil sesuai data terbaru.</small>'
+                    }).then(function () {
+                        window.location.href = res.redirect_url;
+                    });
+                },
+                error: function (xhr) {
+                    const msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Terjadi kesalahan saat menghapus data.';
+                    Swal.fire('Gagal!', msg, 'error');
+                },
+                complete: function () {
+                    requestRunning = false;
+                    updateBulkState();
+                }
+            });
+        }
+
+        $('#btn-delete-selected').on('click', function () {
+            const ids = getSelectedIds();
+            if (!ids.length) {
+                Swal.fire('Tidak ada data', 'Pilih minimal satu data terlebih dahulu.', 'warning');
+                return;
+            }
+
+            const total = selectAllFiltered ? totalFiltered : ids.length;
+            const text = selectAllFiltered
+                ? `Semua ${formatNumber(total)} data pada filter aktif akan dihapus permanen.`
+                : `${formatNumber(total)} data terpilih akan dihapus permanen.`;
+
+            Swal.fire({
+                title: selectAllFiltered ? 'Hapus semua data terfilter?' : `Hapus ${formatNumber(total)} data terpilih?`,
+                text: text + ' Data yang dihapus tidak dapat dikembalikan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f46a6a',
+                confirmButtonText: selectAllFiltered ? 'Ya, Hapus Semua' : 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    sendDelete(buildPayload());
+                }
+            });
+        });
+
+        $(document).on('click', '.btn-delete-row', function () {
+            const id = $(this).data('id');
+            const label = $(this).data('label');
+
+            Swal.fire({
+                title: 'Hapus data ini?',
+                html: 'No Faktur: <strong>' + escapeHtml(label) + '</strong><br><br>Data yang dihapus tidak dapat dikembalikan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f46a6a',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    const payload = basePayload();
+                    payload.ids = [id];
+                    sendDelete(payload);
+                }
+            });
+        });
+
+        updateBulkState();
+    })();
 </script>
 @endsection

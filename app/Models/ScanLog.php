@@ -13,6 +13,7 @@ class ScanLog extends Model
         'source',
         'user',
         'user_id',
+        'no_po',
         'scanner_folder',
         'scanned_by_name',
         'event',

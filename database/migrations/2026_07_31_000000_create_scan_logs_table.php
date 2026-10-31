@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('source')->default('scanner');
             $table->string('user')->nullable();
+            $table->string('no_po')->nullable();
             $table->string('event');
             $table->string('status')->default('info');
             $table->string('filename')->nullable();
