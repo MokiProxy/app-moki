@@ -53,7 +53,7 @@
                             <label class="form-label fw-bold">Filename Template</label>
                             <input type="text" name="filename_template" class="form-control @error('filename_template') is-invalid @enderror" value="{{ old('filename_template', '{vendor}_{number}.{ext}') }}" maxlength="255">
                             @error('filename_template') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            <small class="text-muted">Variabel: <code>{vendor}</code>, <code>{number}</code>, <code>{ext}</code>, <code>{filename}</code></small>
+                            <small class="text-muted">Variabel: <code>{vendor}</code>, <code>{number}</code>, <code>{no_po}</code>, <code>{ext}</code>, <code>{filename}</code>. No PO otomatis ditambahkan bila template belum memuat <code>{no_po}</code>.</small>
                         </div>
 
                         <div class="col-md-6">

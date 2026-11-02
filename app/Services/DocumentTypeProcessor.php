@@ -40,9 +40,9 @@ class DocumentTypeProcessor
         return null;
     }
 
-    public function generateFilename(DocumentType $docType, ?string $vendorName, ?string $number, string $originalExtension): string
+    public function generateFilename(DocumentType $docType, ?string $vendorName, ?string $number, string $originalExtension, ?string $noPo = null): string
     {
-        return $docType->resolveFilename($vendorName, $number, $originalExtension);
+        return $docType->resolveFilename($vendorName, $number, $originalExtension, $noPo);
     }
 
     public function resolveFtpPath(DocumentType $docType, ?string $vendorName, ?string $number, ?string $filename): string
