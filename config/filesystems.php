@@ -62,7 +62,7 @@ return [
             'host' => env('FINAL_FTP_HOST'),
             'username' => env('FINAL_FTP_USERNAME'),
             'password' => env('FINAL_FTP_PASSWORD'),
-            'root' => '/root',
+            'root' => '/root/storage-app',
             'port' => env('FINAL_FTP_PORT', 21),
             'passive' => true,
             'ssl' => false,
