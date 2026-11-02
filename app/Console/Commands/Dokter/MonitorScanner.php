@@ -63,18 +63,37 @@ class MonitorScanner extends Command
     /**
      * Execute the console command.
      */
-    public function handle(FileConversionService $converter, ScanLogger $logger): int
-    {
+    public function handle(
+        FileConversionService $converter,
+        ScanLogger $logger
+    ): int {
         if (DocumentType::count() === 0) {
-            $this->error('No document types configured. Please create at least one document type.');
+            $this->error('No document types configured.');
 
             return self::FAILURE;
         }
 
-        $this->processRootFiles($converter, $logger);
-        $this->processSubfolderFiles($converter, $logger);
+        $interval = 10; // Interval 10 detik
 
-        Log::debug('Scanner monitor cycle completed');
+        $this->info('Scanner monitoring started.');
+
+        while (true) {
+            try {
+                $this->processRootFiles($converter, $logger);
+                $this->processSubfolderFiles($converter, $logger);
+
+                Log::debug('Scanner monitor cycle completed');
+
+            } catch (\Throwable $e) {
+                Log::error('Scanner monitor error', [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+            }
+
+            sleep($interval);
+        }
 
         return self::SUCCESS;
     }
