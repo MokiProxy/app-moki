@@ -114,7 +114,8 @@ class ProcessScanFile implements ShouldQueue
         // Nomor dokumen dipakai sebagai bagian nama file, jadi pemisah path
         // (mis. "001/PBT/M/03/26") harus diratakan agar tidak membuat folder.
         $safeDocumentNumber = FileNameSanitizer::sanitize($documentNumber);
-        $targetFilename = $processor->generateFilename($documentType, $vendorName, $safeDocumentNumber, $originalExtension);
+        $safeNoPo = FileNameSanitizer::sanitize($noPo);
+        $targetFilename = $processor->generateFilename($documentType, $vendorName, $safeDocumentNumber, $originalExtension, $safeNoPo);
         $targetFilename = $targetFilename ?: $this->filename;
 
         $ocrTemp = [

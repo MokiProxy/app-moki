@@ -49,7 +49,7 @@ class DocumentType extends Model
         return str_replace(array_keys($replacements), array_values($replacements), $template);
     }
 
-    public function resolveFilename(?string $vendorName, ?string $number, string $ext): string
+    public function resolveFilename(?string $vendorName, ?string $number, string $ext, ?string $noPo = null): string
     {
         $template = $this->attributes['filename_template'] ?? '{vendor}_{number}.{ext}';
         $safeExt = match (strtolower($ext)) {
@@ -57,13 +57,36 @@ class DocumentType extends Model
             'pdf' => 'pdf',
             default => $ext,
         };
+        $safeNoPo = FileNameSanitizer::sanitize($noPo);
         $replacements = [
             '{vendor}' => strtoupper(FileNameSanitizer::sanitize($vendorName)),
             '{number}' => FileNameSanitizer::sanitize($number),
+            '{no_po}' => $safeNoPo,
             '{ext}' => $safeExt,
             '{filename}' => '',
         ];
 
-        return str_replace(array_keys($replacements), array_values($replacements), $template);
+        $filename = str_replace(array_keys($replacements), array_values($replacements), $template);
+
+        // Template lama belum memuat {no_po}. Tambahkan no PO secara otomatis
+        // sebelum ekstensi agar nama file di FTP final tetap membawa no PO.
+        if ($safeNoPo !== '' && !str_contains($template, '{no_po}')) {
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            $basename = $extension !== ''
+                ? substr($filename, 0, -(strlen($extension) + 1))
+                : $filename;
+
+            $filename = ($basename !== '' ? "{$basename}_" : '') . $safeNoPo
+                . ($extension !== '' ? ".{$extension}" : '');
+        }
+
+        // Bersihkan pemisah ganda/trailing yang tersisa saat placeholder no PO
+        // kosong, mis. template "{vendor}_{number}_{no_po}.{ext}".
+        if ($safeNoPo === '' && str_contains($template, '{no_po}')) {
+            $filename = preg_replace('/_{2,}/', '_', $filename) ?? $filename;
+            $filename = preg_replace('/_(?=\.[^.]+$)/', '', $filename) ?? $filename;
+        }
+
+        return $filename;
     }
 }
