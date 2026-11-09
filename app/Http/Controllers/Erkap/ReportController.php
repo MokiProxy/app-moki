@@ -37,6 +37,7 @@ class ReportController extends Controller
             'rkap' => $rkap,
             'year' => $year,
             'month' => $month,
+            'domain' => $request->input('domain', 'all'),
         ], 'html');
 
         return response($view->render(), 200)->header('Content-Type', 'text/html');
@@ -50,6 +51,7 @@ class ReportController extends Controller
             'rkap_id' => ['nullable', 'exists:erkap_rkap,id'],
             'year' => ['required', 'digits:4'],
             'month' => ['nullable', 'integer', 'between:1,12'],
+            'domain' => ['nullable', 'in:all,revenue,expense'],
         ]);
 
         $rkap = $request->filled('rkap_id') ? RKAP::find($request->integer('rkap_id')) : null;
@@ -62,6 +64,7 @@ class ReportController extends Controller
                 'rkap' => $rkap,
                 'year' => $year,
                 'month' => $request->integer('month') ?: null,
+                'domain' => $request->input('domain', 'all'),
             ], $format);
 
             ReportItem::create([
@@ -112,6 +115,7 @@ class ReportController extends Controller
             'risk' => 'Risiko',
             'realization' => 'Realisasi Anggaran',
             'performance' => 'Performa (KPI)',
+            'combined' => 'Gabungan SIMKA & E-RKAP',
         ];
 
         return 'Laporan ' . ($labels[$type] ?? ucfirst($type)) . " {$year}";

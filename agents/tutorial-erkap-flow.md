@@ -1,5 +1,10 @@
 # Tutorial Pengisian E-RKAP dari Awal sampai Akhir
 
+> **Catatan (9 November 2026):** E-RKAP kini menjadi bagian dari modul **SIMKA**.
+> Seluruh menu Pengeluaran diakses dari sidebar SIMKA pada kategori
+> **Pengeluaran: E-RKAP**, dan URL E-RKAP berpindah dari `/erkap/...` menjadi
+> `/simka/erkap/...`.
+
 **Tujuan dokumen ini:** membandu Anda mengisi satu periode RKAP secara lengkap, dari awal sampai dokumen selesai disahkan dan masuk arsip, lalu dilanjutkan ke monitoring bulanan.
 
 Dokumen ini disusun untuk dibaca oleh pengguna akhir (user). Tidak ada istilah teknis di dalamnya — hanya bahasa bisnis: apa yang diisi, siapa yang mengisi, dan kapan harus diisi.

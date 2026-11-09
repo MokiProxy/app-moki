@@ -146,7 +146,7 @@ class ErkapRolePermissionMatrixTest extends TestCase
 
         $mutating = $auditor->permissions
             ->pluck('name')
-            ->filter(fn (string $name) => $name !== 'erkap.menu'
+            ->filter(fn (string $name) => ! in_array($name, ['erkap.menu', 'simka.menu'], true)
                 && ! str_ends_with($name, '.view')
                 && ! in_array($name, ['erkap.audit-logs.view'], true));
 

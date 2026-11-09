@@ -1,4 +1,4 @@
-@extends('layouts.SIMKA')
+@extends('layouts.Simka')
 
 @section('title', $pageTitle)
 

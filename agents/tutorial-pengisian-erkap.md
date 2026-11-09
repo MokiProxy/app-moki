@@ -1,5 +1,10 @@
 # Tutorial Pengisian RKAP dari Awal sampai Akhir (Modul E-RKAP)
 
+> **Catatan (9 November 2026):** E-RKAP kini menjadi bagian dari modul **SIMKA**.
+> Seluruh menu Pengeluaran diakses dari sidebar SIMKA pada kategori
+> **Pengeluaran: E-RKAP**, dan URL E-RKAP berpindah dari `/erkap/...` menjadi
+> `/simka/erkap/...`. Route name dan permission `erkap.*` tetap dipertahankan.
+
 Panduan tutorial lengkap mengisi Rencana Kerja & Anggaran Perusahaan (RKAP) mulai dari
 **pembuatan Periode RKAP** sampai **pengesahan, distribusi, dan arsip**, berdasarkan
 alur yang benar-benar dieksekusi di kode (`RKAPLifecycleService`, `ApprovalService`,

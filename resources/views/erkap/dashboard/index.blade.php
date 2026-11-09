@@ -13,7 +13,7 @@ $programDonutLabels = collect($program['statusCounts'])->keys()->map(fn ($status
 $programPlanColumns = ['jan_plan', 'feb_plan', 'mar_plan', 'apr_plan', 'may_plan', 'jun_plan', 'jul_plan', 'aug_plan', 'sep_plan', 'oct_plan', 'nov_plan', 'dec_plan'];
 @endphp
 
-@extends('layouts.Erkap')
+@extends('layouts.Simka')
 
 @section('title', 'Dashboard E-RKAP')
 

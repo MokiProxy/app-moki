@@ -33,7 +33,7 @@ $gaugeZoneColor = ['green' => '#10b981', 'yellow' => '#f59e0b', 'red' => '#ef444
 $gaugeZoneLabel = ['green' => 'Aman', 'yellow' => 'Waspada', 'red' => 'Berisiko'][$riskAppetite['gauge']['zone']] ?? '-';
 @endphp
 
-@extends('layouts.Erkap')
+@extends('layouts.Simka')
 
 @section('title', 'Analytics & Widgets')
 
@@ -285,7 +285,7 @@ $gaugeZoneLabel = ['green' => 'Aman', 'yellow' => 'Waspada', 'red' => 'Berisiko'
     <div class="card widget-card mb-3">
         <div class="card-header"><i class="mdi mdi-table-search me-2 text-secondary"></i>Drilldown Detail</div>
         <div class="card-body">
-            <form method="GET" action="{{ url('erkap/dashboard/drilldown') }}" class="d-flex flex-wrap align-items-end gap-2">
+            <form method="GET" action="{{ url('simka/erkap/dashboard/drilldown') }}" class="d-flex flex-wrap align-items-end gap-2">
                 <div>
                     <label class="form-label small fw-bold mb-1">Tipe</label>
                     <select name="type" class="form-select form-select-sm drilldown-form">

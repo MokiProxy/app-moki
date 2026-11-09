@@ -262,6 +262,12 @@ Route::group(['middleware' => ['auth']], function () {
     });
 });
 
+// Backward compatibility Fase B: bookmark/link lama `/erkap/*` diarahkan ke
+// URL baru di bawah modul SIMKA. Form baru selalu memakai URL baru; redirect
+// ini hanya jaring pengaman untuk tautan lama.
+Route::permanentRedirect('/erkap/{any?}', '/simka/erkap/{any?}')
+    ->where('any', '.*');
+
 Route::get('/login/microsoft', [MicrosoftAuthController::class, 'redirect'])
     ->name('login.microsoft');
 

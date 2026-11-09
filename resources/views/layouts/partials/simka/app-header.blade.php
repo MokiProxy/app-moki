@@ -7,7 +7,7 @@ $roleColor = "primary-it-admin";
     <div class="navbar-header">
         <div class="d-flex">
             <div class="navbar-brand-box bg-dark-primary text-start">
-                <a href="{{ url('/') }}" class="logo logo-light text-decoration-none">
+                <a href="{{ route('simka.index') }}" class="logo logo-light text-decoration-none">
                     <span class="logo-sm">
                         <i class="mdi mdi-cash fs-1 m-0 p-0"></i>
                     </span>
@@ -21,6 +21,7 @@ $roleColor = "primary-it-admin";
                                     <div>
                                         <span class="text-{{ $roleColor }} m-0 p-0">SIMKA</span>
                                     </div>
+                                    <p class="fs-6 m-0 p-0 fw-normal">Sistem Informasi Manajemen Keuangan &amp; Anggaran</p>
                                 </div>
                             </h3>
                         </div>

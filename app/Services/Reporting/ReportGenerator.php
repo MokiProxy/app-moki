@@ -3,6 +3,8 @@
 namespace App\Services\Reporting;
 
 use App\Exports\Erkap\ReportExcelExport;
+use App\Models\Erkap\RevenuePlan;
+use App\Services\Simka\DashboardSummaryService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -10,7 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportGenerator
 {
-    public const TYPES = ['rkap', 'financial', 'risk', 'realization', 'performance'];
+    public const TYPES = ['rkap', 'financial', 'risk', 'realization', 'performance', 'combined'];
 
     public function generate(string $reportType, array $params, string $format = 'html')
     {
@@ -110,7 +112,100 @@ class ReportGenerator
             'risk' => $this->riskData($params),
             'realization' => $this->realizationData($params),
             'performance' => $this->performanceData($params),
+            'combined' => $this->combinedData($params),
         };
+    }
+
+    protected function combinedData(array $params): array
+    {
+        $rkap = $params['rkap'] ?? null;
+        $divisionId = $params['division_id'] ?? null;
+        $year = $params['year'] ?? now()->year;
+        $domain = $params['domain'] ?? 'all';
+
+        if (! in_array($domain, ['all', 'revenue', 'expense'], true)) {
+            $domain = 'all';
+        }
+
+        $summary = app(DashboardSummaryService::class)->build($rkap, $divisionId);
+
+        $revenueRows = [
+            ['Komponen' => 'Pendapatan (Rencana)', 'Nilai' => $summary['revenue_plan']],
+            ['Komponen' => 'Skema SPPH', 'Nilai' => $summary['spph']['schemes']],
+            ['Komponen' => 'Baris Tarif SPPH', 'Nilai' => $summary['spph']['tarif_entries']],
+            ['Komponen' => 'Kategori Pendapatan SIMKA', 'Nilai' => $summary['spph']['revenue_categories']],
+            ['Komponen' => 'Kategori Tarif SIMKA', 'Nilai' => $summary['spph']['tariff_categories']],
+        ];
+
+        $expenseRows = [
+            ['Komponen' => 'Pengeluaran (Rencana)', 'Nilai' => $summary['expense_plan']],
+            ['Komponen' => 'Total Pengeluaran (Opex + Capex)', 'Nilai' => $summary['expense_total']],
+            ['Komponen' => 'Anggaran Opex', 'Nilai' => $summary['opex_budget']],
+            ['Komponen' => 'Anggaran Capex', 'Nilai' => $summary['capex_budget']],
+            ['Komponen' => 'Realisasi Pengeluaran', 'Nilai' => $summary['realized']],
+            ['Komponen' => 'Serapan Anggaran (%)', 'Nilai' => $summary['absorption']],
+        ];
+
+        $rows = match ($domain) {
+            'revenue' => $revenueRows,
+            'expense' => $expenseRows,
+            default => [
+                ['Komponen' => 'Pendapatan (Rencana)', 'Nilai' => $summary['revenue_plan']],
+                ['Komponen' => 'Pengeluaran (Rencana)', 'Nilai' => $summary['expense_plan']],
+                ['Komponen' => 'Total Pengeluaran (Opex + Capex)', 'Nilai' => $summary['expense_total']],
+                ['Komponen' => 'Selisih Pendapatan - Pengeluaran', 'Nilai' => $summary['balance']],
+                ['Komponen' => 'Anggaran Opex', 'Nilai' => $summary['opex_budget']],
+                ['Komponen' => 'Anggaran Capex', 'Nilai' => $summary['capex_budget']],
+                ['Komponen' => 'Realisasi Pengeluaran', 'Nilai' => $summary['realized']],
+                ['Komponen' => 'Serapan Anggaran (%)', 'Nilai' => $summary['absorption']],
+                ['Komponen' => 'Skema SPPH', 'Nilai' => $summary['spph']['schemes']],
+                ['Komponen' => 'Baris Tarif SPPH', 'Nilai' => $summary['spph']['tarif_entries']],
+                ['Komponen' => 'Kategori Pendapatan SIMKA', 'Nilai' => $summary['spph']['revenue_categories']],
+                ['Komponen' => 'Kategori Tarif SIMKA', 'Nilai' => $summary['spph']['tariff_categories']],
+            ],
+        };
+
+        $effectiveRkap = $summary['rkap'];
+
+        $revenueByCoa = RevenuePlan::query()
+            ->with('chartOfAccount')
+            ->when($effectiveRkap, fn ($query) => $query->where('erkap_rkap_id', $effectiveRkap->id))
+            ->when($divisionId, fn ($query) => $query->where('division_id', $divisionId))
+            ->get()
+            ->groupBy('chart_of_account_id')
+            ->map(function ($plans) {
+                return [
+                    'code' => $plans->first()->chartOfAccount?->code ?? '-',
+                    'name' => $plans->first()->chartOfAccount?->name ?? 'Tanpa Akun',
+                    'total' => (float) $plans->sum('total'),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values()
+            ->all();
+
+        $title = match ($domain) {
+            'revenue' => 'Laporan Pendapatan SIMKA',
+            'expense' => 'Laporan Pengeluaran E-RKAP',
+            default => 'Laporan Gabungan SIMKA & E-RKAP',
+        };
+
+        $subtitle = match ($domain) {
+            'revenue' => 'Konfigurasi SPPH dan Rencana Pendapatan',
+            'expense' => 'Rencana, Anggaran, dan Realisasi Pengeluaran',
+            default => 'Pendapatan (SIMKA) vs Pengeluaran (E-RKAP)',
+        };
+
+        return [
+            'title' => $title,
+            'subtitle' => $subtitle,
+            'year' => $year,
+            'rkap' => $summary['rkap'],
+            'summary' => $summary,
+            'domain' => $domain,
+            'revenue_by_coa' => $revenueByCoa,
+            'rows' => $rows,
+        ];
     }
 
     protected function rkapData(array $params): array

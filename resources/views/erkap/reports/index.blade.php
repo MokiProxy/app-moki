@@ -1,4 +1,4 @@
-@extends('layouts.Erkap')
+@extends('layouts.Simka')
 
 @section('title', $pageName)
 
@@ -51,6 +51,21 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('erkap.reports.preview', ['type' => 'performance']) }}" target="_blank">
                             <i class="mdi mdi-speedometer me-1"></i> Pratinjau Performa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('erkap.reports.preview', ['type' => 'combined', 'domain' => 'revenue']) }}" target="_blank">
+                            <i class="mdi mdi-cash-multiple me-1"></i> Pratinjau Pendapatan
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('erkap.reports.preview', ['type' => 'combined', 'domain' => 'expense']) }}" target="_blank">
+                            <i class="mdi mdi-cash-register me-1"></i> Pratinjau Pengeluaran
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('erkap.reports.preview', ['type' => 'combined']) }}" target="_blank">
+                            <i class="mdi mdi-swap-horizontal me-1"></i> Pratinjau Gabungan
                         </a>
                     </li>
                 </ul>
@@ -131,7 +146,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Tipe Laporan</label>
                             <select name="report_type" class="form-select" required>
                                 <option value="rkap">RKAP</option>
@@ -139,9 +154,18 @@
                                 <option value="risk">Risiko</option>
                                 <option value="realization">Realisasi Anggaran</option>
                                 <option value="performance">Performa (KPI)</option>
+                                <option value="combined">Gabungan SIMKA &amp; E-RKAP</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Domain</label>
+                            <select name="domain" class="form-select">
+                                <option value="all">Semua Domain</option>
+                                <option value="revenue">Pendapatan (SIMKA)</option>
+                                <option value="expense">Pengeluaran (E-RKAP)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Format</label>
                             <select name="format" class="form-select" required>
                                 <option value="pdf">PDF</option>

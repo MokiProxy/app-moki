@@ -4,6 +4,7 @@ namespace Tests\Feature\Simka;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -21,7 +22,14 @@ class SpphTarifTotalViewTest extends TestCase
     {
         parent::setUp();
 
-        $this->actingAs(User::factory()->create());
+        $user = User::factory()->create();
+
+        foreach (['simka.menu', 'simka.spph.manage'] as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+
+        $user->givePermissionTo(['simka.menu', 'simka.spph.manage']);
+        $this->actingAs($user);
     }
 
     /**
