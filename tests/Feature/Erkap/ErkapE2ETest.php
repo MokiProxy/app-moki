@@ -207,10 +207,10 @@ class ErkapE2ETest extends TestCase
     {
         $this->actingAs($this->ppk);
 
-        $response = $this->get('/erkap/rkap');
+        $response = $this->get('/simka/erkap/rkap');
         $response->assertStatus(200);
 
-        $response = $this->post('/erkap/rkap', [
+        $response = $this->post('/simka/erkap/rkap', [
             'year' => '2026',
         ]);
         $response->assertStatus(302);
@@ -227,7 +227,7 @@ class ErkapE2ETest extends TestCase
         $this->actingAs($this->ppk);
         $rkap = $this->createRkap();
 
-        $response = $this->post("/erkap/rkap/{$rkap->id}/kickoff", [
+        $response = $this->post("/simka/erkap/rkap/{$rkap->id}/kickoff", [
             'kickoff_date' => '2026-01-15',
             'kickoff_notes' => 'Sosialisasi RKAP 2026',
         ]);
@@ -245,7 +245,7 @@ class ErkapE2ETest extends TestCase
 
         $file = UploadedFile::fake()->create('direction.pdf', 100, 'application/pdf');
 
-        $response = $this->post("/erkap/rkap/{$rkap->id}/direction", [
+        $response = $this->post("/simka/erkap/rkap/{$rkap->id}/direction", [
             'direction_file' => $file,
             'direction_notes' => 'Arahan Direksi 2026',
         ]);
@@ -261,7 +261,7 @@ class ErkapE2ETest extends TestCase
         $this->actingAs($this->ppk);
         $rkap = $this->createRkap();
 
-        $response = $this->post("/erkap/rkap/{$rkap->id}/advance");
+        $response = $this->post("/simka/erkap/rkap/{$rkap->id}/advance");
         $response->assertStatus(302);
 
         $rkap->refresh();
@@ -275,7 +275,7 @@ class ErkapE2ETest extends TestCase
         $this->actingAs($this->costOwner);
         $rkap = $this->createRkap();
 
-        $response = $this->post('/erkap/company-targets', [
+        $response = $this->post('/simka/erkap/company-targets', [
             'erkap_rkap_id' => $rkap->id,
             'target' => 'Meningkatkan pendapatan 20%',
         ]);
@@ -293,7 +293,7 @@ class ErkapE2ETest extends TestCase
         $companyTarget = CompanyTarget::factory()->create(['erkap_rkap_id' => $rkap->id]);
         $division = Division::factory()->create();
 
-        $response = $this->post('/erkap/department-targets', [
+        $response = $this->post('/simka/erkap/department-targets', [
             'division_id' => $division->id,
             'erkap_company_target_id' => $companyTarget->id,
             'erkap_rating_criteria_id' => $this->masterData['rating']->id,
@@ -313,7 +313,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/risk-identifications', [
+        $response = $this->post('/simka/erkap/risk-identifications', [
             'erkap_department_target_id' => $chain['deptTarget']->id,
             'erkap_risk_type_id' => $this->masterData['riskType']->id,
             'erkap_risk_taxonomy_id' => $this->masterData['taxonomy']->id,
@@ -334,7 +334,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/risk-analysis', [
+        $response = $this->post('/simka/erkap/risk-analysis', [
             'erkap_risk_identification_id' => $chain['risk']->id,
             'erkap_risk_probability_id' => $this->masterData['probability']->id,
             'erkap_risk_impact_id' => $this->masterData['impact']->id,
@@ -353,7 +353,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/work-programs', [
+        $response = $this->post('/simka/erkap/work-programs', [
             'erkap_risk_identification_id' => $chain['risk']->id,
             'name' => 'Program Kerja Uji',
             'units' => 'Unit',
@@ -376,7 +376,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/routine-costs', [
+        $response = $this->post('/simka/erkap/routine-costs', [
             'erkap_work_program_id' => $chain['workProgram']->id,
             'need' => 'Biaya Gaji',
             'erkap_cost_element_id' => 1,
@@ -405,7 +405,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/investment-plans', [
+        $response = $this->post('/simka/erkap/investment-plans', [
             'erkap_work_program_id' => $chain['workProgram']->id,
             'name' => 'Investasi Uji',
             'erkap_investattion_category_id' => $this->masterData['invCategory']->id,
@@ -437,14 +437,14 @@ class ErkapE2ETest extends TestCase
         $chain = $this->createFullChain($rkap);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/risk-identifications/{$chain['risk']->id}/submit");
+        $response = $this->post("/simka/erkap/risk-identifications/{$chain['risk']->id}/submit");
         $response->assertStatus(302);
 
         $chain['risk']->refresh();
         $this->assertEquals('submitted', $chain['risk']->status);
 
         $this->actingAs($this->riskManager);
-        $response = $this->post("/erkap/approvals/risk_register/{$chain['risk']->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/risk_register/{$chain['risk']->id}/approve", [
             'notes' => 'Disetujui',
         ]);
         $response->assertStatus(302);
@@ -477,20 +477,20 @@ class ErkapE2ETest extends TestCase
         ]);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/work-programs/{$chain['workProgram']->id}/submit");
+        $response = $this->post("/simka/erkap/work-programs/{$chain['workProgram']->id}/submit");
         $response->assertStatus(302);
 
         $chain['workProgram']->refresh();
         $this->assertEquals('submitted', $chain['workProgram']->status);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/approvals/work_program/{$chain['workProgram']->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/work_program/{$chain['workProgram']->id}/approve", [
             'notes' => 'Disetujui PPK',
         ]);
         $response->assertStatus(302);
 
         $this->actingAs($this->controller);
-        $response = $this->post("/erkap/approvals/work_program/{$chain['workProgram']->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/work_program/{$chain['workProgram']->id}/approve", [
             'notes' => 'Disetujui Controller',
         ]);
         $response->assertStatus(302);
@@ -523,20 +523,20 @@ class ErkapE2ETest extends TestCase
         ]);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/routine-costs/{$routineCost->id}/submit");
+        $response = $this->post("/simka/erkap/routine-costs/{$routineCost->id}/submit");
         $response->assertStatus(302);
 
         $routineCost->refresh();
         $this->assertEquals('submitted', $routineCost->status);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/approvals/routine_cost/{$routineCost->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/routine_cost/{$routineCost->id}/approve", [
             'notes' => 'Disetujui PPK',
         ]);
         $response->assertStatus(302);
 
         $this->actingAs($this->controller);
-        $response = $this->post("/erkap/approvals/routine_cost/{$routineCost->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/routine_cost/{$routineCost->id}/approve", [
             'notes' => 'Disetujui Controller',
         ]);
         $response->assertStatus(302);
@@ -571,7 +571,7 @@ class ErkapE2ETest extends TestCase
         ]);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/investment-plans/{$investmentPlan->id}/submit");
+        $response = $this->post("/simka/erkap/investment-plans/{$investmentPlan->id}/submit");
         $response->assertStatus(302);
 
         $investmentPlan->refresh();
@@ -580,7 +580,7 @@ class ErkapE2ETest extends TestCase
         $gates = InvestmentStageGate::where('erkap_investment_plan_id', $investmentPlan->id)->get();
         foreach ($gates as $gate) {
             $this->actingAs($this->ppk);
-            $response = $this->post("/erkap/investment-gates/{$gate->id}/review", [
+            $response = $this->post("/simka/erkap/investment-gates/{$gate->id}/review", [
                 'status' => 'approved',
                 'notes' => 'Gate disetujui',
             ]);
@@ -588,19 +588,19 @@ class ErkapE2ETest extends TestCase
         }
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/approvals/investment_plan/{$investmentPlan->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/investment_plan/{$investmentPlan->id}/approve", [
             'notes' => 'Disetujui PPK',
         ]);
         $response->assertStatus(302);
 
         $this->actingAs($this->manajemenAset);
-        $response = $this->post("/erkap/approvals/investment_plan/{$investmentPlan->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/investment_plan/{$investmentPlan->id}/approve", [
             'notes' => 'Disetujui Manajemen Aset',
         ]);
         $response->assertStatus(302);
 
         $this->actingAs($this->direksiKeuangan);
-        $response = $this->post("/erkap/approvals/investment_plan/{$investmentPlan->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/investment_plan/{$investmentPlan->id}/approve", [
             'notes' => 'Disetujui Direksi Keuangan',
         ]);
         $response->assertStatus(302);
@@ -635,14 +635,14 @@ class ErkapE2ETest extends TestCase
         ]);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/investment-plans/{$investmentPlan->id}/submit");
+        $response = $this->post("/simka/erkap/investment-plans/{$investmentPlan->id}/submit");
         $response->assertStatus(302);
 
         $gates = InvestmentStageGate::where('erkap_investment_plan_id', $investmentPlan->id)->get();
         $this->assertGreaterThan(0, $gates->count());
 
         foreach ($gates as $gate) {
-            $response = $this->post("/erkap/investment-gates/{$gate->id}/review", [
+            $response = $this->post("/simka/erkap/investment-gates/{$gate->id}/review", [
                 'status' => 'approved',
                 'notes' => 'Gate disetujui',
             ]);
@@ -657,11 +657,11 @@ class ErkapE2ETest extends TestCase
         $chain = $this->createFullChain($rkap);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/risk-identifications/{$chain['risk']->id}/submit");
+        $response = $this->post("/simka/erkap/risk-identifications/{$chain['risk']->id}/submit");
         $response->assertStatus(302);
 
         $this->actingAs($this->riskManager);
-        $response = $this->post("/erkap/approvals/risk_register/{$chain['risk']->id}/reject", [
+        $response = $this->post("/simka/erkap/approvals/risk_register/{$chain['risk']->id}/reject", [
             'notes' => 'Ditolak - perlu revisi',
         ]);
         $response->assertStatus(302);
@@ -678,7 +678,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/zbb-reviews/build');
+        $response = $this->post('/simka/erkap/zbb-reviews/build');
         $response->assertStatus(302);
     }
 
@@ -688,7 +688,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/budget-capex/consolidate');
+        $response = $this->post('/simka/erkap/budget-capex/consolidate');
         $response->assertStatus(302);
     }
 
@@ -697,7 +697,7 @@ class ErkapE2ETest extends TestCase
         $this->actingAs($this->ppk);
         $rkap = $this->createRkap();
 
-        $response = $this->post('/erkap/revenue-plans', [
+        $response = $this->post('/simka/erkap/revenue-plans', [
             'erkap_rkap_id' => $rkap->id,
             'description' => 'Pendapatan Usaha',
             'amount' => 1000000000,
@@ -710,7 +710,7 @@ class ErkapE2ETest extends TestCase
         $this->actingAs($this->ppk);
         $rkap = $this->createRkap();
 
-        $response = $this->post('/erkap/expense-plans', [
+        $response = $this->post('/simka/erkap/expense-plans', [
             'erkap_rkap_id' => $rkap->id,
             'description' => 'Beban Operasional',
             'amount' => 500000000,
@@ -727,20 +727,20 @@ class ErkapE2ETest extends TestCase
         $rkap->update(['phase' => 'finalization']);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/rkap/{$rkap->id}/submit");
+        $response = $this->post("/simka/erkap/rkap/{$rkap->id}/submit");
         $response->assertStatus(302);
 
         $rkap->refresh();
         $this->assertEquals('submitted', $rkap->status);
 
         $this->actingAs($this->direksi);
-        $response = $this->post("/erkap/approvals/rkap/{$rkap->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/rkap/{$rkap->id}/approve", [
             'notes' => 'Disetujui Direksi',
         ]);
         $response->assertStatus(302);
 
         $this->actingAs($this->komisaris);
-        $response = $this->post("/erkap/approvals/rkap/{$rkap->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/rkap/{$rkap->id}/approve", [
             'notes' => 'Disetujui Komisaris',
         ]);
         $response->assertStatus(302);
@@ -755,7 +755,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $rkap->update(['status' => 'approved', 'phase' => 'approved']);
 
-        $response = $this->post("/erkap/rkap/{$rkap->id}/distribute");
+        $response = $this->post("/simka/erkap/rkap/{$rkap->id}/distribute");
         $response->assertStatus(302);
 
         $rkap->refresh();
@@ -768,7 +768,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $rkap->update(['status' => 'approved', 'phase' => 'approved', 'distribution_status' => 'distributed']);
 
-        $response = $this->post("/erkap/rkap/{$rkap->id}/advance");
+        $response = $this->post("/simka/erkap/rkap/{$rkap->id}/advance");
         $response->assertStatus(302);
 
         $rkap->refresh();
@@ -783,7 +783,7 @@ class ErkapE2ETest extends TestCase
 
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/work-programs', [
+        $response = $this->post('/simka/erkap/work-programs', [
             'erkap_risk_identification_id' => $chain['risk']->id,
             'code' => 'WP-LOCK',
             'name' => 'Program Kerja Lock Test',
@@ -808,7 +808,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $rkap->update(['status' => 'approved', 'phase' => 'approved']);
 
-        $response = $this->post('/erkap/budget-realizations', [
+        $response = $this->post('/simka/erkap/budget-realizations', [
             'erkap_rkap_id' => $rkap->id,
             'month' => 1,
             'budget' => 10000000,
@@ -824,7 +824,7 @@ class ErkapE2ETest extends TestCase
         $rkap->update(['status' => 'approved', 'phase' => 'approved']);
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/program-realizations', [
+        $response = $this->post('/simka/erkap/program-realizations', [
             'erkap_work_program_id' => $chain['workProgram']->id,
             'month' => 1,
             'target' => 8,
@@ -841,7 +841,7 @@ class ErkapE2ETest extends TestCase
         $rkap->update(['status' => 'approved', 'phase' => 'approved']);
         $chain = $this->createFullChain($rkap);
 
-        $response = $this->post('/erkap/risk-assessments-monthly', [
+        $response = $this->post('/simka/erkap/risk-assessments-monthly', [
             'erkap_risk_identification_id' => $chain['risk']->id,
             'month' => 1,
             'erkap_risk_appetite_id' => $this->masterData['appetite']->id,
@@ -856,7 +856,7 @@ class ErkapE2ETest extends TestCase
         $rkap = $this->createRkap();
         $rkap->update(['status' => 'approved', 'phase' => 'approved']);
 
-        $response = $this->post('/erkap/performance-scorecards', [
+        $response = $this->post('/simka/erkap/performance-scorecards', [
             'erkap_rkap_id' => $rkap->id,
             'kpi' => 'Revenus Growth',
             'target' => 20,
@@ -885,11 +885,11 @@ class ErkapE2ETest extends TestCase
         $chain = $this->createFullChain($rkap);
 
         $this->actingAs($this->ppk);
-        $response = $this->post("/erkap/risk-identifications/{$chain['risk']->id}/submit");
+        $response = $this->post("/simka/erkap/risk-identifications/{$chain['risk']->id}/submit");
         $response->assertStatus(302);
 
         $this->actingAs($this->costOwner);
-        $response = $this->post("/erkap/approvals/risk_register/{$chain['risk']->id}/approve", [
+        $response = $this->post("/simka/erkap/approvals/risk_register/{$chain['risk']->id}/approve", [
             'notes' => 'Should fail',
         ]);
         $response->assertStatus(302);
@@ -902,16 +902,16 @@ class ErkapE2ETest extends TestCase
     {
         $this->actingAs($this->costOwner);
 
-        $response = $this->get('/erkap/coa-options/business-units');
+        $response = $this->get('/simka/erkap/coa-options/business-units');
         $response->assertStatus(200);
 
-        $response = $this->get('/erkap/coa-options/locations');
+        $response = $this->get('/simka/erkap/coa-options/locations');
         $response->assertStatus(200);
 
-        $response = $this->get('/erkap/coa-options/management-areas');
+        $response = $this->get('/simka/erkap/coa-options/management-areas');
         $response->assertStatus(200);
 
-        $response = $this->get('/erkap/coa-options/activities');
+        $response = $this->get('/simka/erkap/coa-options/activities');
         $response->assertStatus(200);
     }
 }

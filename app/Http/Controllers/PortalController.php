@@ -90,19 +90,11 @@ class PortalController extends Controller
                 'link' => route('eqtax.index')
             ],
             [
-                'title' => 'E-RKAP',
-                'sub' => 'Manajemen RKAP Digital',
-                'icon' => 'mdi-cash',
-                'color' => '#556EE6',
-                'permission' => 'erkap.menu',
-                'link' => route('erkap.index')
-            ],
-            [
                 'title' => 'SIMKA',
-                'sub' => 'Sistem Informasi Manajemen Keuangan & Anggaran',
+                'sub' => 'Pendapatan & Pengeluaran',
                 'icon' => 'mdi-cash',
                 'color' => '#556EE6',
-                'permission' => 'erkap.menu',
+                'permission' => 'simka.menu',
                 'link' => route('simka.index')
             ],
             [

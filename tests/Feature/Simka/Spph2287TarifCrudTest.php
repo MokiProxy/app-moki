@@ -11,6 +11,7 @@ use Database\Seeders\SimkaSpph2287BobotSeeder;
 use Database\Seeders\SimkaSpph2287KategoriSeeder;
 use Database\Seeders\SimkaSpph773KategoriTarifSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 /**
@@ -40,7 +41,14 @@ class Spph2287TarifCrudTest extends TestCase
         $this->seed(SimkaSpph2287BobotSeeder::class);
         $this->seed(SimkaSpph2287AsumsiDasarSeeder::class);
 
-        $this->actingAs(User::factory()->create());
+        $user = User::factory()->create();
+
+        foreach (['simka.menu', 'simka.spph.manage'] as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+
+        $user->givePermissionTo(['simka.menu', 'simka.spph.manage']);
+        $this->actingAs($user);
     }
 
     /**

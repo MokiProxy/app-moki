@@ -60,6 +60,8 @@ class RolePermissionSeeder extends Seeder
             // Portal & Menu
             ['name' => 'portal.access', 'guard_name' => 'web'],
             ['name' => 'ams.menu', 'guard_name' => 'web'],
+            ['name' => 'simka.menu', 'guard_name' => 'web'],
+            ['name' => 'simka.spph.manage', 'guard_name' => 'web'],
             ['name' => 'helpdesk.menu', 'guard_name' => 'web'],
             ['name' => 'data-pegawai.menu', 'guard_name' => 'web'],
             ['name' => 'form-it.menu', 'guard_name' => 'web'],
@@ -816,5 +818,18 @@ class RolePermissionSeeder extends Seeder
             'helpdesk.tickets.approve',
             'helpdesk.technicians.view',
         ]);
+
+        // --- SIMKA module gate (merge E-RKAP -> SIMKA, Fase A) ---
+        // Semua role yang sudah bisa membuka E-RKAP otomatis mendapat akses
+        // modul SIMKA. `erkap.menu` tetap dipertahankan sebagai compatibility
+        // sampai Fase C, sehingga kedua gerbang bisa hidup berdampingan.
+        Role::permission('erkap.menu')->get()->each(function (Role $role) {
+            $role->givePermissionTo('simka.menu');
+        });
+
+        // Hanya role admin yang boleh mengubah konfigurasi & tarif SPPH.
+        $superAdmin->givePermissionTo('simka.spph.manage');
+        $erkapAdmin->givePermissionTo('simka.spph.manage');
+        $admin->givePermissionTo('simka.spph.manage');
     }
 }

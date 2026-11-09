@@ -2,7 +2,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-6">
-                E-RKAP SBS
+                SIMKA SBS
                 <script>
                     document.write(new Date().getFullYear())
                 </script>

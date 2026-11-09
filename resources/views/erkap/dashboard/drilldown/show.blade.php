@@ -1,4 +1,4 @@
-@extends('layouts.Erkap')
+@extends('layouts.Simka')
 
 @section('title', $title ?? 'Detail Drilldown')
 

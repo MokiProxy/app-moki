@@ -5,6 +5,14 @@
 > `agents/planning-perubahan-alur-pt-bmi.md` (SELESAI DIIMPLEMENTASI),
 > `database/seeders/RolePermissionSeeder.php` (file yang diubah).
 
+> **Catatan (9 November 2026):** Sejak E-RKAP digabung ke SIMKA, modul memiliki
+> dua permission gerbang tambahan di seeder yang sama:
+> - `simka.menu` — diberikan otomatis ke semua role yang punya `erkap.menu`.
+> - `simka.spph.manage` — untuk `super-admin`, `erkap-admin`, dan `admin`.
+>
+> Permission `erkap.*` **tidak diubah atau dihapus**; matriks di bawah tetap berlaku
+> untuk area Pengeluaran (E-RKAP).
+
 ---
 
 ## 1. Tujuan

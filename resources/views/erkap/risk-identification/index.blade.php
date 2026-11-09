@@ -1,4 +1,4 @@
-@extends('layouts.Erkap')
+@extends('layouts.Simka')
 
 @section('title', $pageName)
 
@@ -175,7 +175,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     var form = $('#form-delete');
-                    form.attr('action', "{{ url('erkap/risk-identifications') }}/" + id);
+                    form.attr('action', "{{ url('simka/erkap/risk-identifications') }}/" + id);
                     form.submit();
                 }
             });
@@ -196,7 +196,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     var form = $('#form-submit');
-                    form.attr('action', "{{ url('erkap/risk-identifications') }}/" + id + "/submit");
+                    form.attr('action', "{{ url('simka/erkap/risk-identifications') }}/" + id + "/submit");
                     form.submit();
                 }
             });

@@ -50,7 +50,9 @@ use App\Http\Controllers\Erkap\WorkProgramController;
 use App\Http\Controllers\Erkap\ZBBReviewController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix("erkap")->name("erkap.")->group(function () {
+// Fase B: E-RKAP kini berada di bawah URL modul SIMKA.
+// Nama route `erkap.*` sengaja dipertahankan agar seluruh referensi lama tetap jalan.
+Route::prefix("simka/erkap")->name("erkap.")->group(function () {
     Route::get("/", [ErkapDashboardController::class, 'index'])->middleware('permission:erkap.menu')->name("index");
     Route::get('/dashboard/risk-detail', [ErkapDashboardController::class, 'riskDetail'])->middleware('permission:erkap.menu')->name("dashboard.risk-detail");
     Route::get('/dashboard/budget-detail', [ErkapDashboardController::class, 'budgetDetail'])->middleware('permission:erkap.menu')->name("dashboard.budget-detail");

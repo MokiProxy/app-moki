@@ -1,5 +1,10 @@
 # Tutorial Pengisian E-RKAP (untuk Pengguna Akhir)
 
+> **Catatan (9 November 2026):** E-RKAP kini menjadi bagian dari modul **SIMKA**.
+> Seluruh menu Pengeluaran diakses dari sidebar SIMKA pada kategori
+> **Pengeluaran: E-RKAP**, dan URL E-RKAP berpindah dari `/erkap/...` menjadi
+> `/simka/erkap/...`.
+
 > Dokumen ini menjelaskan **alur lengkap penyusunan, pengajuan, dan pengesahan RKAP** dari
 > awal sampai akhir, ditulis untuk pengguna aplikasi (bukan untuk teknis).
 > Baca dari urutan awal, lalu ikuti bagian yang sesuai dengan peran Anda.

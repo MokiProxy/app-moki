@@ -1,4 +1,4 @@
-@extends('layouts.Erkap')
+@extends('layouts.Simka')
 
 @section('title', $pageName)
 
@@ -184,7 +184,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     var form = $('#form-delete');
-                    form.attr('action', "{{ url('erkap/work-programs') }}/" + id);
+                    form.attr('action', "{{ url('simka/erkap/work-programs') }}/" + id);
                     form.submit();
                 }
             });
